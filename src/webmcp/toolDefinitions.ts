@@ -199,7 +199,8 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
         additionalProperties: false,
       },
       annotations: { readOnlyHint: false, untrustedContentHint: false },
-      execute: async (input, { signal }) => {
+      execute: async (input, options) => {
+        const signal = options?.signal;
         const patch = input as Partial<AccessibilitySettings>;
         const previousAccessibility = { ...usePortalStore.getState().accessibility };
         const changed = accessibilityKeys.filter(
@@ -262,8 +263,9 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
         additionalProperties: false,
       },
       annotations: { readOnlyHint: false, untrustedContentHint: false },
-      execute: async (input, { signal }) => {
-        if (signal.aborted) return cancelledResult('cancelled');
+      execute: async (input, options) => {
+        const signal = options?.signal;
+        if (signal?.aborted) return cancelledResult('cancelled');
         if (input.domain !== 'pointer_precision' || input.goal !== 'reschedule_appointment') {
           return failed('unsupported_calibration', 'That calibration is not available in this demonstration.');
         }
@@ -313,7 +315,8 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
         additionalProperties: false,
       },
       annotations: { readOnlyHint: false, untrustedContentHint: false },
-      execute: async (input, { signal }) => {
+      execute: async (input, options) => {
+        const signal = options?.signal;
         const target = input.target as SemanticTarget;
         const message =
           typeof input.message === 'string'
@@ -341,7 +344,8 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
         additionalProperties: false,
       },
       annotations: { readOnlyHint: false, untrustedContentHint: false },
-      execute: async (input, { signal }) => {
+      execute: async (input, options) => {
+        const signal = options?.signal;
         const section = input.section as PortalSection;
         const result = await runGuideAction({
           target: sectionTarget[section],
@@ -399,7 +403,8 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
         additionalProperties: false,
       },
       annotations: { readOnlyHint: false, untrustedContentHint: false },
-      execute: async (input, { signal }) => {
+      execute: async (input, options) => {
+        const signal = options?.signal;
         const state = usePortalStore.getState();
         if (input.appointmentId !== state.appointment.id) {
           return failed('appointment_not_found', 'That appointment is not available in this fictional portal.');
@@ -478,7 +483,8 @@ export function createSelectSlotTool(): WebMCP.ModelContextTool {
       additionalProperties: false,
     },
     annotations: { readOnlyHint: false, untrustedContentHint: false },
-    execute: async (input, { signal }) => {
+    execute: async (input, options) => {
+      const signal = options?.signal;
       const state = usePortalStore.getState();
       if (input.appointmentId !== state.appointment.id) {
         return failed('appointment_not_found', 'The requested appointment does not match the shared portal state.');
@@ -527,7 +533,8 @@ export function createConfirmTool(): WebMCP.ModelContextTool {
       additionalProperties: false,
     },
     annotations: { readOnlyHint: false, untrustedContentHint: false },
-    execute: async (input, { signal }) => {
+    execute: async (input, options) => {
+      const signal = options?.signal;
       const before = usePortalStore.getState();
       const slotId = input.slotId as string;
       const slot = rescheduleSlots.find((candidate) => candidate.id === slotId);

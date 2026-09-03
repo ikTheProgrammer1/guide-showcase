@@ -79,6 +79,29 @@ describe('WebMCP tool contracts', () => {
     expect(usePortalStore.getState().functionalProfile).toBeNull();
   });
 
+  it('opens calibration when the WebMCP client omits execution options', async () => {
+    const tool = createStaticTools().find((candidate) => candidate.name === 'start_interface_calibration')!;
+    const executeWithoutOptions = tool.execute as (
+      input: Record<string, unknown>,
+    ) => Promise<unknown>;
+
+    const result = await executeWithoutOptions({
+      domain: 'pointer_precision',
+      goal: 'reschedule_appointment',
+    });
+
+    expect(result).toMatchObject({
+      ok: true,
+      phase: 'target-size',
+      presentedVisually: true,
+    });
+    expect(useCalibrationStore.getState()).toMatchObject({
+      isOpen: true,
+      phase: 'target-size',
+      startedBy: 'guide',
+    });
+  });
+
   it('does not open calibration when execution was already cancelled', async () => {
     const controller = new AbortController();
     controller.abort();

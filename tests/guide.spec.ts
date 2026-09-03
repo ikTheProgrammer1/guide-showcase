@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 type TestTool = {
-  execute: (input: Record<string, unknown>, options: { signal: AbortSignal }) => Promise<unknown>;
+  execute: (input: Record<string, unknown>, options?: { signal: AbortSignal }) => Promise<unknown>;
   name: string;
 };
 
@@ -85,6 +85,18 @@ async function callTool(page: Page, name: string, input: Record<string, unknown>
       const tool = tools.get(toolName);
       if (!tool) throw new Error(`Missing tool: ${toolName}`);
       return tool.execute(toolInput, { signal: new AbortController().signal });
+    },
+    { toolName: name, toolInput: input },
+  );
+}
+
+async function callToolWithoutOptions(page: Page, name: string, input: Record<string, unknown>) {
+  return page.evaluate(
+    async ({ toolName, toolInput }) => {
+      const tools = (window as unknown as { __guideWebMCPTools: Map<string, TestTool> }).__guideWebMCPTools;
+      const tool = tools.get(toolName);
+      if (!tool) throw new Error(`Missing tool: ${toolName}`);
+      return tool.execute(toolInput);
     },
     { toolName: name, toolInput: input },
   );
@@ -603,6 +615,24 @@ test('supports keyboard-only local calibration and restores focus when stopped',
   await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { name: 'Does this feel comfortable?' })).toHaveCount(0);
   await expect(trigger).toBeFocused();
+});
+
+test('opens safe calibration when the WebMCP bridge omits execution options', async ({ page }) => {
+  await installWebMCP(page);
+  await page.goto('/');
+
+  const result = await callToolWithoutOptions(page, 'start_interface_calibration', {
+    domain: 'pointer_precision',
+    goal: 'reschedule_appointment',
+  }) as { ok: boolean; phase: string; presentedVisually: boolean };
+
+  expect(result).toMatchObject({
+    ok: true,
+    phase: 'target-size',
+    presentedVisually: true,
+  });
+  await expect(page.getByRole('heading', { name: 'Let’s find controls that feel easier to select' })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Practice appointment' })).toBeVisible();
 });
 
 test('has no serious accessibility violations across baseline and personalized preferences', async ({ page }, testInfo) => {
