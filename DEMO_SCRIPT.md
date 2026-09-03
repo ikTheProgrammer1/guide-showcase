@@ -1,91 +1,104 @@
-# Guide Demo Script — 2:50 Target
+# Guide Demo Script — 2:55 Target
 
-Record the production URL in ChatGPT’s in-app browser at 1440 × 900 and 100% browser zoom. Start with **Reset Demo**. Keep the source editor ready for one brief code shot.
+Record the queryless production URL in ChatGPT’s built-in browser at 1440 × 900 and 100% browser zoom. Start with **Reset demo**. Keep Site Tools activity visible when practical.
 
-## 0:00–0:15 — One Interface for Everyone
+## 0:00–0:16 — One Interface for Everyone
 
-**Screen:** Hold on the dense Northstar Health portal. Let the crowded tables, compact navigation, abbreviations, small controls, and red/green status dots register.
-
-**Narration:**
-
-“Most websites still present one fixed interface to everyone. And many essential services look like this.”
-
-## 0:15–0:40 — Demonstrate the Barrier
-
-**Screen:** Open **Simulate a barrier → Mobility → Parkinson’s**. Aim at the center of the compact **MODIFY APPT** control during the seeded demonstration phase. The displaced simulated cursor lands outside the button, the action does not fire, and **Missed target** appears.
+**Screen:** Hold on the dense Northstar portal: compact navigation, small appointment controls, abbreviations, competing panels, and color-led statuses.
 
 **Narration:**
 
-“This built-in simulator demonstrates one pointer-precision barrier. It does not reproduce anyone’s disability. The miss is real DOM hit testing—not a scripted failure for this button.”
+“Most websites still give everyone one fixed interface. Essential services often look like this.”
 
-## 0:40–1:12 — Adapt and Point
+## 0:16–0:38 — An Honest Demonstration
+
+**Screen:** Open **Simulate a barrier → Mobility → Parkinson’s**. Aim at compact **MODIFY APPT** during the seeded phase. The displaced cursor lands outside the button and **Missed target** appears.
+
+**Narration:**
+
+“This simulator illustrates one pointer-precision barrier; it does not reproduce anyone’s disability. The miss comes from the elements under the real and displaced coordinates. It is not hard-coded for this button.”
+
+## 0:38–0:58 — One Semantic WebMCP Call
 
 **Prompt:**
 
-> My hands shake, precise clicking is difficult, and this page is overwhelming. Reorganize it with large separated controls and show me where to reschedule, but do not open it yet.
+> My hand shakes and I keep missing buttons. Help me use this page.
 
-**Expected tools:** `get_portal_state` if needed, one composed `configure_accessibility` call with simplified density, large controls, increased spacing, and interactive emphasis, then `guide_to(reschedule_button)`. No appointment action yet.
+**Expected tool call:** start_interface_calibration with domain pointer_precision and goal reschedule_appointment.
 
-**Screen:** Keep the simulation active. The same Northstar application reorganizes into the calm modern interface. Guide ✦ points to the new large appointment control without activating it.
-
-**Narration:**
-
-“Northstar exposes not only actions through WebMCP, but semantic ways its own interface can adapt. This is a structural reflow—not a zoomed screenshot.”
-
-## 1:12–1:28 — Successful Acquisition
-
-**Screen:** Aim at the center of the larger adapted **Change appointment** control with the same simulation phase. Both physical and displaced coordinates resolve to that control, so it opens Appointments successfully. Choose **Reschedule appointment**.
+**Screen:** Show the tool activity, then the safe calibration. The tool returns immediately.
 
 **Narration:**
 
-“Nothing in the simulator changed. The same generic algorithm succeeds because Northstar created a materially larger target with more separation.”
+“The phrase identifies a calibration family, not a diagnosis or a preset. ChatGPT calls one bounded WebMCP tool. The repeated practice loop stays local, so every adjustment is immediate.”
 
-## 1:28–1:58 — Guide & Collaborate
+## 0:58–1:28 — Calibrate Locally
 
-**Screen:** Open the chooser if it is not already open. It shows the current appointment and three alternatives. Manually choose **Monday, September 14 · 3:00 PM**; `confirm_reschedule` appears only after the valid selection.
+**Screen:** Try the safe practice appointment button. Show an honest simulator-driven miss, then repeat successful attempts as the target grows. In the spacing step, demonstrate one miss or choose **Farther apart**, then complete the successful attempts.
 
 **Narration:**
 
-“Guide prepared the path, but I make the decision. My click updates the exact same state the agent sees.”
+“This button cannot navigate or change an appointment. Northstar keeps only non-identifying aggregates—never raw coordinates—and changes one variable at a time: size first, then spacing.”
 
-## 1:58–2:22 — Delegated Act
+## 1:28–1:48 — Human Approval, Component Composition
+
+**Screen:** On **Does this feel comfortable?**, briefly show Larger/Smaller and Closer/Farther controls. Optionally select **Remember these preferences on Northstar**, then approve.
+
+**Narration:**
+
+“Nothing applies until I approve it. Northstar stores functional preferences, not Parkinson’s, simulator state, or miss history. Each semantic region composes only the properties it safely supports.”
+
+**Screen:** The real rescheduling chooser opens locally. Hold on its large separated options and the unchanged current appointment.
+
+## 1:48–2:08 — Human Choice
+
+**Screen:** Select **Monday, September 14 · 3:00 PM** manually. Show the separate current-versus-new review. Point out **Back to times**.
+
+**Narration:**
+
+“Calibration continues into the real task, but stops before the decision. I choose the time. The appointment still cannot change without explicit confirmation.”
+
+## 2:08–2:31 — Delegated Completion
 
 **Prompt:**
 
 > That works. Finish it.
 
-**Expected tools:** `get_portal_state`, then `confirm_reschedule` with the human-selected slot.
+**Expected tools:** get_portal_state, then confirm_reschedule for the currently selected slot.
 
-**Screen:** Guide moves to Confirm, shows the before-and-after time, pauses, and commits. `confirm_reschedule` unregisters immediately. Hold on success, then stop the simulation.
-
-**Narration:**
-
-“When I delegate the last step, Guide re-reads my choice and refuses stale instructions. The action stays visible and attributable.”
-
-## 2:22–2:38 — WebMCP-Native
-
-**Screen:** Briefly show `document.modelContext.registerTool()`, the `configure_accessibility` schema, the semantic target registry, and the separate simulation store.
+**Screen:** Guide moves to Confirm, previews the before-and-after time, commits, and shows success. Site Tools activity shows confirm_reschedule disappearing immediately.
 
 **Narration:**
 
-“This is not screen-coordinate automation. ChatGPT is the language layer, and Northstar owns semantic capabilities and visible presence. The simulator is human-only and never appears in WebMCP state.”
+“Only after I delegate does Guide re-read the appointment, selected slot, and workflow revision. A stale instruction is rejected instead of overwriting my choice.”
 
-## 2:38–2:50 — Close
+## 2:31–2:42 — Undo
 
-**Screen:** Adapted Northstar and the Guide success state, with the simulator off.
+**Screen:** Choose **Undo change**. Show the original September 10 appointment restored, then Done.
 
 **Narration:**
 
-“What if websites didn’t have one interface for everyone? Guide lets agents reshape the web around people—and stay beside them when they need help. Agents shouldn’t just use the web for us. They should be able to use it with us.”
+“The person keeps the last word. Consequential changes have review, Back, and Undo.”
+
+## 2:42–2:55 — Close
+
+**Screen:** Briefly show the bounded manifest, the start_interface_calibration schema, and the separate simulation store. Return to personalized Northstar and stop the simulation.
+
+**Narration:**
+
+“Guide is not arbitrary DOM automation and it is not a disability template. It is a site-supported negotiation between a person, an agent, and one semantic interface.”
 
 ## Recording Checklist
 
-- Keep the finished video under 3 minutes.
-- Show the production URL and tools actually discovered by the client.
-- Keep the full legacy-to-adapted transition in one uninterrupted shot.
-- Use functional-needs language, not diagnosis presets or medical claims.
-- Explicitly call the simulator illustrative, keep Dyslexia and Concentration difficulty out of the hero, and do not imply disability reproduction or compliance proof.
-- Show that the first miss and second success come from actual coordinate hit testing, with no target-specific failure or nearest-control retargeting.
-- Show one human slot selection and one delegated confirmation.
-- Do not imply a real healthcare integration or appointment change.
-- Upload the final video publicly and add its link to Devpost manually.
+- Keep the final video under three minutes.
+- Show the production URL and tools actually discovered by the supported client.
+- Use the exact vague functional-needs prompt and verify it selects start_interface_calibration, not configure_accessibility.
+- Separately demonstrate that “make the text 175%” still selects configure_accessibility.
+- Show only one WebMCP calibration call; all practice attempts happen locally.
+- Keep the Parkinson’s simulator active through practice and the real appointment selection.
+- Show a genuine miss from DOM hit testing and no nearest-control retargeting.
+- Show explicit comfort approval, no preselected time, one manual time choice, delegated confirmation, and Undo.
+- State that remembered preferences are optional, local, bounded, and diagnosis-free.
+- Keep Dyslexia and Concentration difficulty out of the hero.
+- Do not imply a real healthcare integration, disability reproduction, diagnosis, disabled-user testing, or accessibility certification.
+- Upload the video publicly and add the link to Devpost manually.

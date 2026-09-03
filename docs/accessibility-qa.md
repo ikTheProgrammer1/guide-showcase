@@ -1,70 +1,67 @@
-# Guide Accessibility QA
+# Guide accessibility and safety QA
 
-Verify both the dense legacy interface and the structurally adapted interface at the production URL. Reset between layouts and do not use pointer input during the keyboard pass.
+Guide's central release path is the closed-loop pointer-precision calibration followed by the human-controlled rescheduling workflow. Verify both the initial dense presentation and the composed result. Reset between passes and keep the Parkinson's simulator active for the acquisition portion of the hero flow.
 
-## Automated Checks
+## Automated gate
 
-- Axe: default, simplified, high contrast, large controls, and 200% text.
-- Responsive: 1440 × 900 and 375 × 812.
-- No horizontal document overflow at 200% text.
-- `guide_to` preserves `document.activeElement`.
-- Reschedule choices expose a single tab stop and support Arrow keys, Home, and End.
-- The modal traps Tab/Shift+Tab, closes with Escape, announces review changes, and restores focus.
-- The simulator hierarchy expands only after deliberate click, Enter, Space, or touch input; category focus alone does not expand it.
-- Simulator activation leaves the ten static tools and `get_portal_state` unchanged.
-- The seeded Parkinson’s case derives miss/success from real `elementFromPoint(...).closest(...)` results.
+- Unit/component coverage verifies bounded manifests, region composition, component-override precedence, aggregate-only calibration telemetry, ordered size-then-spacing adjustment, approval, opt-in persistence, reset, stale confirmation rejection, Undo, WebMCP schemas, and simulator isolation.
+- Playwright covers desktop and mobile layouts, reduced motion, 200% text, axe scans, keyboard operation, the safe practice target, a genuine seeded miss, local progression, explicit approval, the opened chooser, human slot selection, delegated confirmation, immediate tool removal, and Undo.
+- The Parkinson's acquisition assertions use the browser's actual `elementFromPoint(...).closest(...)` results. They never search for a nearby control or special-case an appointment button.
+- WebMCP discovery is compared before, during, and after simulation and calibration. Neither private calibration aggregates nor simulator state appears in `get_portal_state`.
+- Screenshot capture records the initial portal, the genuine simulator miss, active calibration, the approved composed workflow, and Guide presence before confirmation.
 
-## Keyboard Pass
+## Keyboard pass
 
-- Tab through all primary navigation and header controls; every focus indicator remains visible.
-- Activate each portal section with Enter or Space and verify its accessible name in both layouts.
-- Open rescheduling, verify focus moves to the dialog title, then Tab once into the time choices.
-- Use Arrow Right/Down and Arrow Left/Up to move and select; use Home/End for the first/last time.
-- Tab to **Confirm new time**, activate it, verify focus moves to the success heading, then choose **Done** and confirm focus returns to the invoking control.
-- Run `guide_to` while a visible control is focused and confirm focus does not move.
-- Use Reset Demo and confirm speech stops, the dialog closes, and the legacy interface returns.
-- Open the simulator by hover, click, Enter, and Space; deliberately expand each category; close with Escape and verify focus returns to **Simulate a barrier**.
-- At 200% text and 375 px, verify the panel, active explanation, disclaimer, and **Stop simulation** remain operable without horizontal page overflow.
-- With Parkinson’s active, verify keyboard and touch activate controls normally and Guide pointing never changes focus.
+- Tab through the header, primary navigation, **Personalize interface**, and portal actions. Confirm every focus indicator is visible and every control has a concise accessible name.
+- Open **Personalize interface** with Enter and Space. Choose a semantic region and adjust only the bounded controls exposed for that region.
+- Start pointer calibration manually. Verify focus moves to its heading and that Tab reaches the safe **Practice appointment** target, size controls, spacing controls, Reset, and Stop.
+- Activate the practice target with the keyboard. Confirm it counts as a safe success and never triggers a portal action.
+- Complete several attempts, reach the comfort review, and verify approval is unavailable until the success thresholds are met.
+- Toggle **Remember these preferences on Northstar** using the keyboard and confirm persistence occurs only after explicit approval.
+- Approve with Enter. Verify the rescheduling chooser opens locally with no selected time and focus moves to the dialog heading.
+- Tab once into the radiogroup. Use Arrow keys and Home/End, then verify the human choice is preserved in the review.
+- Use **Back** to revise the choice. Confirm only one radio receives a tab stop.
+- After an explicitly delegated Guide confirmation, verify focus moves to the success heading. Activate **Undo** and confirm the original appointment is restored.
+- Press Escape in the personalizer or calibration and verify focus returns to **Personalize interface**.
+- Run `guide_to` while another control is focused and confirm neither keyboard nor screen-reader focus moves.
+- With Parkinson's active, confirm keyboard activation bypasses pointer displacement as intended.
 
-## VoiceOver Pass (macOS)
+## VoiceOver pass on macOS
 
-- Start VoiceOver and navigate landmarks, headings, Portal sections, Guide status, and the main content region.
-- Verify every primary navigation item and manual accessibility control has a concise accessible name and state.
-- In both layouts, verify the upcoming appointment exposes provider, date, time, status, and its reschedule control.
-- Open the dialog and verify its title, current appointment, available-time radiogroup, checked state, review comparison, and confirmation control.
-- Confirm the appointment and verify the success status is announced before dismissing it.
-- Invoke `guide_to` and verify the polite Guide announcement does not move the VoiceOver cursor or keyboard focus.
-- With read-aloud enabled, confirm webpage speech is understandable and bounded; `spokenByPage` remains only an informational result signal.
-- Navigate the simulator trigger, category disclosure buttons, native simulation buttons, active label, explanation, disclaimer, and Stop control. Confirm start/stop announcements are polite and do not interrupt the current cursor position.
-- Verify Dyslexia and Concentration difficulty are announced as illustrative simulations; do not use either as evidence of a real disability experience.
+- Navigate the banner, header, primary navigation, Guide status, main landmark, and **Personalize interface** control in the initial and composed layouts.
+- Verify each semantic-region option exposes its name and selected state. Confirm target-size and spacing controls announce their current values without exposing CSS or DOM terminology.
+- In calibration, verify the dialog name, concise instructions, progress, safe practice target, adjustment controls, optional Remember checkbox, comfort question, Reset, and Stop are announced.
+- Confirm progress and phase changes use polite announcements and do not move the VoiceOver cursor unexpectedly.
+- After approval, verify the appointment dialog announces its title, current appointment, three-option radiogroup, selected time, review comparison, Back, and explicit confirmation control.
+- Confirm Guide pointing is announced politely while keyboard and VoiceOver focus remain on the person's current control.
+- Verify success and Undo are announced and remain operable.
+- Navigate the simulator disclosure hierarchy, selected simulation state, active explanation, disclaimer, and Stop control. Confirm the simulator remains a separately framed demonstration aid.
 
-## Simulator Boundary
+## Responsive and motion checks
 
-The simulator is a demonstration aid for isolated barriers. Guide/WebMCP is the product. These effects do not reproduce a person’s disability, replace testing with disabled people, or establish accessibility compliance. The simulator is excluded from WebMCP and remains separate from portal preferences, revisions, activity, and human overrides.
+- At 375 x 812 and 200% text, verify the simulator panel, personalizer, calibration, chooser, review, success, and Undo remain usable without document-level horizontal overflow.
+- On coarse pointer/touch, verify the simulator never displaces input.
+- Under reduced motion, verify continuous tremor and cycling effects become restrained static effects while focus and announcements remain unchanged.
+- Confirm simulator controls, the skip link, Guide pointer, and Guide bubble remain crisp and outside all simulation filters.
 
-## Release Record
+## Privacy and product boundary
 
-- Date: September 3, 2026
-- Production build/commit: `f7ba299`
-- Browser/app version: ChatGPT/Codex desktop built-in browser `26.901.20858`; macOS `15.7.4`; production WebMCP capability
-- Legacy keyboard: **Pass** — all portal navigation names were exposed; Enter opened Appointments; the dialog used title → one radio tab stop → confirmation → success heading → Done; focus returned to **Reschedule appointment**.
-- Adapted keyboard: **Pass** — the same flow passed with 150% text, stronger contrast, simplified density, larger controls, increased spacing, interactive emphasis, and color-independent status.
-- Legacy VoiceOver: **Pass** — live VoiceOver and the browser accessibility tree exposed the portal landmarks, Guide status, appointment summary, dialog title, current time, three-option radiogroup, review, confirmation, and success status.
-- Adapted VoiceOver: **Pass** — the adapted appointment and all eight manual preference names/states were exposed; the complete dialog flow and success status remained available.
-- Guide focus: **Pass** — with VoiceOver running, `guide_to` exposed its polite page announcement while keyboard focus stayed on the same reschedule control. The overlay remained non-interactive and non-focusable.
-- Speech: **Pass** — production SpeechSynthesis reached `onend` for the read-aloud cases; automated coverage separately verifies unsupported, error, abort, previous-speech cancellation, and the 25-second timeout paths. `spokenByPage` was treated only as an informational signal.
-- Issues found/fixed: the production pass found and fixed the missing Home reschedule semantic target (`165bbd2`) and moved the close control later in dialog focus order so one Tab from the title reaches the radio group (`f7ba299`). No remaining blocking issue was observed. VoiceOver was stopped after the pass.
+- Pointer events are reduced immediately to non-identifying counts and displacement magnitude buckets; raw coordinates are never stored.
+- Approval stores only functional target-size, spacing, labeling, and safety preferences. It never stores a diagnosis, simulator state, miss history, or raw measurements.
+- Persistence is session-only unless the person explicitly selects **Remember these preferences on Northstar**. That opt-in stores the approved bounded profile locally; Reset Demo removes it.
+- Calibration never reads simulator state and diagnosis terms never select a template.
+- The simulator is a demonstration aid for isolated barriers. It does not reproduce anyone's disability, replace testing with disabled people, or establish accessibility compliance.
+- Guide and WebMCP remain the product. The browser is offered bounded semantic intents only; no arbitrary CSS, selectors, HTML, coordinates, or DOM manipulation are exposed.
 
-The VoiceOver pass used live VoiceOver navigation plus observable accessibility-tree and focus state. It did not record or score the synthesized audio waveform.
+## Release record
 
-## Integrated Simulator Addendum
+Record the final commit, production URL, automated totals, desktop-app build, keyboard result, VoiceOver result, production discovery result, and hero-flow result here only after each check has actually run. The prior release record is historical and does not establish that this calibration-centered revision passed.
 
 - Date: September 3, 2026
-- Automated gate: **Pass** — 31 unit/component tests and 41 desktop/mobile Playwright cases passed; one coarse-pointer duplicate of the fine-pointer-only Parkinson’s acquisition case was intentionally skipped. Axe reported no serious or critical simulator-control violations.
-- Simulator keyboard: **Pass** — focus alone left categories collapsed; Enter and Space expanded/collapsed them deliberately; Escape closed the panel and restored focus to **Simulate a barrier**.
-- Responsive/touch: **Pass** — the panel and Stop control remained operable at 375 × 812 and 200% text without document-level horizontal overflow. Touch activation bypassed pointer displacement as designed.
-- Parkinson’s acquisition: **Pass** — at the seeded phase, the compact legacy control’s physical and displaced coordinates resolved to different elements and produced a visible miss. After the existing WebMCP accessibility tool created large separated controls, both coordinates resolved to the same adapted control and activation succeeded. The full manual-selection and delegated-confirmation flow then passed with the simulation still active.
-- Guide and WebMCP isolation: **Pass** — Guide remained crisp and focus-safe; simulator activation did not alter the ten static tools, dynamic confirmation lifecycle, portal state, accessibility preferences, revisions, activity, or human overrides.
-- VoiceOver/native accessibility: **Pass** — with macOS VoiceOver enabled, the native browser accessibility tree exposed the collapsed/expanded trigger, four category disclosures, selected simulation state, **Illustrative simulation: Parkinson’s**, functional explanation, exact disclaimer, polite start announcement, and **Stop simulation**. The adapted dialog exposed its title, current and new times, radiogroup, confirmation, and focused success heading.
-- Boundary: these results verify implementation behavior only. They do not reproduce disability experience, replace disabled-user testing, or establish accessibility compliance.
+- Check/build: **Pass** — ESLint, 8 Vitest files with 48 tests, TypeScript, and the production Vite build completed successfully.
+- Playwright/axe: **Pass** — 47 desktop/mobile cases passed; the one skipped case is the intentional coarse-pointer duplicate of the desktop-only displaced-pointer acquisition test. Axe found no serious or critical issues in the covered states.
+- Keyboard: **Pass** — the local built-in-browser pass covered initial navigation names, the bounded personalizer, the calibration focus loop, safe practice, comfort review, local chooser opening, a single radiogroup tab stop, End-key selection, Back, confirmation, focused success, and Undo. This pass found and fixed a focus-loop defect caused by the intentionally untabbable neighboring practice control.
+- VoiceOver: **Pass with stated scope** — macOS VoiceOver was enabled during the local pass. The browser accessibility tree exposed the initial portal, semantic regions, calibration instructions/progress/adjustments, Remember checkbox, chooser radiogroup, current/new review, confirmation, focused success, and Undo. The pass did not record or score VoiceOver audio output.
+- Production WebMCP discovery: Pending deployment
+- Production hero flow: Pending deployment
+- Natural-language routing matrix: Pending production rerun; the earlier P0 20/20 result does not prove the revised calibration routing.

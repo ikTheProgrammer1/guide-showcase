@@ -2,75 +2,105 @@
 
 ## Tagline
 
-What if websites did not have one interface for everyone?
+A website that calibrates with the person, then composes itself around approved functional preferences.
 
 ## Inspiration
 
-Essential websites often force the same inherited interface on every person: tiny text, dense tables, weak hierarchy, unfamiliar abbreviations, and status colors that assume everyone sees them the same way. Accessibility is commonly treated as a fixed overlay or a set of diagnosis presets. AI offers instructions in a separate chat or completes work invisibly.
+Essential websites often present one inherited interface to everyone: compact controls, dense information, unfamiliar terminology, and status colors that assume people perceive and operate them in the same way. Accessibility is then reduced to a fixed overlay or a diagnosis preset. AI may offer instructions in a separate chat or complete work invisibly.
 
-Guide explores another model. A website can expose semantic ways to adapt itself around a person’s functional needs, then let an agent remain visibly present to show, explain, guide, collaborate, and act.
+Guide explores a different relationship. A website can expose bounded semantic adaptation through WebMCP. An agent can identify the right calibration family from a functional need, while the webpage and person determine what actually feels comfortable. The resulting interface is composed from approved preferences—not from a diagnosis.
 
 ## What It Does
 
-The demonstration begins inside **Northstar Health**, a fictional institutional patient portal that feels familiar for the wrong reasons. It is dense and dated, but plausible and usable. A human-controlled illustrative simulator can make one isolated interaction barrier visible while Guide adapts the same page.
+The demonstration begins inside Northstar Health, a fictional institutional patient portal that is dense and dated but still functional.
 
-In the primary story, the Parkinson’s pointer-precision demonstration produces an honest miss on a compact legacy control. The person explains that precise clicking is difficult and the page is overwhelming. ChatGPT calls Northstar’s `configure_accessibility` WebMCP capability. The same website visibly transforms: content is reprioritized, secondary information is reduced, spacing opens, and controls enlarge. With the simulator still active, the larger control succeeds under the same hit-testing algorithm.
+In the hero story, a human-controlled Parkinson’s pointer-precision simulation produces an honest miss on a compact appointment control. The person says:
 
-Guide ✦ then appears as the agent’s presence inside Northstar. It can point without clicking, explain without taking over, open a rescheduling workflow, observe a time the person selected manually, and complete the final confirmation only after the person delegates it.
+> My hand shakes and I keep missing buttons. Help me use this page.
 
-The complete continuum is:
+ChatGPT calls one semantic WebMCP tool: start_interface_calibration for pointer precision and the bounded reschedule goal. Northstar immediately opens a safe practice button and the WebMCP call returns.
 
-**Adapt → Show → Explain → Guide → Collaborate → Act**
+Every practice attempt after that happens locally. Northstar:
 
-Manual accessibility preferences remain available under Settings. There are no diagnosis modes, because people with the same condition can have different functional needs.
+1. reduces pointer input to non-identifying aggregates and never retains raw coordinates;
+2. adjusts target size first;
+3. adjusts control spacing second;
+4. requires several successful attempts;
+5. lets the person request larger, smaller, closer, or farther-apart controls;
+6. asks for explicit comfort approval.
 
-The simulator is not the accessibility solution and is never exposed through WebMCP. It does not accurately reproduce a disability, replace disabled-user research, diagnose a condition, or prove accessibility compliance. Guide and the site-supported WebMCP adaptation are the product.
+The practice target cannot navigate, select an appointment, or change account data. Calibration never reads simulator state and never treats it as a diagnosis.
+
+After approval, Northstar stores only a bounded functional profile. It composes compatible semantic regions independently—navigation, appointment summary, appointment actions, statuses, forms, and secondary content—inside one React component tree. There is no fixed legacy/adapted template swap.
+
+Because the calibration goal is rescheduling, Northstar locally opens a large, separated appointment chooser, but stops before selecting a time. The person chooses. Guide can confirm only after explicit delegation and a fresh appointment, slot, and workflow revision check. The result includes Back, review, and Undo.
+
+An optional **Remember these preferences on Northstar** choice writes only the versioned functional profile and bounded region overrides to local storage. It never stores Parkinson’s, simulator state, miss history, or raw measurements.
 
 ## How We Used WebMCP
 
-Northstar registers typed semantic tools with the secure-context `document.modelContext.registerTool()` API. ChatGPT supplies language understanding and voice input; the website owns its adaptation system, Guide cursor, semantic targets, and shared application state.
+Northstar uses the secure-context imperative document.modelContext.registerTool API. ChatGPT supplies language understanding; Northstar owns safe calibration, component semantics, shared state, rendering, and Guide’s visible presence.
 
-The tools expose meaning—`configure_accessibility`, `guide_to`, `open_reschedule`, and `confirm_reschedule`—instead of arbitrary selectors, screen coordinates, or mouse commands. Targets such as `appointments_navigation` and `reschedule_button` remain stable while their visual DOM positions change dramatically.
+The page exposes meaning rather than arbitrary automation:
 
-Consequential handlers route through the Guide presence controller:
+- start_interface_calibration selects one implemented functional calibration family and one bounded task goal;
+- configure_accessibility applies an explicit request such as “make text 175%”;
+- guide_to points and explains without activation;
+- open_reschedule opens a non-committing chooser;
+- confirm_reschedule appears only for a valid reviewed selection and unregisters immediately after commit.
 
-1. Resolve a stable semantic target to its current DOM element.
-2. Recalculate its position after layout or viewport changes.
-3. Move the distinct Guide pointer and explain the step.
-4. Preview consequences before committing.
-5. Re-read shared state so human input remains authoritative.
-6. Attribute mutations to “Guide” or “You.”
+No tool accepts arbitrary CSS, selectors, HTML, coordinates, generated DOM, or unrestricted scripts.
 
-`select_reschedule_slot` is statically discoverable but returns `chooser_closed` before the workflow opens. A valid selection dynamically registers `confirm_reschedule`, which unregisters immediately after a commit. Human interaction invalidates an obsolete in-progress agent sequence. A stale confirmation returns `selection_changed` rather than overwriting the person.
+A vague statement such as “my hand shakes and I keep missing buttons” routes to calibration because the person has not specified a final interface value. A precise request such as “make the text 175%” routes directly to configure_accessibility. A diagnosis word alone should not trigger any mutating tool.
+
+Consequential actions remain visible and human-controlled. Guide captures the appointment ID, slot ID, and reschedule revision, then re-reads all three immediately before commit. A changed human selection returns selection_changed rather than being overwritten.
+
+## Component-Level Personalization
+
+Each semantic component declares its supported bounded properties. The manifest resolver projects explicit accessibility settings and an approved functional profile into those regions, then applies human region overrides last.
+
+Safe properties include minimum target size, minimum spacing, row/column/step-by-step layout, information priority, secondary-content visibility, concise/descriptive/plain-language labels, icon-shape-text statuses, enhanced focus, review protection, and separate destructive actions.
+
+One unobtrusive **Personalize interface** control lets a person edit the same bounded component properties manually. AI is never required for access.
+
+## Integrated Demonstration Boundary
+
+The simulator is a supporting storytelling aid. Guide and the WebMCP-driven calibration-to-composition system are the product.
+
+The Parkinson’s option compares the actual actionable elements under physical and displaced pointer coordinates using document.elementFromPoint(...).closest(...). Activation succeeds only when both coordinates resolve to the same element. There is no nearest-control search, retargeting, replacement click, or appointment-specific failure branch. Keyboard, touch, WebMCP, and programmatic actions bypass the pointer displacement.
+
+Dyslexia and Concentration difficulty remain explicitly labeled illustrative and are not used as the hero. The simulator does not reproduce anyone’s disability, diagnose a condition, replace testing with disabled people, or prove accessibility compliance.
 
 ## How We Built It
 
 - React 19, TypeScript, and Vite
-- Zustand shared state machine
-- Motion for coordinated transformation and Guide presence
-- Direct imperative WebMCP API with `webmcp-types`
-- Separate session-only simulator store with deterministic CSS/SVG effects and real DOM coordinate hit testing
-- CSS Modules and bundled OFL fonts
+- Zustand stores with deliberate portal, calibration, and simulator boundaries
+- A bounded semantic adaptation manifest
+- Motion with reduced-motion handling
+- Direct imperative WebMCP with webmcp-types
+- SpeechSynthesis as an optional, bounded page signal
 - Vitest, React Testing Library, Playwright, and axe
 - Vercel production deployment
 
 ## Challenges
 
-The first challenge was making the before state look honestly institutional without making it inaccessible on purpose. Northstar uses semantic HTML, keyboard-operable controls, responsive overflow, and honest status text even while recreating the visual density and hierarchy of inherited enterprise software.
+The first challenge was rejecting the seductive but shallow idea of a “Parkinson’s mode.” The system had to start from a functional barrier, gather a person’s own interaction evidence safely, and wait for approval.
 
-The second challenge was making adaptation structural. The modern state is not a theme painted over the same dashboard: information hierarchy, navigation, status representation, content density, card structure, typography, and control sizing all change while semantic target IDs remain stable.
+The second was creating a true component-composition system without exposing arbitrary DOM control. Every semantic region needed declared capabilities, sanitization, deterministic precedence, and the same state path for manual and agent-supported changes.
 
-The third challenge was protecting human agency during visible asynchronous actions. Guide separates UI, navigation, and reschedule revisions, then re-reads the appointment, selected slot, and reschedule revision immediately before committing. Accessibility reflow can reposition the pointer without invalidating a valid choice, while stale selection instructions are rejected.
+The third was handling practice locally. Agent round trips would make the loop slow and brittle, so WebMCP opens the bounded experience once and the webpage owns the responsive adjustment cycle.
 
-The fourth challenge was making a pointer-precision demonstration honest. The motor simulation compares `document.elementFromPoint()` results at the physical and displaced coordinates, permits activation only when both resolve to the same actionable element, and never searches for or redirects to a nearby control. The code contains no appointment-specific failure branch.
+The fourth was protecting human agency across the real task. Calibration cannot select a time, no appointment can be automatically confirmed, destructive actions are separated, confirmation has a review, stale instructions fail, and the person can undo.
 
 ## What We Learned
 
-WebMCP can be more than an API surface for autonomous agents. It can become a negotiation layer between a person, an agent, and an interface. The page knows what it can safely change; the agent understands the person’s request; and the person stays inside the shared result.
+WebMCP can be more than an action API for autonomous agents. It can be a negotiation boundary: the agent understands language, the site declares what can safely change, local interaction finds an appropriate value, and the person approves the result.
+
+The design question is no longer “which accessible template should replace the original?” It is “which semantic properties can this component safely compose, and who has final authority?” In Guide, the answer to the second question is always the person.
 
 ## What’s Next
 
-The pattern can extend beyond healthcare to government services, insurance, education, banking, and enterprise software. The long-term question is not which single accessible interface should replace every existing interface. It is how websites can safely expose semantic adaptation so interfaces can respond to people.
+The typed registry is ready for honest visual readability, color distinction, language, attention, and keyboard/switch calibration experiences. They are intentionally not shipped as shallow P0 demos. The pattern can extend to government services, education, banking, insurance, and other essential sites.
 
 ## Links
 
