@@ -45,7 +45,7 @@ export interface RescheduleSlot {
   time: string;
 }
 
-export type ReschedulePhase = 'idle' | 'choosing' | 'reviewing' | 'complete';
+export type ReschedulePhase = 'idle' | 'choosing' | 'reviewing' | 'complete' | 'undone';
 
 export interface RescheduleState {
   phase: ReschedulePhase;
@@ -73,7 +73,9 @@ export type SemanticTarget =
   | 'insurance_status'
   | 'patient_responsibility'
   | 'update_insurance_button'
-  | 'accessibility_controls';
+  | 'accessibility_controls'
+  | 'personalize_interface'
+  | 'calibration_practice_target';
 
 export type AgentStatus =
   | 'hidden'

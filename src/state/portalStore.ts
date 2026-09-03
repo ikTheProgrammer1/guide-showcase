@@ -1,4 +1,11 @@
 import { create } from 'zustand';
+import { clearRememberedPreferences, readRememberedPreferences, writeRememberedPreferences } from '../adaptation/persistence';
+import { sanitizeComponentAdaptation } from '../adaptation/manifest';
+import type {
+  ComponentAdaptation,
+  FunctionalProfile,
+  SemanticComponentId,
+} from '../adaptation/types';
 import {
   defaultAccessibility,
   originalAppointment,
@@ -17,7 +24,12 @@ import type {
   SemanticTarget,
 } from '../types';
 
-interface PortalStore {
+interface AppointmentUndo {
+  previous: Appointment;
+  changed: Appointment;
+}
+
+export interface PortalStore {
   currentSection: PortalSection;
   appointment: Appointment;
   reschedule: RescheduleState;
@@ -26,21 +38,35 @@ interface PortalStore {
   activityLog: ActivityEvent[];
   recentHumanOverrides: HumanOverride[];
   pendingAction: PendingAction | null;
+  functionalProfile: FunctionalProfile | null;
+  componentOverrides: Partial<Record<SemanticComponentId, ComponentAdaptation>>;
+  rememberPreferences: boolean;
+  manifestRevision: number;
   uiRevision: number;
   navigationRevision: number;
   rescheduleRevision: number;
   insuranceUpdateOpen: boolean;
   insuranceUpdateSaved: boolean;
+  appointmentUndo: AppointmentUndo | null;
   openSection: (section: PortalSection, actor: Actor) => void;
   setAccessibility: (patch: Partial<AccessibilitySettings>, actor: Actor) => void;
   openReschedule: (actor: Actor) => void;
   closeReschedule: (actor: Actor) => void;
   selectRescheduleSlot: (slotId: string, actor: Actor) => boolean;
   confirmReschedule: (slotId: string, actor: Actor) => boolean;
+  undoReschedule: (actor: Actor) => boolean;
+  applyFunctionalProfile: (profile: FunctionalProfile, actor: Actor, remember: boolean) => void;
+  setComponentAdaptation: (
+    component: SemanticComponentId,
+    patch: ComponentAdaptation,
+    actor: Actor,
+  ) => void;
+  resetComponentAdaptation: (component: SemanticComponentId, actor: Actor) => void;
   openInsuranceUpdate: (actor: Actor) => void;
   closeInsuranceUpdate: (actor: Actor) => void;
   saveInsuranceUpdate: (actor: Actor) => void;
   setAgentPresence: (patch: Partial<AgentPresenceState>) => void;
+  recordActivity: (actor: Actor, type: string, message: string) => void;
   resetDemo: () => void;
 }
 
@@ -58,6 +84,8 @@ const initialReschedule: RescheduleState = {
   dialogOpen: false,
   selectedSlotId: null,
 };
+
+const rememberedPreferences = readRememberedPreferences();
 
 let eventSequence = 0;
 
@@ -89,11 +117,16 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
   activityLog: [],
   recentHumanOverrides: [],
   pendingAction: null,
+  functionalProfile: rememberedPreferences?.profile ?? null,
+  componentOverrides: rememberedPreferences?.componentOverrides ?? {},
+  rememberPreferences: Boolean(rememberedPreferences),
+  manifestRevision: rememberedPreferences ? 1 : 0,
   uiRevision: 0,
   navigationRevision: 0,
   rescheduleRevision: 0,
   insuranceUpdateOpen: false,
   insuranceUpdateSaved: false,
+  appointmentUndo: null,
 
   openSection: (section, actor) => {
     if (get().currentSection === section) return;
@@ -143,6 +176,7 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
       currentSection: 'appointments',
       reschedule: { phase: 'choosing', dialogOpen: true, selectedSlotId: null },
       pendingAction: null,
+      appointmentUndo: null,
       uiRevision: state.uiRevision + 1,
       navigationRevision:
         state.currentSection === 'appointments' ? state.navigationRevision : state.navigationRevision + 1,
@@ -195,27 +229,152 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
     const slot = rescheduleSlots.find((candidate) => candidate.id === slotId);
     if (!slot || state.reschedule.selectedSlotId !== slotId || !state.reschedule.dialogOpen) return false;
 
-    set((current) => ({
-      appointment: {
+    set((current) => {
+      const changedAppointment = {
         ...current.appointment,
         date: slot.date,
         dateLabel: slot.dateLabel,
         time: slot.time,
-      },
-      reschedule: { phase: 'complete', dialogOpen: true, selectedSlotId: slotId },
+      };
+      return {
+        appointment: changedAppointment,
+        appointmentUndo: { previous: { ...current.appointment }, changed: changedAppointment },
+        reschedule: { phase: 'complete', dialogOpen: true, selectedSlotId: slotId },
+        pendingAction: null,
+        uiRevision: current.uiRevision + 1,
+        rescheduleRevision: current.rescheduleRevision + 1,
+        activityLog: appendEvent(
+          current.activityLog,
+          makeEvent(
+            actor,
+            'reschedule_confirmed',
+            `${actor === 'guide' ? 'Guide confirmed' : 'You confirmed'} the appointment change to ${slot.dateLabel} at ${slot.time}`,
+          ),
+        ),
+      };
+    });
+    return true;
+  },
+
+  undoReschedule: (actor) => {
+    const state = get();
+    const undo = state.appointmentUndo;
+    if (!undo || state.reschedule.phase !== 'complete') return false;
+    if (
+      state.appointment.date !== undo.changed.date ||
+      state.appointment.time !== undo.changed.time
+    ) return false;
+
+    set((current) => ({
+      appointment: { ...undo.previous },
+      appointmentUndo: null,
+      reschedule: { phase: 'undone', dialogOpen: true, selectedSlotId: null },
       pendingAction: null,
       uiRevision: current.uiRevision + 1,
       rescheduleRevision: current.rescheduleRevision + 1,
       activityLog: appendEvent(
         current.activityLog,
-        makeEvent(
-          actor,
-          'reschedule_confirmed',
-          `${actor === 'guide' ? 'Guide confirmed' : 'You confirmed'} the appointment change to ${slot.dateLabel} at ${slot.time}`,
-        ),
+        makeEvent(actor, 'reschedule_undone', `${actor === 'guide' ? 'Guide restored' : 'You restored'} the previous appointment time`),
       ),
     }));
     return true;
+  },
+
+  applyFunctionalProfile: (profile, actor, remember) => {
+    set((state) => ({
+      functionalProfile: profile,
+      rememberPreferences: remember,
+      manifestRevision: state.manifestRevision + 1,
+      uiRevision: state.uiRevision + 1,
+      recentHumanOverrides:
+        actor === 'you'
+          ? [
+              ...state.recentHumanOverrides,
+              { field: 'functionalProfile.input.minimumTargetSize', value: profile.input.minimumTargetSize, timestamp: Date.now() },
+              { field: 'functionalProfile.input.minimumControlGap', value: profile.input.minimumControlGap, timestamp: Date.now() },
+            ].slice(-8)
+          : state.recentHumanOverrides,
+      activityLog: appendEvent(
+        state.activityLog,
+        makeEvent(
+          actor,
+          'profile_approved',
+          `${actor === 'guide' ? 'Guide applied' : 'You approved'} target size ${profile.input.minimumTargetSize}px and spacing ${profile.input.minimumControlGap}px`,
+        ),
+      ),
+    }));
+    const current = get();
+    if (remember) {
+      writeRememberedPreferences({
+        version: 1,
+        profile: current.functionalProfile!,
+        componentOverrides: current.componentOverrides,
+      });
+    } else {
+      clearRememberedPreferences();
+    }
+  },
+
+  setComponentAdaptation: (component, patch, actor) => {
+    const sanitized = sanitizeComponentAdaptation(component, patch);
+    const previous = get().componentOverrides[component] ?? {};
+    const changed = Object.entries(sanitized).filter(
+      ([key, value]) => previous[key as keyof ComponentAdaptation] !== value,
+    );
+    if (changed.length === 0) return;
+
+    set((state) => ({
+      componentOverrides: {
+        ...state.componentOverrides,
+        [component]: { ...previous, ...sanitized },
+      },
+      manifestRevision: state.manifestRevision + 1,
+      uiRevision: state.uiRevision + 1,
+      recentHumanOverrides:
+        actor === 'you'
+          ? [
+              ...state.recentHumanOverrides,
+              ...changed.map(([field, value]) => ({
+                field: `componentOverrides.${component}.${field}`,
+                value: value as string | number | boolean,
+                timestamp: Date.now(),
+              })),
+            ].slice(-8)
+          : state.recentHumanOverrides,
+      activityLog: appendEvent(
+        state.activityLog,
+        makeEvent(actor, 'component_personalized', `${actor === 'guide' ? 'Guide changed' : 'You changed'} ${component.replaceAll('_', ' ')}`),
+      ),
+    }));
+    const current = get();
+    if (current.rememberPreferences && current.functionalProfile) {
+      writeRememberedPreferences({
+        version: 1,
+        profile: current.functionalProfile,
+        componentOverrides: current.componentOverrides,
+      });
+    }
+  },
+
+  resetComponentAdaptation: (component, actor) => {
+    if (!get().componentOverrides[component]) return;
+    set((state) => {
+      const next = { ...state.componentOverrides };
+      delete next[component];
+      return {
+        componentOverrides: next,
+        manifestRevision: state.manifestRevision + 1,
+        uiRevision: state.uiRevision + 1,
+        recentHumanOverrides:
+          actor === 'you'
+            ? [...state.recentHumanOverrides, { field: `componentOverrides.${component}`, value: 'reset', timestamp: Date.now() }].slice(-8)
+            : state.recentHumanOverrides,
+        activityLog: appendEvent(
+          state.activityLog,
+          makeEvent(actor, 'component_personalized', `${actor === 'guide' ? 'Guide reset' : 'You reset'} ${component.replaceAll('_', ' ')}`),
+        ),
+      };
+    });
   },
 
   openInsuranceUpdate: (actor) => {
@@ -258,8 +417,13 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
     set((state) => ({ agentPresence: { ...state.agentPresence, ...patch } }));
   },
 
+  recordActivity: (actor, type, message) => {
+    set((state) => ({ activityLog: appendEvent(state.activityLog, makeEvent(actor, type, message)) }));
+  },
+
   resetDemo: () => {
     eventSequence = 0;
+    clearRememberedPreferences();
     set((state) => ({
       currentSection: 'home',
       appointment: { ...originalAppointment },
@@ -269,11 +433,16 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
       activityLog: [],
       recentHumanOverrides: [],
       pendingAction: null,
+      functionalProfile: null,
+      componentOverrides: {},
+      rememberPreferences: false,
+      manifestRevision: state.manifestRevision + 1,
       uiRevision: state.uiRevision + 1,
       navigationRevision: state.navigationRevision + 1,
       rescheduleRevision: state.rescheduleRevision + 1,
       insuranceUpdateOpen: false,
       insuranceUpdateSaved: false,
+      appointmentUndo: null,
     }));
   },
 }));

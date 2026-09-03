@@ -32,6 +32,8 @@ export const semanticTargetMetadata: Record<
   patient_responsibility: { title: 'Patient responsibility', description: 'The patient portion of the fictional bill.' },
   update_insurance_button: { title: 'Update insurance', description: 'The control that opens the simulated insurance update.' },
   accessibility_controls: { title: 'Accessibility preferences', description: 'The manual controls for portal presentation preferences.' },
+  personalize_interface: { title: 'Personalize interface', description: 'The control that opens bounded component personalization and safe calibration.' },
+  calibration_practice_target: { title: 'Calibration practice target', description: 'The safe non-operational control used during pointer precision calibration.' },
 };
 
 export const semanticTargets = Object.keys(semanticTargetMetadata) as SemanticTarget[];
