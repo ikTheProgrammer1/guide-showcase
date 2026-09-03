@@ -13,7 +13,7 @@ Guide is an OpenAI WebMCP Challenge project exploring a middle ground between ch
 ## Live Demo
 
 - Production: [https://guide-webmcp.vercel.app](https://guide-webmcp.vercel.app)
-- Source: [github.com/ikTheProgrammer1/guide-webmcp](https://github.com/ikTheProgrammer1/guide-webmcp)
+- Source: [github.com/ikTheProgrammer1/guide-showcase](https://github.com/ikTheProgrammer1/guide-showcase)
 
 The portal contains only fictional administrative data. It does not connect to healthcare providers, upload files, or provide medical or financial advice.
 
