@@ -101,7 +101,7 @@
 
 .simulatorChrome {
   position: relative;
-  z-index: 100;
+  z-index: 50;
 }
 
 .demoLabel {
@@ -416,14 +416,18 @@
 
 .app[data-simulation='concentration-difficulty'] .quickCard:nth-child(2n),
 .app[data-simulation='concentration-difficulty'] .legacyStatusBox:nth-child(2n),
-.app[data-simulation='concentration-difficulty'] .secondarySection {
+.app[data-simulation='concentration-difficulty'] .secondarySection,
+.app[data-simulation='concentration-difficulty'] .unifiedStatusCard:nth-child(2n),
+.app[data-simulation='concentration-difficulty'] .unifiedSecondaryContent .unifiedPanel:nth-child(2n) {
   animation: concentration-pull 5.8s ease-in-out infinite alternate;
   transform-origin: center;
 }
 
 .app[data-simulation='concentration-difficulty'] .quickCard:nth-child(2n + 1),
 .app[data-simulation='concentration-difficulty'] .legacyStatusBox:nth-child(2n + 1),
-.app[data-simulation='concentration-difficulty'] .legacyColumns .legacyPanel {
+.app[data-simulation='concentration-difficulty'] .legacyColumns .legacyPanel,
+.app[data-simulation='concentration-difficulty'] .unifiedStatusCard:nth-child(2n + 1),
+.app[data-simulation='concentration-difficulty'] .unifiedSecondaryContent .unifiedPanel:nth-child(2n + 1) {
   animation: concentration-pull 7.2s 0.9s ease-in-out infinite alternate-reverse;
   transform-origin: center;
 }
@@ -3210,7 +3214,9 @@
   .app[data-simulation='concentration-difficulty'] .quickCard,
   .app[data-simulation='concentration-difficulty'] .legacyStatusBox,
   .app[data-simulation='concentration-difficulty'] .secondarySection,
-  .app[data-simulation='concentration-difficulty'] .legacyColumns .legacyPanel {
+  .app[data-simulation='concentration-difficulty'] .legacyColumns .legacyPanel,
+  .app[data-simulation='concentration-difficulty'] .unifiedStatusCard,
+  .app[data-simulation='concentration-difficulty'] .unifiedSecondaryContent .unifiedPanel {
     animation: none !important;
     outline: 2px solid rgba(228, 139, 47, 0.32);
     outline-offset: 2px;
@@ -3218,7 +3224,8 @@
 
   .simulatorTrigger svg:last-child,
   .simulatorCategoryButton svg,
-  .missedTarget > span {
+  .missedTarget > span,
+  .practiceTarget {
     animation: none;
     transition: none;
   }

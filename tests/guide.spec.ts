@@ -109,7 +109,7 @@ async function stopBarrier(page: Page) {
   await expect(page.locator('[data-simulation="none"]')).toBeVisible();
 }
 
-test('points to the reschedule entry point from both home layouts without activating it', async ({ page }) => {
+test('points to the reschedule entry point before and after composition without activating it', async ({ page }) => {
   await installWebMCP(page);
   await page.goto('/');
   await expect(page.locator('[data-semantic-target="reschedule_button"]')).toBeVisible();
@@ -160,7 +160,8 @@ test('keeps slot selection static and removes dynamic confirmation immediately a
     appointmentId: 'appointment_robert_2026_09_10',
     slotId: 'slot_2026_09_14_1500',
   });
-  await expect(page.getByRole('radio', { name: /Monday, September 14/ })).toBeChecked();
+  await expect(page.getByRole('heading', { name: 'Review your appointment change' })).toBeVisible();
+  await expect(page.locator('[data-new="true"]')).toContainText('September 14, 2026');
   await expect.poll(() => toolNames(page)).toContain('confirm_reschedule');
 
   await callTool(page, 'confirm_reschedule', {
@@ -373,6 +374,7 @@ test('rejects a stale agent confirmation and commits the human selection only', 
     appointmentId: 'appointment_robert_2026_09_10',
     slotId: 'slot_2026_09_12_1130',
   });
+  await page.getByRole('button', { name: 'Back to times' }).click();
   await page.getByRole('radio', { name: /Monday, September 14/ }).click();
 
   const stale = (await callTool(page, 'confirm_reschedule', {
@@ -395,6 +397,13 @@ test('shows an honest fallback without WebMCP', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Appointments', exact: true })).toBeEnabled();
 });
 
+test('loads the appointments section from its direct route', async ({ page }) => {
+  await installWebMCP(page);
+  await page.goto('/appointments');
+  await expect(page.getByRole('heading', { name: 'Upcoming appointments' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Appointments', exact: true })).toHaveAttribute('aria-current', 'page');
+});
+
 test('supports a single-tab-stop reschedule radio group with arrow, Home, and End keys', async ({ page }) => {
   await installWebMCP(page);
   await page.goto('/');
@@ -414,28 +423,81 @@ test('supports a single-tab-stop reschedule radio group with arrow, Home, and En
   await expect(radios.nth(1)).toHaveAttribute('tabindex', '-1');
   await radios.nth(0).focus();
   await page.keyboard.press('End');
-  await expect(radios.nth(2)).toBeFocused();
-  await expect(radios.nth(2)).toBeChecked();
-  await expect(radios.nth(2)).toHaveAttribute('tabindex', '0');
+  await expect(page.getByRole('heading', { name: 'Review your appointment change' })).toBeFocused();
+  await expect(page.locator('[data-new="true"]')).toContainText('September 14, 2026');
 
+  await page.getByRole('button', { name: 'Back to times' }).click();
+  await expect(page.getByRole('heading', { name: 'Reschedule your appointment' })).toBeFocused();
+  const reopenedRadios = page.getByRole('radio');
+  await reopenedRadios.nth(0).focus();
   await page.keyboard.press('Home');
-  await expect(radios.nth(0)).toBeFocused();
-  await expect(radios.nth(0)).toBeChecked();
+  await expect(page.locator('[data-new="true"]')).toContainText('September 11, 2026');
+
+  await page.getByRole('button', { name: 'Back to times' }).click();
+  await expect(page.getByRole('heading', { name: 'Reschedule your appointment' })).toBeFocused();
+  await page.getByRole('radio').nth(0).focus();
   await page.keyboard.press('ArrowRight');
-  await expect(radios.nth(1)).toBeFocused();
-  await expect(radios.nth(1)).toBeChecked();
-  await page.keyboard.press('Tab');
-  await expect(page.getByRole('button', { name: 'Confirm new time' })).toBeFocused();
+  await expect(page.locator('[data-new="true"]')).toContainText('September 12, 2026');
+  await page.getByRole('button', { name: 'Confirm new time' }).focus();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Your new time is confirmed.' })).toBeFocused();
   await page.getByRole('button', { name: 'Done' }).click();
   await expect(page.getByRole('button', { name: 'Reschedule appointment' })).toBeFocused();
 });
 
-test('has no serious accessibility violations across legacy and adapted preferences', async ({ page }, testInfo) => {
+test('offers one bounded manual personalization entry point with region-specific controls', async ({ page }) => {
+  await installWebMCP(page);
+  await page.goto('/');
+
+  const trigger = page.getByRole('button', { name: 'Personalize interface' });
+  await trigger.click();
+  await expect(page.getByRole('heading', { name: 'Personalize the interface' })).toBeFocused();
+  await expect(page.getByRole('navigation', { name: 'Interface regions' }).getByRole('button')).toHaveCount(6);
+  await page.getByRole('button', { name: /Statuses/ }).click();
+  await expect(page.getByRole('group', { name: 'Status presentation' })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Minimum control size' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Icon, shape, and text' }).click();
+  await expect(page.locator('[data-adaptation-region="status_indicators"]')).toHaveAttribute('data-status-presentation', 'icon-shape-text');
+
+  const dialog = page.getByRole('dialog', { name: 'Personalize the interface' });
+  await expect(dialog.locator('input[type="text"], textarea, [contenteditable="true"]')).toHaveCount(0);
+  await expect(dialog).not.toContainText(/selector|CSS|HTML|coordinate|DOM manipulation/i);
+  await page.getByRole('button', { name: 'Close interface personalization' }).click();
+  await expect(trigger).toBeFocused();
+});
+
+test('supports keyboard-only local calibration and restores focus when stopped', async ({ page }) => {
+  await installWebMCP(page);
+  await page.goto('/');
+
+  const trigger = page.getByRole('button', { name: 'Personalize interface' });
+  await trigger.click();
+  await page.getByRole('button', { name: /Calibrate pointer precision/ }).click();
+  await expect(page.getByRole('heading', { name: 'Find a comfortable control size' })).toBeFocused();
+  await expect(page.getByRole('dialog', { name: 'Find a comfortable control size' }).getByRole('button', { name: 'Reset demo' })).toBeVisible();
+
+  const practice = page.getByRole('button', { name: 'Practice appointment' });
+  await practice.focus();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('dialog', { name: 'Find a comfortable control size' }).getByRole('button', { name: 'Reset demo' })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(practice).toBeFocused();
+  for (let attempt = 0; attempt < 6; attempt += 1) await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Does this feel comfortable?' })).toBeVisible();
+
+  await page.waitForTimeout(600);
+  const axe = await new AxeBuilder({ page }).include('[role="dialog"]').analyze();
+  expect(axe.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([]);
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Does this feel comfortable?' })).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+});
+
+test('has no serious accessibility violations across baseline and personalized preferences', async ({ page }, testInfo) => {
   await installWebMCP(page);
   const variants: Array<{ name: string; settings: Record<string, unknown> | null }> = [
-    { name: 'legacy', settings: null },
+    { name: 'baseline', settings: null },
     { name: 'simplified', settings: { density: 'simplified' } },
     { name: 'high-contrast', settings: { contrast: 'high', colorIndependentStatus: true } },
     { name: 'large-controls', settings: { controlSize: 'large' } },
@@ -445,6 +507,7 @@ test('has no serious accessibility violations across legacy and adapted preferen
   for (const variant of variants) {
     await page.goto('/');
     if (variant.settings) await callTool(page, 'configure_accessibility', variant.settings);
+    await page.waitForTimeout(350);
     const dimensions = await page.evaluate(() => ({ viewport: window.innerWidth, content: document.documentElement.scrollWidth }));
     expect(dimensions.content, `${variant.name} should not overflow horizontally`).toBe(dimensions.viewport);
     const results = await new AxeBuilder({ page }).analyze();
@@ -464,29 +527,28 @@ test('has no serious accessibility violations across legacy and adapted preferen
   await page.screenshot({ path: testInfo.outputPath('guide-adapted.png'), fullPage: true });
 });
 
-test('visibly transforms the same Northstar portal from legacy density to adapted clarity', async ({ page }) => {
+test('composes independent regions without replacing the semantic component tree', async ({ page }) => {
   await installWebMCP(page);
   await page.goto('/');
 
-  await expect(page.locator('[data-interface="legacy"]')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'PATIENT SUMMARY' })).toBeVisible();
-  await expect(page.getByText('PAYMENT DUE', { exact: true })).toBeVisible();
+  await expect(page.locator('[data-personalized="false"]')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Primary care visit' })).toBeVisible();
+  const appointmentControl = page.getByRole('button', { name: 'Reschedule appointment' });
+  await appointmentControl.evaluate((element) => { element.dataset.treeMarker = 'preserved'; });
 
   const result = (await callTool(page, 'configure_accessibility', {
-    textScale: 175,
-    contrast: 'high',
-    density: 'simplified',
     controlSize: 'large',
-    spacing: 'increased',
     colorIndependentStatus: true,
-    emphasizeInteractive: true,
   })) as { ok: boolean; accessibility: { colorIndependentStatus: boolean } };
 
   expect(result).toMatchObject({ ok: true, accessibility: { colorIndependentStatus: true } });
-  await expect(page.locator('[data-interface="adapted"]')).toBeVisible();
-  await expect(page.getByText('Interface adapted')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Good afternoon, Robert.' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'PATIENT SUMMARY' })).toHaveCount(0);
+  await expect(page.locator('[data-personalized="true"]')).toBeVisible();
+  await expect(page.getByText('Interface personalized')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Primary care visit' })).toBeVisible();
+  await expect(appointmentControl).toHaveAttribute('data-tree-marker', 'preserved');
+  await expect(page.locator('[data-adaptation-region="appointment_actions"]')).toHaveCSS('--region-target-size', '56px');
+  await expect(page.locator('[data-adaptation-region="status_indicators"]')).toHaveAttribute('data-status-presentation', 'icon-shape-text');
+  await expect(page.locator('[data-interface]')).toHaveCount(0);
 });
 
 test('exposes the exact deliberate simulator hierarchy with focus-safe dismissal', async ({ page }) => {
@@ -576,60 +638,89 @@ test('does not expose simulation state or alter WebMCP discovery', async ({ page
   const stateDuring = await callTool(page, 'get_portal_state', {});
 
   expect(namesDuring).toEqual(namesBefore);
-  expect(namesDuring).toHaveLength(10);
+  expect(namesDuring).toHaveLength(11);
   expect(namesDuring.every((name) => !name.includes('simulation'))).toBe(true);
   expect(stateDuring).toEqual(stateBefore);
   expect(JSON.stringify(stateDuring)).not.toContain('parkinsons');
 });
 
-test('derives a real Parkinson’s miss from hit testing, then succeeds on Guide-adapted controls', async ({ page }, testInfo) => {
+test('runs the complete Parkinson’s hero flow through calibration, human choice, Guide confirmation, and Undo', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === 'mobile-chromium', 'Fine-pointer acquisition is covered in the desktop project.');
   await installWebMCP(page);
   await page.goto('/');
   await selectBarrier(page, 'Mobility', 'Parkinson’s', 'parkinsons');
   await page.evaluate(() => { window.__guideSimulationTestElapsedMs = 495; });
 
-  const legacyButton = page.getByRole('button', { name: 'Reschedule appointment' });
-  const legacyBox = await legacyButton.boundingBox();
-  expect(legacyBox).not.toBeNull();
-  const legacyCenter = { x: legacyBox!.x + legacyBox!.width / 2, y: legacyBox!.y + legacyBox!.height / 2 };
-  const legacyHits = await page.evaluate(({ x, y }) => {
+  const baselineButton = page.getByRole('button', { name: 'Reschedule appointment' });
+  const baselineBox = await baselineButton.boundingBox();
+  expect(baselineBox).not.toBeNull();
+  const baselineCenter = { x: baselineBox!.x + baselineBox!.width / 2, y: baselineBox!.y + baselineBox!.height / 2 };
+  const baselineHits = await page.evaluate(({ x, y }) => {
     const actionable = 'button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[role="button"]:not([aria-disabled="true"]),[role="radio"]:not([aria-disabled="true"]),[role="link"]:not([aria-disabled="true"])';
     const physical = document.elementFromPoint(x, y)?.closest(actionable);
     const displaced = document.elementFromPoint(x - 0.7661712126857743, y + 16.24802106648383)?.closest(actionable);
     return { physical: physical?.textContent?.trim(), displaced: displaced?.textContent?.trim(), same: physical === displaced };
-  }, legacyCenter);
-  expect(legacyHits.physical).toBe('MODIFY APPT');
-  expect(legacyHits.same).toBe(false);
+  }, baselineCenter);
+  expect(baselineHits.physical).toBe('MODIFY APPT');
+  expect(baselineHits.same).toBe(false);
 
-  await page.mouse.click(legacyCenter.x, legacyCenter.y);
+  await page.mouse.click(baselineCenter.x, baselineCenter.y);
   await expect(page.getByText('Missed target')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'PATIENT SUMMARY' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Primary care visit' })).toBeVisible();
 
-  const adapted = await callTool(page, 'configure_accessibility', {
-    density: 'simplified',
-    controlSize: 'large',
-    spacing: 'increased',
-    emphasizeInteractive: true,
-  }) as { ok: boolean };
-  expect(adapted).toMatchObject({ ok: true });
+  const started = await callTool(page, 'start_interface_calibration', {
+    domain: 'pointer_precision',
+    goal: 'reschedule_appointment',
+  }) as { ok: boolean; localPractice: boolean; phase: string; profileApplied: boolean };
+  expect(started).toMatchObject({ ok: true, localPractice: true, phase: 'target-size', profileApplied: false });
+  await expect(page.getByRole('heading', { name: 'Find a comfortable control size' })).toBeFocused();
 
-  const adaptedButton = page.getByRole('button', { name: 'Change appointment' });
-  const adaptedBox = await adaptedButton.boundingBox();
-  expect(adaptedBox).not.toBeNull();
-  expect(adaptedBox!.height).toBeGreaterThan(legacyBox!.height * 1.7);
-  const adaptedCenter = { x: adaptedBox!.x + adaptedBox!.width / 2, y: adaptedBox!.y + adaptedBox!.height / 2 };
-  const adaptedSameHit = await page.evaluate(({ x, y }) => {
-    const actionable = 'button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[role="button"]:not([aria-disabled="true"]),[role="radio"]:not([aria-disabled="true"]),[role="link"]:not([aria-disabled="true"])';
-    const physical = document.elementFromPoint(x, y)?.closest(actionable);
-    const displaced = document.elementFromPoint(x - 0.7661712126857743, y + 16.24802106648383)?.closest(actionable);
-    return physical === displaced;
-  }, adaptedCenter);
-  expect(adaptedSameHit).toBe(true);
+  const practice = page.getByRole('button', { name: 'Practice appointment' });
+  let practiceBox = await practice.boundingBox();
+  expect(practiceBox).not.toBeNull();
+  await page.mouse.click(practiceBox!.x + practiceBox!.width / 2, practiceBox!.y + practiceBox!.height - 2);
+  await expect(page.getByText(/practice target increased to 44 pixels/i)).toBeVisible();
+  await expect(page.getByText('Missed target')).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath('parkinsons-calibration-miss.png'), fullPage: true });
 
-  await page.mouse.click(adaptedCenter.x, adaptedCenter.y);
-  await expect(page.getByRole('heading', { name: 'Upcoming appointments' })).toBeVisible();
-  await page.getByRole('button', { name: 'Reschedule appointment' }).click();
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    practiceBox = await practice.boundingBox();
+    await page.mouse.click(practiceBox!.x + practiceBox!.width / 2, practiceBox!.y + practiceBox!.height / 2);
+  }
+  await expect(page.getByText('Now test the spacing')).toBeVisible();
+
+  practiceBox = await practice.boundingBox();
+  await page.mouse.click(practiceBox!.x + practiceBox!.width / 2, practiceBox!.y + practiceBox!.height - 2);
+  await expect(page.getByText(/control gap increased to 16 pixels/i)).toBeVisible();
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    practiceBox = await practice.boundingBox();
+    await page.mouse.click(practiceBox!.x + practiceBox!.width / 2, practiceBox!.y + practiceBox!.height / 2);
+  }
+  await expect(page.getByRole('heading', { name: 'Does this feel comfortable?' })).toBeFocused();
+  await page.getByRole('checkbox', { name: /Remember these preferences/ }).focus();
+  await page.keyboard.press('Space');
+  await page.getByRole('button', { name: /This feels comfortable/ }).focus();
+  await page.keyboard.press('Enter');
+
+  await expect(page.getByRole('heading', { name: 'Reschedule your appointment' })).toBeVisible();
+  const composedState = await callTool(page, 'get_portal_state', {}) as {
+    state: {
+      appointment: { date: string };
+      reschedule: { phase: string; selectedSlotId: string | null };
+      personalization: { functionalProfile: { input: { minimumTargetSize: number; minimumControlGap: number } } };
+    };
+  };
+  expect(composedState.state).toMatchObject({
+    appointment: { date: '2026-09-10' },
+    reschedule: { phase: 'choosing', selectedSlotId: null },
+    personalization: { functionalProfile: { input: { minimumTargetSize: 44, minimumControlGap: 16 } } },
+  });
+  expect(JSON.stringify(composedState)).not.toMatch(/parkinson|simulation|missDistance|coordinates|aggregates/i);
+  await expect(page.locator('[data-adaptation-region="forms"]')).toHaveCSS('--region-target-size', '44px');
+  await expect(page.locator('[data-adaptation-region="forms"]')).toHaveCSS('--region-control-gap', '16px');
+  const firstSlotBox = await page.getByRole('radio').first().boundingBox();
+  expect(firstSlotBox!.height).toBeGreaterThanOrEqual(44);
+
   await page.getByRole('radio', { name: /Monday, September 14/ }).click();
   await expect.poll(() => toolNames(page)).toContain('confirm_reschedule');
   await callTool(page, 'confirm_reschedule', {
@@ -638,6 +729,9 @@ test('derives a real Parkinson’s miss from hit testing, then succeeds on Guide
   });
   await expect(page.getByRole('heading', { name: 'Your new time is confirmed.' })).toBeVisible();
   await expect.poll(() => toolNames(page)).not.toContain('confirm_reschedule');
+  await page.getByRole('button', { name: 'Undo change' }).click();
+  await expect(page.getByRole('heading', { name: 'Your previous time was restored.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Done' }).click();
   await stopBarrier(page);
 });
 
@@ -646,8 +740,16 @@ test('keeps Guide focus-safe and substitutes static effects for reduced motion',
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   await selectBarrier(page, 'Concentration', 'Concentration difficulty, illustrative simulation', 'concentration-difficulty');
-  await expect(page.locator('[class*="legacyStatusBox"]').nth(1)).toHaveCSS('animation-name', 'none');
+  await expect(page.locator('[class*="unifiedStatusCard"]').nth(1)).toHaveCSS('animation-name', 'none');
   await stopBarrier(page);
+
+  await page.getByRole('button', { name: 'Personalize interface' }).click();
+  await page.getByRole('button', { name: /Calibrate pointer precision/ }).click();
+  const reducedTransition = await page.getByRole('button', { name: 'Practice appointment' }).evaluate(
+    (element) => Number.parseFloat(getComputedStyle(element).transitionDuration),
+  );
+  expect(reducedTransition).toBeLessThanOrEqual(0.001);
+  await page.getByRole('button', { name: 'Stop calibration' }).click();
 
   await selectBarrier(page, 'Sight', 'Tunnel vision', 'tunnel-vision');
   await page.getByRole('button', { name: 'Reset demo' }).focus();
@@ -687,4 +789,11 @@ test('keeps simulator controls usable at 200% text and supports touch activation
   expect(dimensions.content).toBe(dimensions.viewport);
   await tapOrClick(page.getByRole('button', { name: 'Stop simulation' }));
   await expect(page.locator('[data-simulation="none"]')).toBeVisible();
+
+  await tapOrClick(page.getByRole('button', { name: 'Personalize interface' }));
+  await tapOrClick(page.getByRole('button', { name: /Calibrate pointer precision/ }));
+  await expect(page.getByRole('button', { name: 'Practice appointment' })).toBeVisible();
+  const calibrationDimensions = await page.evaluate(() => ({ viewport: window.innerWidth, content: document.documentElement.scrollWidth }));
+  expect(calibrationDimensions.content).toBe(calibrationDimensions.viewport);
+  await expect(page.getByRole('button', { name: 'Stop calibration' })).toBeVisible();
 });

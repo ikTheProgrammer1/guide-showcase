@@ -113,7 +113,8 @@ export function SimulationEffects() {
       if (!decision.blocked) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      if (showMiss(decision.point)) notifyCalibrationMiss(decision, event.clientX, event.clientY);
+      showMiss(decision.point);
+      notifyCalibrationMiss(decision, event.clientX, event.clientY);
     };
 
     const blockClick = (event: MouseEvent) => {

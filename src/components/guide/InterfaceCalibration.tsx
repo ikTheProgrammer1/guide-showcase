@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ArrowLeft, Check, Crosshair, Minus, Plus, RotateCcw, ShieldCheck, X } from 'lucide-react';
 import { useEffect, useRef, type MouseEvent, type PointerEvent } from 'react';
 import { useCalibrationStore } from '../../calibration/calibrationStore';
@@ -25,19 +25,55 @@ function distanceToRect(x: number, y: number, rect: DOMRect) {
   return Math.hypot(dx, dy);
 }
 
+function restorePersonalizeFocus() {
+  window.requestAnimationFrame(() => {
+    document.querySelector<HTMLElement>('[data-semantic-target="personalize_interface"]')?.focus();
+  });
+}
+
 export function InterfaceCalibration() {
   const calibration = useCalibrationStore();
+  const reduceMotion = useReducedMotion();
   const practiceRef = useSemanticTarget<HTMLButtonElement>('calibration_practice_target');
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const comfortTitleRef = useRef<HTMLHeadingElement>(null);
   const correctionCount = useRef(0);
   const hasEnteredTarget = useRef(false);
   const recordAttempt = calibration.recordAttempt;
+
+  const stopCalibration = () => {
+    calibration.stop('you');
+    restorePersonalizeFocus();
+  };
+
+  const resetExperience = () => {
+    resetDemoExperience();
+    restorePersonalizeFocus();
+  };
 
   useEffect(() => {
     if (!calibration.isOpen) return;
     const frame = window.requestAnimationFrame(() => titleRef.current?.focus());
     return () => window.cancelAnimationFrame(frame);
+  }, [calibration.isOpen]);
+
+  useEffect(() => {
+    if (calibration.phase !== 'comfort') return;
+    const frame = window.requestAnimationFrame(() => comfortTitleRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [calibration.phase]);
+
+  useEffect(() => {
+    if (!calibration.isOpen) return;
+    const onEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      useCalibrationStore.getState().stop('you');
+      restorePersonalizeFocus();
+    };
+    document.addEventListener('keydown', onEscape);
+    return () => document.removeEventListener('keydown', onEscape);
   }, [calibration.isOpen]);
 
   useEffect(() => {
@@ -99,11 +135,13 @@ export function InterfaceCalibration() {
   const handleKeys = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape') {
       event.preventDefault();
-      calibration.stop('you');
+      event.stopPropagation();
+      stopCalibration();
       return;
     }
     if (event.key !== 'Tab' || !dialogRef.current) return;
-    const controls = [...dialogRef.current.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), [tabindex="0"]')];
+    const controls = [...dialogRef.current.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), [tabindex="0"]')]
+      .filter((control) => control.tabIndex >= 0);
     if (controls.length === 0) return;
     const first = controls[0];
     const last = controls.at(-1)!;
@@ -128,9 +166,10 @@ export function InterfaceCalibration() {
         <motion.div
           className={styles.calibrationBackdrop}
           data-simulation-surface="true"
-          initial={{ opacity: 0 }}
+          initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          exit={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ duration: reduceMotion ? 0 : 0.2 }}
         >
           <motion.div
             ref={dialogRef}
@@ -139,9 +178,10 @@ export function InterfaceCalibration() {
             aria-modal="true"
             aria-labelledby="calibration-title"
             onKeyDown={handleKeys}
-            initial={{ opacity: 0, y: 22, scale: 0.985 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 22, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.99 }}
+            exit={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 12, scale: 0.99 }}
+            transition={{ duration: reduceMotion ? 0 : 0.24 }}
           >
             <header className={styles.calibrationHeader}>
               <div className={styles.calibrationIdentity}>
@@ -152,10 +192,10 @@ export function InterfaceCalibration() {
                 </div>
               </div>
               <div className={styles.calibrationHeaderActions}>
-                <button className={styles.resetCalibrationButton} onClick={resetDemoExperience}>
+                <button className={styles.resetCalibrationButton} onClick={resetExperience}>
                   <RotateCcw size={16} aria-hidden="true" /> Reset demo
                 </button>
-                <button className={styles.stopCalibrationButton} onClick={() => calibration.stop('you')}>
+                <button className={styles.stopCalibrationButton} onClick={stopCalibration}>
                   <X size={17} aria-hidden="true" /> Stop calibration
                 </button>
               </div>
@@ -173,7 +213,7 @@ export function InterfaceCalibration() {
               <div className={styles.comfortReview}>
                 <div className={styles.comfortSummary}>
                   <span className={styles.eyebrow}>Your current result</span>
-                  <h3>Does this feel comfortable?</h3>
+                  <h3 ref={comfortTitleRef} tabIndex={-1}>Does this feel comfortable?</h3>
                   <p>Only the approved control size and spacing will be applied. Practice measurements will be discarded.</p>
                   <div className={styles.measurementSummary}>
                     <span><strong>{calibration.targetSize}px</strong> minimum control size</span>

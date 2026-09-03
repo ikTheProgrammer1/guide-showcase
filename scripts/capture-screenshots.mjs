@@ -8,6 +8,38 @@ await mkdir(outputDirectory, { recursive: true });
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+const tremorOffset = { x: -0.7661712126857743, y: 16.24802106648383 };
+const actionableSelector = 'button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[role="button"]:not([aria-disabled="true"]),[role="radio"]:not([aria-disabled="true"]),[role="link"]:not([aria-disabled="true"])';
+
+async function clickHitTestPoint(locator, shouldResolveToSameControl) {
+  const point = await locator.evaluate((target, options) => {
+    const rect = target.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const candidates = [];
+
+    for (let inset = 1; inset < Math.max(2, Math.floor(rect.height)); inset += 1) {
+      candidates.push({ x: centerX, y: rect.bottom - inset });
+    }
+    for (let y = Math.ceil(rect.top + 1); y < Math.floor(rect.bottom - 1); y += 2) {
+      for (let x = Math.ceil(rect.left + 1); x < Math.floor(rect.right - 1); x += 3) {
+        candidates.push({ x, y });
+      }
+    }
+
+    return candidates.find(({ x, y }) => {
+      const physical = document.elementFromPoint(x, y)?.closest(options.actionableSelector);
+      const displaced = document
+        .elementFromPoint(x + options.tremorOffset.x, y + options.tremorOffset.y)
+        ?.closest(options.actionableSelector);
+      return physical === target && (physical === displaced) === options.shouldResolveToSameControl;
+    }) ?? null;
+  }, { actionableSelector, tremorOffset, shouldResolveToSameControl });
+
+  if (!point) {
+    throw new Error(`Could not find an honest ${shouldResolveToSameControl ? 'success' : 'miss'} point for the calibration target.`);
+  }
+  await page.mouse.click(point.x, point.y);
+}
 
 await page.addInitScript(() => {
   const tools = new Map();
@@ -42,34 +74,54 @@ await page.mouse.move(legacyBox.x + legacyBox.width / 2, legacyBox.y + legacyBox
 await page.mouse.click(legacyBox.x + legacyBox.width / 2, legacyBox.y + legacyBox.height / 2);
 await page.getByText('Missed target').waitFor();
 await page.screenshot({ path: new URL('guide-parkinsons.png', outputDirectory).pathname });
-await page.getByRole('button', { name: 'Stop simulation' }).click();
 
 await page.evaluate(async () => {
   const tools = window.__guideScreenshotTools;
-  const tool = tools.get('configure_accessibility');
+  const tool = tools.get('start_interface_calibration');
   await tool.execute(
     {
-      textScale: 150,
-      contrast: 'high',
-      density: 'simplified',
-      controlSize: 'large',
-      spacing: 'increased',
-      colorIndependentStatus: true,
-      emphasizeInteractive: true,
+      domain: 'pointer_precision',
+      goal: 'reschedule_appointment',
     },
     { signal: new AbortController().signal },
   );
 });
-await page.locator('[class*="agentPointer"]').waitFor({ state: 'detached', timeout: 7000 });
+await page.waitForTimeout(500);
+
+const practice = page.getByRole('button', { name: 'Practice appointment' });
+await clickHitTestPoint(practice, false);
+await page.getByText(/practice target increased to 44 pixels/i).waitFor();
+await page.waitForTimeout(100);
+await page.screenshot({ path: new URL('guide-calibration.png', outputDirectory).pathname });
+
+for (let attempt = 0; attempt < 3; attempt += 1) {
+  await clickHitTestPoint(practice, true);
+}
+await page.getByText('Now test the spacing').waitFor();
+
+await clickHitTestPoint(practice, false);
+await page.getByText(/control gap increased to 16 pixels/i).waitFor();
+for (let attempt = 0; attempt < 3; attempt += 1) {
+  await clickHitTestPoint(practice, true);
+}
+
+const approve = page.getByRole('button', { name: /This feels comfortable/ });
+await approve.focus();
+await approve.dispatchEvent('click', { detail: 0 });
+await page.getByRole('heading', { name: 'Reschedule your appointment' }).waitFor();
+await page.waitForTimeout(700);
 await page.screenshot({ path: new URL('guide-adapted.png', outputDirectory).pathname });
 
+const selectedTime = page.getByRole('radio', { name: /Monday, September 14/ });
+await selectedTime.focus();
+await page.keyboard.press('Enter');
 await page.evaluate(async () => {
   const tools = window.__guideScreenshotTools;
   const tool = tools.get('guide_to');
   await tool.execute(
     {
-      target: 'upcoming_appointment',
-      message: 'Your next appointment is here. I can help you review it without changing anything.',
+      target: 'confirm_reschedule_button',
+      message: 'Your selected time is ready for review. I will not confirm it until you ask.',
     },
     { signal: new AbortController().signal },
   );

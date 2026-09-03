@@ -153,7 +153,7 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
       name: 'configure_accessibility',
       title: 'Adapt the portal',
       description:
-        'Visibly transform the shared Northstar interface around functional visual needs. Compose any requested settings in one call; the person can change every setting afterward.',
+        'Apply one or more explicitly requested Northstar settings, such as “make text 175%” or “use stronger contrast.” Preserve omitted settings. For vague pointer-acquisition difficulty without requested values, use start_interface_calibration instead.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -243,7 +243,7 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
       name: 'start_interface_calibration',
       title: 'Start interface calibration',
       description:
-        'Open a safe, local pointer-precision calibration when the person describes difficulty acquiring controls, such as shaking hands or repeatedly missing buttons. This selects a functional calibration family, never a diagnosis or disability template. The webpage handles practice attempts locally and never automatically confirms an appointment.',
+        'Open a safe, local pointer-precision calibration when the person describes functional difficulty acquiring controls, such as shaking hands or repeatedly missing buttons, without specifying a target size. Do not call from a diagnosis word alone. This selects a calibration family, never a diagnosis or disability template. The webpage handles practice attempts locally and never automatically confirms an appointment.',
       inputSchema: {
         type: 'object',
         properties: {

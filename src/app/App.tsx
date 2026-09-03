@@ -20,6 +20,7 @@ import { BarrierSimulator } from '../simulation/BarrierSimulator';
 import { SimulationEffects } from '../simulation/SimulationEffects';
 import { useSimulationStore } from '../simulation/simulationStore';
 import { useWebMCPTools } from '../webmcp/useWebMCPTools';
+import { portalSections, type PortalSection } from '../types';
 import styles from './App.module.css';
 
 const sectionDescriptions = {
@@ -58,6 +59,13 @@ export function App() {
   const personalized = hasPersonalization(accessibility, functionalProfile, componentOverrides);
 
   useEffect(() => () => cancelGuidePresence(), []);
+
+  useEffect(() => {
+    const requestedSection = window.location.pathname.split('/').filter(Boolean)[0] as PortalSection | undefined;
+    if (requestedSection && portalSections.includes(requestedSection)) {
+      usePortalStore.getState().openSection(requestedSection, 'you');
+    }
+  }, []);
 
   return (
     <div

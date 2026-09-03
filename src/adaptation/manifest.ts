@@ -169,6 +169,7 @@ export function resolveAdaptationManifest(
       minimumTargetSize: input.minimumTargetSize,
       minimumControlGap: input.minimumControlGap,
       layout: 'column',
+      labelStyle: 'descriptive',
       activationProtection: input.accidentalActivationProtection,
       focusVisibility: input.focusVisibility,
       destructiveActionPlacement: 'separate',

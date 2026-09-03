@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Crosshair, SlidersHorizontal, X } from 'lucide-react';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { componentCapabilities } from '../../adaptation/manifest';
@@ -77,6 +77,7 @@ const optionLabels: Record<ComponentAdaptationKey, string> = {
 };
 
 export function PersonalizeInterface() {
+  const reduceMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState<SemanticComponentId>('appointment_actions');
   const triggerRef = useSemanticTarget<HTMLButtonElement>('personalize_interface');
@@ -135,7 +136,13 @@ export function PersonalizeInterface() {
 
       <AnimatePresence>
         {open ? (
-          <motion.div className={styles.personalizeBackdrop} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div
+            className={styles.personalizeBackdrop}
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.2 }}
+          >
             <motion.div
               ref={dialogRef}
               className={styles.personalizeDialog}
@@ -143,9 +150,10 @@ export function PersonalizeInterface() {
               aria-modal="true"
               aria-labelledby="personalize-title"
               onKeyDown={handleDialogKey}
-              initial={{ opacity: 0, y: 18, scale: 0.985 }}
+              initial={reduceMotion ? false : { opacity: 0, y: 18, scale: 0.985 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.99 }}
+              exit={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10, scale: 0.99 }}
+              transition={{ duration: reduceMotion ? 0 : 0.24 }}
             >
               <header className={styles.personalizeHeader}>
                 <div>
