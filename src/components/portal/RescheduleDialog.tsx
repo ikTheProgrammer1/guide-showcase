@@ -107,7 +107,7 @@ export function RescheduleDialog() {
     if (controls.length === 0) return;
     const first = controls[0];
     const last = controls.at(-1)!;
-    if (event.shiftKey && document.activeElement === first) {
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === titleRef.current)) {
       event.preventDefault();
       last.focus();
     } else if (!event.shiftKey && document.activeElement === last) {
@@ -158,9 +158,6 @@ export function RescheduleDialog() {
                     <h2 ref={titleRef} id="reschedule-title" tabIndex={-1}>Reschedule your appointment</h2>
                     <p>Nothing changes until you confirm.</p>
                   </div>
-                  <button className={styles.iconButton} onClick={dismiss} aria-label="Close reschedule dialog">
-                    <X size={20} aria-hidden="true" />
-                  </button>
                 </header>
 
                 <div className={styles.currentAppointmentStrip}>
@@ -209,6 +206,9 @@ export function RescheduleDialog() {
                     </button>
                   </aside>
                 </div>
+                <button className={`${styles.iconButton} ${styles.dialogDismiss}`} onClick={dismiss} aria-label="Close reschedule dialog">
+                  <X size={20} aria-hidden="true" />
+                </button>
               </>
             )}
           </motion.section>

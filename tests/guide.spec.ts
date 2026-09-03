@@ -386,6 +386,13 @@ test('supports a single-tab-stop reschedule radio group with arrow, Home, and En
   await page.goto('/');
   await page.getByRole('button', { name: 'Appointments', exact: true }).click();
   await page.getByRole('button', { name: 'Reschedule appointment' }).click();
+  await expect(page.getByRole('heading', { name: 'Reschedule your appointment' })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('radio', { name: /Friday, September 11/ })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(page.getByRole('button', { name: 'Close reschedule dialog' })).toBeFocused();
+  await page.getByRole('heading', { name: 'Reschedule your appointment' }).focus();
+  await page.keyboard.press('Tab');
 
   const radios = page.getByRole('radio');
   await expect(radios).toHaveCount(3);

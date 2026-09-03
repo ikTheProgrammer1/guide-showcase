@@ -1321,6 +1321,7 @@
 }
 
 .dialog {
+  position: relative;
   width: min(62rem, 96vw);
   max-height: min(48rem, 94vh);
   overflow-y: auto;
@@ -1335,7 +1336,13 @@
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.4rem 1.5rem 1.1rem;
+  padding: 1.4rem 5rem 1.1rem 1.5rem;
+}
+
+.dialogDismiss {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
 }
 
 .dialogHeader h2,
