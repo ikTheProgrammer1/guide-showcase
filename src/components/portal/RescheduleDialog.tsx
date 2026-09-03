@@ -1,0 +1,138 @@
+import { AnimatePresence, motion } from 'motion/react';
+import { CalendarCheck, Check, CheckCircle2, Clock3, X } from 'lucide-react';
+import { originalAppointment, rescheduleSlots } from '../../data/demoData';
+import { cancelGuidePresence } from '../../presence/presenceController';
+import { useSemanticTarget } from '../../presence/targetRegistry';
+import { usePortalStore } from '../../state/portalStore';
+import type { RescheduleSlot } from '../../types';
+import styles from '../../app/App.module.css';
+
+function SlotButton({ slot, selected }: { slot: RescheduleSlot; selected: boolean }) {
+  const select = usePortalStore((state) => state.selectRescheduleSlot);
+  const targetMap = {
+    slot_2026_09_11_0900: 'appointment_slot_sep_11',
+    slot_2026_09_12_1130: 'appointment_slot_sep_12',
+    slot_2026_09_14_1500: 'appointment_slot_sep_14',
+  } as const;
+  const ref = useSemanticTarget<HTMLButtonElement>(targetMap[slot.id as keyof typeof targetMap]);
+
+  return (
+    <button
+      ref={ref}
+      className={styles.slotButton}
+      data-selected={selected ? 'true' : 'false'}
+      role="radio"
+      aria-checked={selected}
+      onClick={() => select(slot.id, 'you')}
+    >
+      <span className={styles.slotDate}>{slot.dayLabel}</span>
+      <span className={styles.slotTime}><Clock3 size={16} aria-hidden="true" /> {slot.time}</span>
+      <span className={styles.radioMark} aria-hidden="true">{selected ? <Check size={14} /> : null}</span>
+    </button>
+  );
+}
+
+export function RescheduleDialog() {
+  const appointment = usePortalStore((state) => state.appointment);
+  const reschedule = usePortalStore((state) => state.reschedule);
+  const close = usePortalStore((state) => state.closeReschedule);
+  const confirm = usePortalStore((state) => state.confirmReschedule);
+  const selectedSlot = rescheduleSlots.find((slot) => slot.id === reschedule.selectedSlotId) ?? null;
+  const confirmRef = useSemanticTarget<HTMLButtonElement>('confirm_reschedule_button');
+
+  const dismiss = () => {
+    cancelGuidePresence();
+    close('you');
+  };
+
+  return (
+    <AnimatePresence>
+      {reschedule.dialogOpen ? (
+        <motion.div
+          className={styles.dialogBackdrop}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.section
+            className={styles.dialog}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reschedule-title"
+            initial={{ opacity: 0, y: 24, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 18, scale: 0.98 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {reschedule.phase === 'complete' ? (
+              <div className={styles.successPanel}>
+                <div className={styles.successIcon}><CheckCircle2 size={34} aria-hidden="true" /></div>
+                <span className={styles.eyebrow}>Appointment updated</span>
+                <h2 id="reschedule-title">Your new time is confirmed.</h2>
+                <p>{appointment.provider} · {appointment.specialty}</p>
+                <div className={styles.confirmedTime}>
+                  <CalendarCheck size={20} aria-hidden="true" />
+                  <span><strong>{appointment.dateLabel}</strong>{appointment.time}</span>
+                </div>
+                <button className={styles.primaryButton} onClick={dismiss}>Done</button>
+                <small>This is a fictional demonstration. No real appointment was changed.</small>
+              </div>
+            ) : (
+              <>
+                <header className={styles.dialogHeader}>
+                  <div>
+                    <span className={styles.eyebrow}>Choose a new time</span>
+                    <h2 id="reschedule-title">Reschedule your appointment</h2>
+                    <p>Nothing changes until you confirm.</p>
+                  </div>
+                  <button className={styles.iconButton} onClick={dismiss} aria-label="Close reschedule dialog">
+                    <X size={20} aria-hidden="true" />
+                  </button>
+                </header>
+
+                <div className={styles.currentAppointmentStrip}>
+                  <span>Current appointment</span>
+                  <strong>{originalAppointment.dateLabel} · {originalAppointment.time}</strong>
+                </div>
+
+                <div className={styles.dialogBody}>
+                  <div className={styles.slotColumn}>
+                    <h3>Available times</h3>
+                    <div role="radiogroup" aria-label="Available reschedule times" className={styles.slotList}>
+                      {rescheduleSlots.map((slot) => (
+                        <SlotButton key={slot.id} slot={slot} selected={slot.id === reschedule.selectedSlotId} />
+                      ))}
+                    </div>
+                  </div>
+
+                  <aside className={styles.reviewPanel} aria-live="polite">
+                    <span className={styles.reviewLabel}>Review change</span>
+                    <div className={styles.timeComparison}>
+                      <div><span>Current</span><strong>{originalAppointment.dateLabel}</strong><small>{originalAppointment.time}</small></div>
+                      <span className={styles.changeArrow} aria-hidden="true">→</span>
+                      <div data-new="true">
+                        <span>New</span>
+                        <strong>{selectedSlot?.dateLabel ?? 'Choose a time'}</strong>
+                        <small>{selectedSlot?.time ?? '—'}</small>
+                      </div>
+                    </div>
+                    <p>You stay in control. Review both times before completing this change.</p>
+                    <button
+                      ref={confirmRef}
+                      className={styles.primaryButton}
+                      disabled={!selectedSlot}
+                      onClick={() => selectedSlot && confirm(selectedSlot.id, 'you')}
+                    >
+                      <CalendarCheck size={17} aria-hidden="true" />
+                      Confirm new time
+                    </button>
+                  </aside>
+                </div>
+              </>
+            )}
+          </motion.section>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  );
+}
