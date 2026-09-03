@@ -8,7 +8,7 @@ Guide's central release path is the closed-loop pointer-precision calibration fo
 - Playwright covers desktop and mobile layouts, reduced motion, 200% text, axe scans, keyboard operation, the safe practice target, a genuine seeded miss, local progression, explicit approval, the opened chooser, human slot selection, delegated confirmation, immediate tool removal, and Undo.
 - The Parkinson's acquisition assertions use the browser's actual `elementFromPoint(...).closest(...)` results. They never search for a nearby control or special-case an appointment button.
 - WebMCP discovery is compared before, during, and after simulation and calibration. Neither private calibration aggregates nor simulator state appears in `get_portal_state`.
-- Screenshot capture records the initial portal, the genuine simulator miss, active calibration, the approved composed workflow, and Guide presence before confirmation.
+- Screenshot capture records the initial portal, the genuine simulator miss, active calibration, the original-versus-proposed approval preview, the approved composed workflow, and Guide presence before confirmation.
 
 ## Keyboard pass
 
@@ -58,8 +58,8 @@ Guide's central release path is the closed-loop pointer-precision calibration fo
 Record the final commit, production URL, automated totals, desktop-app build, keyboard result, VoiceOver result, production discovery result, and hero-flow result here only after each check has actually run. The prior release record is historical and does not establish that this calibration-centered revision passed.
 
 - Date: September 3, 2026
-- Check/build: **Pass** — ESLint, 8 Vitest files with 48 tests, TypeScript, and the production Vite build completed successfully.
-- Playwright/axe: **Pass** — 47 desktop/mobile cases passed; the one skipped case is the intentional coarse-pointer duplicate of the desktop-only displaced-pointer acquisition test. Axe found no serious or critical issues in the covered states.
+- Check/build: **Pass** — ESLint, 8 Vitest files with 51 tests, TypeScript, and the production Vite build completed successfully.
+- Playwright/axe: **Pass** — 55 desktop/mobile cases passed; the one skipped case is the intentional coarse-pointer duplicate of the desktop-only displaced-pointer acquisition test. Axe found no serious or critical issues in the covered states.
 - Keyboard: **Pass** — the local built-in-browser pass covered initial navigation names, the bounded personalizer, the calibration focus loop, safe practice, comfort review, local chooser opening, a single radiogroup tab stop, End-key selection, Back, confirmation, focused success, and Undo. This pass found and fixed a focus-loop defect caused by the intentionally untabbable neighboring practice control.
 - VoiceOver: **Pass with stated scope** — macOS VoiceOver was enabled during the local pass. The browser accessibility tree exposed the initial portal, semantic regions, calibration instructions/progress/adjustments, Remember checkbox, chooser radiogroup, current/new review, confirmation, focused success, and Undo. The pass did not record or score VoiceOver audio output.
 - Production WebMCP discovery: **Pass** — the supported built-in browser discovered all 11 static tools from the queryless HTTPS URL, including `start_interface_calibration`. The schemas exposed only bounded enums and semantic targets. Both `/` and `/appointments` returned HTTP 200, and the browser rendered the Appointments view directly at the latter route.

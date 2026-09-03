@@ -1,5 +1,18 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { ArrowLeft, Check, Crosshair, Minus, Plus, RotateCcw, ShieldCheck, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Crosshair,
+  LockKeyhole,
+  Maximize2,
+  Minus,
+  MoveHorizontal,
+  Plus,
+  RotateCcw,
+  ShieldCheck,
+  X,
+} from 'lucide-react';
 import { useEffect, useRef, type MouseEvent, type PointerEvent } from 'react';
 import { useCalibrationStore } from '../../calibration/calibrationStore';
 import { REQUIRED_SUCCESSFUL_ATTEMPTS } from '../../calibration/calibrationEngine';
@@ -159,6 +172,12 @@ export function InterfaceCalibration() {
     : calibration.phase === 'spacing'
       ? 2
       : 3;
+  const isTargetSizeStep = calibration.phase === 'target-size';
+  const stepHeading = isTargetSizeStep ? 'Try the practice button' : 'Now try the spacing';
+  const stepDescription = isTargetSizeStep
+    ? 'Select it three times. Nothing here can change your appointment.'
+    : 'Select the same safe button three times with another control nearby.';
+  const feedbackWasAdjustment = /missed|increased|larger|smaller|farther|closer/i.test(calibration.feedback);
 
   return (
     <AnimatePresence>
@@ -187,41 +206,73 @@ export function InterfaceCalibration() {
               <div className={styles.calibrationIdentity}>
                 <span><Crosshair size={22} aria-hidden="true" /></span>
                 <div>
-                  <span className={styles.eyebrow}>Safe interface calibration</span>
-                  <h2 ref={titleRef} id="calibration-title" tabIndex={-1}>Find a comfortable control size</h2>
+                  <span className={styles.eyebrow}>Pointer comfort check</span>
+                  <h2 ref={titleRef} id="calibration-title" tabIndex={-1}>Let’s find controls that feel easier to select</h2>
                 </div>
               </div>
-              <div className={styles.calibrationHeaderActions}>
-                <button className={styles.resetCalibrationButton} onClick={resetExperience}>
-                  <RotateCcw size={16} aria-hidden="true" /> Reset demo
-                </button>
-                <button className={styles.stopCalibrationButton} onClick={stopCalibration}>
-                  <X size={17} aria-hidden="true" /> Stop calibration
-                </button>
-              </div>
+              <button className={styles.calibrationCloseButton} onClick={stopCalibration} aria-label="Close calibration">
+                <X size={20} aria-hidden="true" />
+              </button>
             </header>
 
-            <div className={styles.calibrationProgress} aria-label={`Calibration step ${progress} of 3`}>
-              {['Target size', 'Spacing', 'Comfort'].map((label, index) => (
-                <span key={label} data-current={progress === index + 1 ? 'true' : undefined} data-complete={progress > index + 1 ? 'true' : undefined}>
-                  <i aria-hidden="true">{progress > index + 1 ? <Check size={13} /> : index + 1}</i>{label}
-                </span>
+            <ol className={styles.calibrationProgress} aria-label={`Calibration step ${progress} of 3`}>
+              {['Target size', 'Spacing', 'Confirm'].map((label, index) => (
+                <li key={label} aria-current={progress === index + 1 ? 'step' : undefined} data-complete={progress > index + 1 ? 'true' : undefined}>
+                  <i aria-hidden="true">{progress > index + 1 ? <Check size={14} /> : index + 1}</i><span>{label}</span>
+                </li>
               ))}
-            </div>
+            </ol>
 
             {calibration.phase === 'comfort' ? (
               <div className={styles.comfortReview}>
                 <div className={styles.comfortSummary}>
-                  <span className={styles.eyebrow}>Your current result</span>
+                  <span className={styles.eyebrow}>Your result</span>
                   <h3 ref={comfortTitleRef} tabIndex={-1}>Does this feel comfortable?</h3>
-                  <p>Only the approved control size and spacing will be applied. Practice measurements will be discarded.</p>
+                  <p>Review the fit, adjust it if you want, then choose whether to apply it.</p>
                   <div className={styles.measurementSummary}>
-                    <span><strong>{calibration.targetSize}px</strong> minimum control size</span>
-                    <span><strong>{calibration.controlGap}px</strong> minimum spacing</span>
+                    <span><Maximize2 size={18} aria-hidden="true" /><small>Minimum target</small><strong>{calibration.targetSize}px</strong></span>
+                    <span><MoveHorizontal size={18} aria-hidden="true" /><small>Control spacing</small><strong>{calibration.controlGap}px</strong></span>
                   </div>
+                  <ul className={styles.comfortGuarantees}>
+                    <li><Check size={15} aria-hidden="true" />Appointment actions will use clear, separated controls.</li>
+                    <li><Check size={15} aria-hidden="true" />You will still choose the appointment time.</li>
+                    <li><Check size={15} aria-hidden="true" />Review remains required before confirmation.</li>
+                  </ul>
                 </div>
 
-                <div className={styles.comfortAdjustments}>
+                <section className={styles.fitPreview} aria-label="Original and personalized control comparison">
+                  <div className={styles.fitPreviewHeading}>
+                    <span className={styles.eyebrow}>Preview</span>
+                    <strong>How appointment actions will change</strong>
+                  </div>
+                  <div className={styles.fitComparison}>
+                    <div className={styles.fitExample} data-version="original">
+                      <span>Original</span>
+                      <div
+                        className={styles.fitActionStack}
+                        style={{ '--preview-size': `${calibration.initialTargetSize}px`, '--preview-gap': '5px' } as React.CSSProperties}
+                        aria-hidden="true"
+                      >
+                        <i>VIEW APPT</i><i>MODIFY APPT</i><i>CANCEL APPT</i>
+                      </div>
+                      <small>{calibration.initialTargetSize}px targets · close together</small>
+                    </div>
+                    <ArrowRight className={styles.fitArrow} size={22} aria-hidden="true" />
+                    <div className={styles.fitExample} data-version="personalized">
+                      <span>Your result</span>
+                      <div
+                        className={styles.fitActionStack}
+                        style={{ '--preview-size': `${calibration.targetSize}px`, '--preview-gap': `${calibration.controlGap}px` } as React.CSSProperties}
+                        aria-hidden="true"
+                      >
+                        <i>View appointment</i><i>Reschedule appointment</i><i>Cancel appointment</i>
+                      </div>
+                      <small>{calibration.targetSize}px targets · {calibration.controlGap}px apart</small>
+                    </div>
+                  </div>
+                </section>
+
+                <div className={styles.comfortAdjustments} aria-label="Adjust your result">
                   <fieldset>
                     <legend>Control size</legend>
                     <button onClick={() => calibration.adjustTargetSize('smaller')}><Minus size={16} aria-hidden="true" /> Smaller</button>
@@ -251,12 +302,20 @@ export function InterfaceCalibration() {
               <div className={styles.practiceLayout}>
                 <section className={styles.practiceInstructions}>
                   <span className={styles.eyebrow}>Step {progress} of 3</span>
-                  <h3>{calibration.phase === 'target-size' ? 'Try the appointment control' : 'Now test the spacing'}</h3>
-                  <p>Try selecting the practice appointment button. It will not perform a real action.</p>
-                  <div className={styles.practiceSafety}><ShieldCheck size={18} aria-hidden="true" /><span><strong>Practice only</strong>No appointment, navigation, or account data can change here.</span></div>
-                  <p className={styles.practiceCount} aria-live="polite">
-                    {calibration.consecutiveSuccesses} of {REQUIRED_SUCCESSFUL_ATTEMPTS} consistent attempts in this step
-                  </p>
+                  <h3>{stepHeading}</h3>
+                  <p>{stepDescription}</p>
+                  <div className={styles.practiceSafety}><ShieldCheck size={19} aria-hidden="true" /><span><strong>Practice only</strong>No portal action can happen here.</span></div>
+                  <div className={styles.attemptTracker} aria-label={`${calibration.consecutiveSuccesses} of ${REQUIRED_SUCCESSFUL_ATTEMPTS} successful attempts`}>
+                    <strong>Attempts</strong>
+                    <div className={styles.attemptPips} aria-hidden="true">
+                      {Array.from({ length: REQUIRED_SUCCESSFUL_ATTEMPTS }, (_, index) => (
+                        <span key={index} data-complete={index < calibration.consecutiveSuccesses ? 'true' : undefined} data-current={index === calibration.consecutiveSuccesses ? 'true' : undefined}>
+                          {index < calibration.consecutiveSuccesses ? <Check size={20} /> : index + 1}
+                        </span>
+                      ))}
+                    </div>
+                    <small aria-live="polite">{calibration.consecutiveSuccesses} of {REQUIRED_SUCCESSFUL_ATTEMPTS} at this setting</small>
+                  </div>
                 </section>
 
                 <section
@@ -265,33 +324,77 @@ export function InterfaceCalibration() {
                   style={{ '--practice-gap': `${calibration.controlGap}px` } as React.CSSProperties}
                   onPointerDown={recordMiss}
                 >
-                  <div className={styles.practiceGrid}>
-                    <button
-                      ref={practiceRef}
-                      type="button"
-                      data-calibration-target="true"
-                      className={styles.practiceTarget}
-                      style={{
-                        minHeight: `${calibration.targetSize}px`,
-                        minWidth: `${Math.max(calibration.initialTargetWidth, calibration.targetSize * 2.55)}px`,
-                      }}
-                      onPointerEnter={onTargetEnter}
-                      onPointerLeave={onTargetLeave}
-                      onClick={recordSuccess}
-                    >
-                      Practice appointment
-                    </button>
-                    <button type="button" className={styles.practiceDecoy} tabIndex={-1} aria-label="Safe neighboring practice control">Other action</button>
+                  <div className={styles.practiceStageHeader}>
+                    <span>Safe practice area</span>
+                    <small>{isTargetSizeStep ? `${calibration.targetSize}px target` : `${calibration.controlGap}px spacing`}</small>
                   </div>
-                  <span className={styles.practiceCaption}>Nothing here performs a portal action.</span>
+                  <div className={styles.practiceStageBody}>
+                    <div className={styles.practiceGrid} data-step={calibration.phase}>
+                      <button
+                        ref={practiceRef}
+                        type="button"
+                        data-calibration-target="true"
+                        className={styles.practiceTarget}
+                        style={{
+                          minHeight: `${calibration.targetSize}px`,
+                          minWidth: `${Math.max(calibration.initialTargetWidth, calibration.targetSize * 2.55)}px`,
+                        }}
+                        onPointerEnter={onTargetEnter}
+                        onPointerLeave={onTargetLeave}
+                        onClick={recordSuccess}
+                      >
+                        Practice appointment
+                      </button>
+                      {!isTargetSizeStep ? <button type="button" className={styles.practiceDecoy} tabIndex={-1} aria-label="Safe neighboring practice control">Other action</button> : null}
+                    </div>
+
+                    <motion.div
+                      key={calibration.feedback}
+                      className={styles.stageFeedback}
+                      data-adjusted={feedbackWasAdjustment ? 'true' : undefined}
+                      role="status"
+                      aria-live="polite"
+                      initial={reduceMotion ? false : { opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: reduceMotion ? 0 : 0.18 }}
+                    >
+                      {calibration.feedback}
+                    </motion.div>
+
+                    <div className={styles.practiceAdjustments} aria-label="Adjust this practice step">
+                      <span>Need a different fit?</span>
+                      {isTargetSizeStep ? (
+                        <>
+                          <button onClick={() => calibration.adjustTargetSize('smaller')}><Minus size={15} aria-hidden="true" /> Smaller</button>
+                          <button onClick={() => calibration.adjustTargetSize('larger')}>Make it larger <Plus size={15} aria-hidden="true" /></button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => calibration.adjustControlGap('closer')}><ArrowLeft size={15} aria-hidden="true" /> Closer</button>
+                          <button onClick={() => calibration.adjustControlGap('farther')}>Farther apart <Plus size={15} aria-hidden="true" /></button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <dl className={styles.measurementDock}>
+                    <div><dt><Maximize2 size={16} aria-hidden="true" />Current target</dt><dd>{calibration.targetSize}px</dd></div>
+                    <div><dt><MoveHorizontal size={16} aria-hidden="true" />Current spacing</dt><dd>{calibration.controlGap}px</dd></div>
+                    <div><dt><ArrowRight size={16} aria-hidden="true" />Next</dt><dd>{isTargetSizeStep ? 'Spacing' : 'Confirm'}</dd></div>
+                  </dl>
                 </section>
               </div>
             )}
 
-            <div className={styles.calibrationFeedback} role="status" aria-live="polite">
-              {calibration.feedback}
-            </div>
-            <p className={styles.calibrationDisclaimer}>This calibrates interface controls, not a medical condition. It does not establish accessibility compliance.</p>
+            <footer className={styles.calibrationFooter}>
+              <div className={styles.calibrationPrivacy}>
+                <LockKeyhole size={17} aria-hidden="true" />
+                <span>Only approved preferences are kept.</span>
+                <button className={styles.resetCalibrationButton} onClick={resetExperience}><RotateCcw size={15} aria-hidden="true" /> Reset demo</button>
+              </div>
+              <p className={styles.calibrationDisclaimer}>This adjusts interface controls, not a medical condition, and does not establish accessibility compliance.</p>
+              <button className={styles.stopCalibrationButton} onClick={stopCalibration}><X size={17} aria-hidden="true" /> Stop calibration</button>
+            </footer>
           </motion.div>
         </motion.div>
       ) : null}

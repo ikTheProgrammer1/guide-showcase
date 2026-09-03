@@ -5,7 +5,7 @@ import type {
   CalibrationPhase,
 } from './types';
 
-export const TARGET_SIZE_STEPS = [44, 52, 64, 72] as const;
+export const TARGET_SIZE_STEPS = [28, 44, 52, 64, 72] as const;
 export const CONTROL_GAP_STEPS = [8, 16, 24, 32] as const;
 export const REQUIRED_SUCCESSFUL_ATTEMPTS = 3;
 
@@ -59,8 +59,8 @@ export function advanceCalibration(
         controlGap,
         consecutiveSuccesses: 0,
         feedback: nextSize === targetSize
-          ? 'That attempt missed. The practice target is already at the largest available size.'
-          : `That attempt missed, so the practice target increased to ${nextSize} pixels. Try again.`,
+          ? 'That one missed. This is the largest available target.'
+          : `That one missed — I made the target ${nextSize}px tall. Try again.`,
       };
     }
     if (nextSuccesses >= REQUIRED_SUCCESSFUL_ATTEMPTS) {
@@ -69,7 +69,7 @@ export function advanceCalibration(
         targetSize,
         controlGap,
         consecutiveSuccesses: 0,
-        feedback: 'Target size is now consistent. Next, try the same safe control while spacing is calibrated.',
+        feedback: 'This target size feels consistent. Now let’s check the spacing.',
       };
     }
     return {
@@ -77,7 +77,7 @@ export function advanceCalibration(
       targetSize,
       controlGap,
       consecutiveSuccesses: nextSuccesses,
-      feedback: `Successful practice attempt ${nextSuccesses} of ${REQUIRED_SUCCESSFUL_ATTEMPTS}.`,
+      feedback: `That worked. ${nextSuccesses} of ${REQUIRED_SUCCESSFUL_ATTEMPTS} at this size.`,
     };
   }
 
@@ -90,8 +90,8 @@ export function advanceCalibration(
         controlGap: nextGap,
         consecutiveSuccesses: 0,
         feedback: nextGap === controlGap
-          ? 'That attempt missed. The practice controls already use the widest available separation.'
-          : `That attempt missed, so the control gap increased to ${nextGap} pixels. Try again.`,
+          ? 'That one missed. This is the widest available spacing.'
+          : `That one missed — I moved the controls ${nextGap}px apart. Try again.`,
       };
     }
     if (nextSuccesses >= REQUIRED_SUCCESSFUL_ATTEMPTS) {
@@ -108,7 +108,7 @@ export function advanceCalibration(
       targetSize,
       controlGap,
       consecutiveSuccesses: nextSuccesses,
-      feedback: `Successful spacing attempt ${nextSuccesses} of ${REQUIRED_SUCCESSFUL_ATTEMPTS}.`,
+      feedback: `That worked. ${nextSuccesses} of ${REQUIRED_SUCCESSFUL_ATTEMPTS} at this spacing.`,
     };
   }
 

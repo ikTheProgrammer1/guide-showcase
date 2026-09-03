@@ -44,6 +44,28 @@ describe('bounded adaptation manifest', () => {
     expect(manifest.status_indicators).toEqual(baseAdaptationManifest.status_indicators);
   });
 
+  it('keeps a measured 28px profile honest without shrinking safer regional defaults', () => {
+    const measuredProfile: FunctionalProfile = {
+      ...calibratedProfile,
+      input: {
+        ...calibratedProfile.input,
+        minimumTargetSize: 28,
+        minimumControlGap: 8,
+      },
+    };
+
+    const manifest = resolveAdaptationManifest(defaultAccessibility, measuredProfile, {});
+
+    expect(manifest.primary_navigation.minimumTargetSize).toBe(36);
+    expect(manifest.appointment_actions.minimumTargetSize).toBe(28);
+    expect(manifest.forms.minimumTargetSize).toBe(38);
+    expect(manifest.appointment_actions).toMatchObject({
+      minimumControlGap: 8,
+      layout: 'column',
+      activationProtection: 'review',
+    });
+  });
+
   it('applies bounded human region overrides after the calibrated profile', () => {
     const manifest = resolveAdaptationManifest(defaultAccessibility, calibratedProfile, {
       appointment_actions: { minimumTargetSize: 52, minimumControlGap: 16, layout: 'row' },

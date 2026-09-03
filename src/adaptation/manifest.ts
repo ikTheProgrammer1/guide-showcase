@@ -161,12 +161,12 @@ export function resolveAdaptationManifest(
   if (profile) {
     const input = profile.input;
     mergeComponent(manifest, 'primary_navigation', {
-      minimumTargetSize: input.minimumTargetSize,
+      minimumTargetSize: Math.max(baseAdaptationManifest.primary_navigation.minimumTargetSize!, input.minimumTargetSize),
       minimumControlGap: input.minimumControlGap,
       focusVisibility: input.focusVisibility,
     });
     mergeComponent(manifest, 'appointment_actions', {
-      minimumTargetSize: input.minimumTargetSize,
+      minimumTargetSize: Math.max(baseAdaptationManifest.appointment_actions.minimumTargetSize!, input.minimumTargetSize),
       minimumControlGap: input.minimumControlGap,
       layout: 'column',
       labelStyle: 'descriptive',
@@ -175,7 +175,7 @@ export function resolveAdaptationManifest(
       destructiveActionPlacement: 'separate',
     });
     mergeComponent(manifest, 'forms', {
-      minimumTargetSize: input.minimumTargetSize,
+      minimumTargetSize: Math.max(baseAdaptationManifest.forms.minimumTargetSize!, input.minimumTargetSize),
       minimumControlGap: input.minimumControlGap,
       layout: 'step-by-step',
       activationProtection: input.accidentalActivationProtection,

@@ -3465,8 +3465,14 @@
 }
 
 .calibrationDialog {
-  width: min(64rem, 96vw);
-  overflow: hidden auto;
+  width: min(72rem, 96vw);
+  max-height: min(54rem, 95vh);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 14% 0%, rgba(240, 180, 41, 0.08), transparent 25rem),
+    #fffdf8;
 }
 
 .calibrationIdentity {
@@ -3475,64 +3481,96 @@
   gap: 0.85rem;
 }
 
-.calibrationHeaderActions {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
+.calibrationIdentity > span {
+  box-shadow: 0 7px 18px rgba(118, 68, 8, 0.16);
+}
+
+.calibrationCloseButton {
+  width: 2.8rem;
+  height: 2.8rem;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  color: var(--ink-soft);
+  background: color-mix(in srgb, white 84%, var(--paper));
+  border: 1px solid var(--line-strong);
+  border-radius: 0.75rem;
+  cursor: pointer;
+}
+
+.calibrationCloseButton:hover {
+  color: var(--ink);
+  border-color: var(--teal);
 }
 
 .stopCalibrationButton,
 .resetCalibrationButton {
-  min-height: 2.65rem;
   display: inline-flex;
   align-items: center;
   gap: 0.42rem;
-  padding: 0.5rem 0.72rem;
-  color: var(--danger);
-  background: white;
-  border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--line));
-  border-radius: 0.7rem;
   cursor: pointer;
   font: inherit;
-  font-size: 0.8em;
   font-weight: 720;
 }
 
 .resetCalibrationButton {
+  min-height: 2.35rem;
+  padding: 0.35rem 0.55rem;
   color: var(--ink-soft);
-  border-color: var(--line-strong);
+  background: transparent;
+  border: 0;
+  border-radius: 0.45rem;
+  font-size: 0.78em;
+  text-decoration: underline;
+  text-underline-offset: 0.16rem;
+}
+
+.stopCalibrationButton {
+  min-height: 2.7rem;
+  justify-content: center;
+  padding: 0.48rem 0.78rem;
+  color: var(--danger);
+  background: white;
+  border: 1px solid color-mix(in srgb, var(--danger) 55%, var(--line));
+  border-radius: 0.72rem;
+  font-size: 0.8em;
 }
 
 .calibrationProgress {
+  min-height: 4.7rem;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  padding: 0.85rem 1.4rem;
-  background: color-mix(in srgb, var(--paper) 78%, white);
-  border-bottom: 1px solid var(--line);
+  gap: 1rem;
+  margin: 0;
+  padding: 0.95rem 1.5rem;
+  background: color-mix(in srgb, var(--paper) 62%, white);
+  border-block: 1px solid var(--line);
+  list-style: none;
 }
 
-.calibrationProgress > span {
+.calibrationProgress > li {
   position: relative;
   display: flex;
   align-items: center;
   gap: 0.45rem;
   color: var(--ink-soft);
-  font-size: 0.78em;
+  font-size: 0.82em;
   font-weight: 700;
 }
 
-.calibrationProgress > span:not(:last-child)::after {
+.calibrationProgress > li:not(:last-child)::after {
   content: '';
   position: absolute;
-  right: 1rem;
-  width: min(5vw, 4rem);
+  left: min(9rem, 70%);
+  right: 0;
   height: 1px;
-  background: var(--line-strong);
+  background: linear-gradient(90deg, var(--line-strong), transparent);
 }
 
 .calibrationProgress i {
-  width: 1.65rem;
-  height: 1.65rem;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
   display: grid;
   place-items: center;
   color: var(--ink-soft);
@@ -3542,42 +3580,55 @@
   font-style: normal;
 }
 
-.calibrationProgress > span[data-current='true'] {
+.calibrationProgress > li[aria-current='step'] {
   color: var(--teal-dark);
 }
 
-.calibrationProgress > span[data-current='true'] i,
-.calibrationProgress > span[data-complete='true'] i {
+.calibrationProgress > li[aria-current='step'] i {
+  color: #402500;
+  background: var(--amber);
+  border-color: color-mix(in srgb, var(--amber) 75%, #704000);
+  box-shadow: 0 5px 14px rgba(145, 85, 9, 0.17);
+}
+
+.calibrationProgress > li[data-complete='true'] i {
   color: white;
   background: var(--teal);
   border-color: var(--teal);
 }
 
 .practiceLayout {
+  min-height: 0;
   display: grid;
-  grid-template-columns: minmax(16rem, 0.75fr) minmax(22rem, 1.25fr);
-  gap: 1.3rem;
-  padding: 1.4rem;
+  grid-template-columns: minmax(15rem, 0.62fr) minmax(26rem, 1.38fr);
+  gap: 1.5rem;
+  padding: 1.45rem 1.5rem;
+  overflow-y: auto;
 }
 
 .practiceInstructions {
-  align-self: center;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.4rem 0.25rem;
 }
 
 .practiceInstructions h3,
 .comfortReview h3 {
-  font-size: 1.55em;
+  font-size: 1.62em;
 }
 
 .practiceSafety {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 0.55rem;
-  margin-top: 1rem;
-  padding: 0.7rem;
+  gap: 0.62rem;
+  margin-top: 1.15rem;
+  padding: 0.8rem;
   color: var(--teal-dark);
-  background: var(--teal-pale);
-  border-radius: 0.72rem;
+  background: color-mix(in srgb, var(--teal-pale) 78%, white);
+  border: 1px solid color-mix(in srgb, var(--teal) 20%, var(--line));
+  border-radius: 0.78rem;
 }
 
 .practiceSafety strong,
@@ -3585,25 +3636,102 @@
   display: block;
 }
 
-.practiceCount {
-  font-size: 0.82em;
-  font-weight: 720;
+.practiceSafety strong {
+  margin-bottom: 0.08rem;
+}
+
+.attemptTracker {
+  margin-top: 1.4rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid var(--line);
+}
+
+.attemptTracker > strong {
+  display: block;
+  font-family: 'Newsreader Variable', serif;
+  font-size: 1.05em;
+  font-weight: 620;
+}
+
+.attemptPips {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 0.7rem;
+}
+
+.attemptPips span {
+  width: 3rem;
+  height: 3rem;
+  display: grid;
+  place-items: center;
+  color: var(--ink-soft);
+  background: white;
+  border: 1.5px dashed var(--line-strong);
+  border-radius: 50%;
+  font-size: 0.78em;
+  font-weight: 760;
+}
+
+.attemptPips span[data-current='true'] {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 4px rgba(240, 180, 41, 0.12);
+}
+
+.attemptPips span[data-complete='true'] {
+  color: #432500;
+  background: var(--amber);
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--amber) 78%, #704000);
+}
+
+.attemptTracker small {
+  display: block;
+  margin-top: 0.55rem;
+  color: var(--ink-soft);
+  font-size: 0.76em;
 }
 
 .practiceSurface {
-  min-height: 19rem;
+  min-width: 0;
+  min-height: 28rem;
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding: 0.75rem;
+  background:
+    linear-gradient(rgba(72, 96, 88, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(72, 96, 88, 0.05) 1px, transparent 1px),
+    #fbf6e9;
+  background-size: 1.75rem 1.75rem;
+  border: 1px solid color-mix(in srgb, var(--amber) 55%, var(--line));
+  border-radius: 1.05rem;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.68);
+}
+
+.practiceStageHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0.35rem 0.7rem;
+  color: var(--ink-soft);
+  font-size: 0.7em;
+  font-weight: 740;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.practiceStageHeader small {
+  font: inherit;
+  letter-spacing: 0;
+}
+
+.practiceStageBody {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(7rem, 1fr) auto auto;
   place-items: center;
   align-content: center;
-  gap: 1rem;
-  padding: clamp(1rem, 4vw, 2.5rem);
-  background:
-    linear-gradient(rgba(14, 104, 98, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(14, 104, 98, 0.055) 1px, transparent 1px),
-    #f8f4e8;
-  background-size: 1.5rem 1.5rem;
-  border: 1px solid color-mix(in srgb, var(--amber) 45%, var(--line));
-  border-radius: 1rem;
+  gap: 0.8rem;
+  padding: 1rem clamp(0.6rem, 3vw, 2rem);
 }
 
 .practiceGrid {
@@ -3616,18 +3744,23 @@
 
 .practiceTarget,
 .practiceDecoy {
-  padding: 0.28rem 0.5rem;
-  border-radius: 0.2rem;
+  padding: 0.22rem 0.62rem;
   cursor: pointer;
-  font: 700 0.7em Tahoma, sans-serif;
+  font: 720 0.76em 'Atkinson Hyperlegible Next Variable', sans-serif;
+  touch-action: manipulation;
 }
 
 .practiceTarget {
-  color: #0d3455;
-  background: linear-gradient(#fff, #d4d8db);
-  border: 1px solid #70777c;
-  box-shadow: 0 0 0 3px rgba(228, 139, 47, 0.12);
-  transition: min-width 0.32s ease, min-height 0.32s ease, padding 0.32s ease;
+  color: var(--teal-dark);
+  background: #fffefa;
+  border: 2px solid var(--teal-dark);
+  border-radius: 0.55rem;
+  box-shadow: 0 8px 18px rgba(12, 67, 63, 0.14), 0 0 0 4px rgba(240, 180, 41, 0.12);
+  transition: min-width 0.32s ease, min-height 0.32s ease, padding 0.32s ease, box-shadow 0.2s ease;
+}
+
+.practiceTarget:hover {
+  box-shadow: 0 10px 22px rgba(12, 67, 63, 0.2), 0 0 0 5px rgba(240, 180, 41, 0.18);
 }
 
 .practiceDecoy {
@@ -3635,62 +3768,262 @@
   color: #59635f;
   background: #eceae4;
   border: 1px solid #aaa9a4;
+  border-radius: 0.35rem;
   opacity: 0.75;
 }
 
-.practiceCaption {
-  color: var(--ink-soft);
-  font-size: 0.74em;
-}
-
-.calibrationFeedback {
-  min-height: 3rem;
-  margin: 0 1.4rem;
-  padding: 0.7rem 0.85rem;
+.stageFeedback {
+  max-width: min(28rem, 100%);
+  padding: 0.62rem 0.75rem;
   color: var(--teal-dark);
-  background: color-mix(in srgb, var(--teal-pale) 72%, white);
-  border-left: 4px solid var(--teal);
-  border-radius: 0.3rem 0.72rem 0.72rem 0.3rem;
-  font-size: 0.84em;
+  background: rgba(255, 254, 250, 0.94);
+  border: 1px solid color-mix(in srgb, var(--teal) 32%, var(--line));
+  border-radius: 0.7rem;
+  box-shadow: 0 8px 20px rgba(37, 54, 47, 0.09);
+  font-size: 0.8em;
+  text-align: center;
 }
 
-.calibrationDisclaimer {
-  margin: 0;
-  padding: 0.85rem 1.4rem 1.2rem;
+.stageFeedback[data-adjusted='true'] {
+  color: #512f00;
+  border-color: color-mix(in srgb, var(--amber) 75%, var(--line));
+  box-shadow: 0 8px 20px rgba(118, 70, 10, 0.11);
+}
+
+.practiceAdjustments {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.practiceAdjustments > span {
+  margin-right: 0.2rem;
   color: var(--ink-soft);
-  font-size: 0.7em;
+  font-size: 0.72em;
+  font-weight: 690;
+}
+
+.practiceAdjustments button {
+  min-height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.42rem 0.62rem;
+  color: var(--teal-dark);
+  background: rgba(255, 254, 250, 0.86);
+  border: 1px solid var(--line-strong);
+  border-radius: 0.55rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76em;
+  font-weight: 720;
+}
+
+.measurementDock {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 0.7rem 0.3rem 0.15rem;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  box-shadow: 0 7px 18px rgba(44, 58, 53, 0.08);
+}
+
+.measurementDock > div {
+  min-width: 0;
+  padding: 0 0.8rem 0.55rem;
+}
+
+.measurementDock > div:not(:last-child) {
+  border-right: 1px solid var(--line);
+}
+
+.measurementDock dt {
+  display: flex;
+  align-items: center;
+  gap: 0.32rem;
+  color: var(--ink-soft);
+  font-size: 0.67em;
+}
+
+.measurementDock dd {
+  margin: 0.16rem 0 0 1.3rem;
+  color: var(--ink);
+  font-family: 'Newsreader Variable', serif;
+  font-size: 1.08em;
+  font-weight: 640;
 }
 
 .comfortReview {
+  min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(19rem, 0.9fr);
-  gap: 1rem 1.3rem;
-  padding: 1.4rem;
+  grid-template-columns: minmax(17rem, 0.72fr) minmax(28rem, 1.28fr);
+  grid-template-areas:
+    'summary preview'
+    'adjustments preview'
+    'remember remember'
+    'approve approve';
+  gap: 0.9rem 1.35rem;
+  padding: 1.35rem 1.5rem;
+  overflow-y: auto;
+}
+
+.comfortSummary {
+  grid-area: summary;
 }
 
 .measurementSummary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
   margin-top: 1rem;
 }
 
 .measurementSummary span {
-  padding: 0.7rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.08rem 0.45rem;
+  padding: 0.68rem;
   color: var(--ink-soft);
-  background: var(--paper);
+  background: color-mix(in srgb, var(--paper) 70%, white);
   border: 1px solid var(--line);
-  border-radius: 0.72rem;
-  font-size: 0.78em;
+  border-radius: 0.75rem;
+}
+
+.measurementSummary svg {
+  grid-row: 1 / 3;
+  color: var(--teal);
+}
+
+.measurementSummary small {
+  font-size: 0.65em;
 }
 
 .measurementSummary strong {
-  display: block;
   color: var(--ink);
-  font-size: 1.35em;
+  font-family: 'Newsreader Variable', serif;
+  font-size: 1.25em;
+}
+
+.comfortGuarantees {
+  display: grid;
+  gap: 0.38rem;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.comfortGuarantees li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.4rem;
+  color: var(--ink-soft);
+  font-size: 0.75em;
+}
+
+.comfortGuarantees svg {
+  margin-top: 0.12rem;
+  color: var(--teal);
+}
+
+.fitPreview {
+  grid-area: preview;
+  min-width: 0;
+  padding: 1rem;
+  background:
+    linear-gradient(rgba(72, 96, 88, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(72, 96, 88, 0.045) 1px, transparent 1px),
+    #fbf6e9;
+  background-size: 1.5rem 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--amber) 50%, var(--line));
+  border-radius: 1rem;
+}
+
+.fitPreviewHeading strong {
+  display: block;
+  margin-top: 0.12rem;
+  font-family: 'Newsreader Variable', serif;
+  font-size: 1.1em;
+}
+
+.fitComparison {
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) auto minmax(0, 1.14fr);
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 0.9rem;
+}
+
+.fitExample {
+  min-width: 0;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+}
+
+.fitExample > span {
+  color: var(--ink-soft);
+  font-size: 0.68em;
+  font-weight: 760;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.fitExample[data-version='personalized'] {
+  border-color: color-mix(in srgb, var(--teal) 56%, var(--line));
+  box-shadow: 0 8px 22px rgba(14, 104, 98, 0.1);
+}
+
+.fitActionStack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--preview-gap, 5px);
+  margin-top: 0.6rem;
+}
+
+.fitExample[data-version='personalized'] .fitActionStack {
+  display: grid;
+}
+
+.fitActionStack i {
+  min-height: var(--preview-size, 28px);
+  display: grid;
+  place-items: center;
+  padding: 0.18rem 0.4rem;
+  color: #173d3a;
+  background: white;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.38rem;
+  font-size: 0.58em;
+  font-style: normal;
+  font-weight: 760;
+  text-align: center;
+}
+
+.fitExample[data-version='personalized'] .fitActionStack i {
+  color: var(--teal-dark);
+  border: 2px solid var(--teal);
+  font-size: 0.7em;
+}
+
+.fitExample > small {
+  display: block;
+  margin-top: 0.6rem;
+  color: var(--ink-soft);
+  font-size: 0.62em;
+}
+
+.fitArrow {
+  color: var(--teal);
 }
 
 .comfortAdjustments {
+  grid-area: adjustments;
   display: grid;
   gap: 0.7rem;
 }
@@ -3708,7 +4041,7 @@
 }
 
 .rememberPreference {
-  grid-column: 1 / -1;
+  grid-area: remember;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.65rem;
@@ -3737,7 +4070,7 @@
 }
 
 .approveCalibrationButton {
-  grid-column: 1 / -1;
+  grid-area: approve;
   min-height: 3.35rem;
   display: inline-flex;
   align-items: center;
@@ -3751,6 +4084,35 @@
   cursor: pointer;
   font: inherit;
   font-weight: 760;
+}
+
+.calibrationFooter {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem 1rem;
+  padding: 0.72rem 1.5rem;
+  background: color-mix(in srgb, var(--surface) 75%, white);
+  border-top: 1px solid var(--line);
+}
+
+.calibrationPrivacy {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--ink-soft);
+  font-size: 0.72em;
+}
+
+.calibrationPrivacy > svg {
+  color: var(--teal);
+}
+
+.calibrationDisclaimer {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.66em;
+  text-align: center;
 }
 
 [data-adaptation-region] button:not(.textButton),
@@ -4254,6 +4616,14 @@
   .personalizeBody,
   .practiceLayout,
   .comfortReview { grid-template-columns: 1fr; }
+  .comfortReview {
+    grid-template-areas:
+      'summary'
+      'preview'
+      'adjustments'
+      'remember'
+      'approve';
+  }
   .rememberPreference,
   .approveCalibrationButton { grid-column: 1; }
   .regionList { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -4262,14 +4632,14 @@
   .unifiedAppointmentActions { justify-self: stretch; }
   .unifiedDetailGrid { grid-template-columns: 1fr; }
   .unifiedStatusGrid { grid-template-columns: 1fr; }
-  .calibrationProgress > span:not(:last-child)::after { display: none; }
+  .calibrationProgress > li:not(:last-child)::after { display: none; }
 }
 
 @media (max-width: 480px) {
   .personalizeBackdrop,
   .calibrationBackdrop { padding: 0; align-items: end; }
   .personalizeDialog,
-  .calibrationDialog { width: 100%; max-height: 96vh; border-radius: 1.2rem 1.2rem 0 0; }
+  .calibrationDialog { width: 100%; max-height: 100dvh; border-radius: 1.2rem 1.2rem 0 0; }
   .personalizeHeader,
   .calibrationHeader { padding: 1rem; }
   .personalizeHeader h2,
@@ -4277,15 +4647,24 @@
   .calibrationCallout { width: calc(100% - 2rem); margin: 1rem 1rem 0; }
   .personalizeBody,
   .practiceLayout,
-  .comfortReview { padding: 1rem; }
+  .comfortReview { padding: 1rem; overflow-y: visible; }
   .regionList { grid-template-columns: 1fr; }
   .calibrationHeader { align-items: center; }
-  .calibrationHeaderActions { gap: 0.3rem; }
-  .resetCalibrationButton { padding-inline: 0.55rem; }
-  .stopCalibrationButton { font-size: 0; }
-  .stopCalibrationButton svg { width: 1.1rem; }
-  .calibrationProgress { padding-inline: 1rem; }
-  .calibrationProgress > span { align-items: flex-start; flex-direction: column; font-size: 0.7em; }
-  .practiceSurface { min-height: 15rem; }
+  .calibrationIdentity > span { width: 2.3rem; }
+  .calibrationProgress { min-height: 4.25rem; gap: 0.35rem; padding-inline: 1rem; }
+  .calibrationProgress > li { align-items: flex-start; flex-direction: column; font-size: 0.7em; }
+  .calibrationProgress i { width: 1.8rem; height: 1.8rem; }
+  .practiceSurface { min-height: 23rem; }
+  .practiceStageBody { padding-inline: 0.25rem; }
+  .attemptPips span { width: 2.7rem; height: 2.7rem; }
+  .measurementDock { grid-template-columns: 1fr; width: 100%; }
+  .measurementDock > div:not(:last-child) { border-right: 0; border-bottom: 1px solid var(--line); }
+  .measurementDock dd { margin-left: 1.3rem; }
+  .fitComparison { grid-template-columns: 1fr; }
+  .fitArrow { justify-self: center; transform: rotate(90deg); }
+  .calibrationFooter { grid-template-columns: 1fr; align-items: stretch; padding: 0.8rem 1rem; }
+  .calibrationPrivacy { flex-wrap: wrap; }
+  .calibrationDisclaimer { text-align: left; }
+  .stopCalibrationButton { width: 100%; }
   .portalBreadcrumb { align-items: flex-start; flex-direction: column; }
 }

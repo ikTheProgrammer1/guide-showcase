@@ -41,6 +41,32 @@ describe('pointer precision calibration', () => {
     expect(useCalibrationStore.getState()).toMatchObject({ phase: 'spacing', targetSize: 44, controlGap: 16 });
   });
 
+  it('restarts the current attempt set after a manual measurement adjustment', () => {
+    useCalibrationStore.getState().start('pointer_precision', 'reschedule_appointment', 'you', 28, 92);
+    useCalibrationStore.getState().recordAttempt(success);
+    useCalibrationStore.getState().recordAttempt(success);
+    expect(useCalibrationStore.getState()).toMatchObject({
+      phase: 'target-size',
+      initialTargetSize: 28,
+      consecutiveSuccesses: 2,
+    });
+
+    useCalibrationStore.getState().adjustTargetSize('larger');
+    expect(useCalibrationStore.getState()).toMatchObject({ targetSize: 44, consecutiveSuccesses: 0 });
+
+    for (let attempt = 0; attempt < REQUIRED_SUCCESSFUL_ATTEMPTS; attempt += 1) {
+      useCalibrationStore.getState().recordAttempt(success);
+    }
+    useCalibrationStore.getState().recordAttempt(success);
+    useCalibrationStore.getState().recordAttempt(success);
+    useCalibrationStore.getState().adjustControlGap('farther');
+    expect(useCalibrationStore.getState()).toMatchObject({
+      phase: 'spacing',
+      controlGap: 16,
+      consecutiveSuccesses: 0,
+    });
+  });
+
   it('retains only aggregate attempt data and discards it after approval', () => {
     useCalibrationStore.getState().start('pointer_precision', 'reschedule_appointment', 'guide');
     useCalibrationStore.getState().recordAttempt({ success: false, method: 'pointer', missDistance: 12.7, corrections: 3 });
@@ -86,6 +112,17 @@ describe('pointer precision calibration', () => {
     expect(portal.appointment.date).toBe('2026-09-10');
     expect(portal.activityLog.find((event) => event.type === 'calibration_started')).toMatchObject({ actor: 'guide' });
     expect(portal.activityLog.find((event) => event.type === 'profile_approved')).toMatchObject({ actor: 'you' });
+  });
+
+  it('stores the exact target size established by successful practice', () => {
+    useCalibrationStore.getState().start('pointer_precision', 'reschedule_appointment', 'you', 28, 92);
+    completePractice();
+
+    expect(useCalibrationStore.getState().approve()).toBe(true);
+    expect(usePortalStore.getState().functionalProfile?.input).toMatchObject({
+      minimumTargetSize: 28,
+      minimumControlGap: 8,
+    });
   });
 
   it('persists only an explicitly remembered functional profile', () => {

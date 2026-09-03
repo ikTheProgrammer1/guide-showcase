@@ -34,7 +34,7 @@ Record the queryless production URL in ChatGPT’s built-in browser at 1440 × 9
 
 ## 0:58–1:28 — Calibrate Locally
 
-**Screen:** Try the safe practice appointment button. Show an honest simulator-driven miss, then repeat successful attempts as the target grows. In the spacing step, demonstrate one miss or choose **Farther apart**, then complete the successful attempts.
+**Screen:** Hold briefly on the three-step comfort check, attempt indicators, and live measurement dock. Try the safe practice appointment button. Show an honest simulator-driven miss, then repeat successful attempts as the target grows. In the spacing step, demonstrate one miss or choose **Farther apart**, then complete the successful attempts.
 
 **Narration:**
 
@@ -42,7 +42,7 @@ Record the queryless production URL in ChatGPT’s built-in browser at 1440 × 9
 
 ## 1:28–1:48 — Human Approval, Component Composition
 
-**Screen:** On **Does this feel comfortable?**, briefly show Larger/Smaller and Closer/Farther controls. Optionally select **Remember these preferences on Northstar**, then approve.
+**Screen:** On **Does this feel comfortable?**, show the original-versus-proposed appointment-action preview. Briefly show Larger/Smaller and Closer/Farther controls. Optionally select **Remember these preferences on Northstar**, then approve.
 
 **Narration:**
 

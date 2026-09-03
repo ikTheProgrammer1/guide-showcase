@@ -583,15 +583,16 @@ test('supports keyboard-only local calibration and restores focus when stopped',
   const trigger = page.getByRole('button', { name: 'Personalize interface' });
   await trigger.click();
   await page.getByRole('button', { name: /Calibrate pointer precision/ }).click();
-  await expect(page.getByRole('heading', { name: 'Find a comfortable control size' })).toBeFocused();
-  await expect(page.getByRole('dialog', { name: 'Find a comfortable control size' }).getByRole('button', { name: 'Reset demo' })).toBeVisible();
+  const calibrationDialog = page.getByRole('dialog', { name: 'Let’s find controls that feel easier to select' });
+  await expect(page.getByRole('heading', { name: 'Let’s find controls that feel easier to select' })).toBeFocused();
+  await expect(calibrationDialog.getByRole('button', { name: 'Reset demo' })).toBeVisible();
+  await page.keyboard.press('Tab');
+  await expect(calibrationDialog.getByRole('button', { name: 'Close calibration' })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(calibrationDialog.getByRole('button', { name: 'Stop calibration' })).toBeFocused();
 
   const practice = page.getByRole('button', { name: 'Practice appointment' });
   await practice.focus();
-  await page.keyboard.press('Tab');
-  await expect(page.getByRole('dialog', { name: 'Find a comfortable control size' }).getByRole('button', { name: 'Reset demo' })).toBeFocused();
-  await page.keyboard.press('Shift+Tab');
-  await expect(practice).toBeFocused();
   for (let attempt = 0; attempt < 6; attempt += 1) await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Does this feel comfortable?' })).toBeVisible();
 
@@ -783,13 +784,13 @@ test('runs the complete Parkinson’s hero flow through calibration, human choic
     goal: 'reschedule_appointment',
   }) as { ok: boolean; localPractice: boolean; phase: string; profileApplied: boolean };
   expect(started).toMatchObject({ ok: true, localPractice: true, phase: 'target-size', profileApplied: false });
-  await expect(page.getByRole('heading', { name: 'Find a comfortable control size' })).toBeFocused();
+  await expect(page.getByRole('heading', { name: 'Let’s find controls that feel easier to select' })).toBeFocused();
 
   const practice = page.getByRole('button', { name: 'Practice appointment' });
   let practiceBox = await practice.boundingBox();
   expect(practiceBox).not.toBeNull();
   await page.mouse.click(practiceBox!.x + practiceBox!.width / 2, practiceBox!.y + practiceBox!.height - 2);
-  await expect(page.getByText(/practice target increased to 44 pixels/i)).toBeVisible();
+  await expect(page.getByText(/made the target 44px tall/i)).toBeVisible();
   await expect(page.getByText('Missed target')).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('parkinsons-calibration-miss.png'), fullPage: true });
 
@@ -797,11 +798,11 @@ test('runs the complete Parkinson’s hero flow through calibration, human choic
     practiceBox = await practice.boundingBox();
     await page.mouse.click(practiceBox!.x + practiceBox!.width / 2, practiceBox!.y + practiceBox!.height / 2);
   }
-  await expect(page.getByText('Now test the spacing')).toBeVisible();
+  await expect(page.getByText('Now try the spacing')).toBeVisible();
 
   practiceBox = await practice.boundingBox();
   await page.mouse.click(practiceBox!.x + practiceBox!.width / 2, practiceBox!.y + practiceBox!.height - 2);
-  await expect(page.getByText(/control gap increased to 16 pixels/i)).toBeVisible();
+  await expect(page.getByText(/moved the controls 16px apart/i)).toBeVisible();
   for (let attempt = 0; attempt < 3; attempt += 1) {
     practiceBox = await practice.boundingBox();
     await page.mouse.click(practiceBox!.x + practiceBox!.width / 2, practiceBox!.y + practiceBox!.height / 2);

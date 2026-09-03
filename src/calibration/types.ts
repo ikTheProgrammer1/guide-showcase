@@ -42,6 +42,7 @@ export interface InterfaceCalibrationState {
   startedBy: Actor | null;
   phase: CalibrationPhase;
   isOpen: boolean;
+  initialTargetSize: number;
   targetSize: number;
   initialTargetWidth: number;
   controlGap: number;

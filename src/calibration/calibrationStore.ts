@@ -42,6 +42,7 @@ const initialState: InterfaceCalibrationState = {
   startedBy: null,
   phase: 'idle',
   isOpen: false,
+  initialTargetSize: 28,
   targetSize: 28,
   initialTargetWidth: 92,
   controlGap: 8,
@@ -62,6 +63,7 @@ export const useCalibrationStore = create<CalibrationStore>((set, get) => ({
   start: (domain, goal, actor, initialTargetSize = 28, initialTargetWidth = 92) => {
     calibrationSequence += 1;
     const calibrationId = `calibration-${calibrationSequence}`;
+    const normalizedTargetSize = Math.max(28, Math.min(72, Math.round(initialTargetSize)));
     set((state) => ({
       ...initialState,
       calibrationId,
@@ -70,10 +72,11 @@ export const useCalibrationStore = create<CalibrationStore>((set, get) => ({
       startedBy: actor,
       phase: 'target-size',
       isOpen: true,
-      targetSize: Math.max(24, Math.min(72, Math.round(initialTargetSize))),
+      initialTargetSize: normalizedTargetSize,
+      targetSize: normalizedTargetSize,
       initialTargetWidth: Math.max(72, Math.min(220, Math.round(initialTargetWidth))),
       revision: state.revision + 1,
-      feedback: 'Try the practice appointment button. It cannot perform a real action.',
+      feedback: 'Try the practice button three times. Nothing here can change your appointment.',
     }));
     usePortalStore.getState().recordActivity(
       actor,
@@ -105,7 +108,10 @@ export const useCalibrationStore = create<CalibrationStore>((set, get) => ({
     targetSize: direction === 'larger'
       ? nextStep(state.targetSize, TARGET_SIZE_STEPS)
       : previousStep(state.targetSize, TARGET_SIZE_STEPS),
-    feedback: `Target size set ${direction === 'larger' ? 'larger' : 'smaller'}.`,
+    consecutiveSuccesses: state.phase === 'target-size' ? 0 : state.consecutiveSuccesses,
+    feedback: state.phase === 'target-size'
+      ? `Target size set ${direction === 'larger' ? 'larger' : 'smaller'}. Try it three times at this size.`
+      : `Target size set ${direction === 'larger' ? 'larger' : 'smaller'}.`,
     revision: state.revision + 1,
   })),
 
@@ -113,7 +119,10 @@ export const useCalibrationStore = create<CalibrationStore>((set, get) => ({
     controlGap: direction === 'farther'
       ? nextStep(state.controlGap, CONTROL_GAP_STEPS)
       : previousStep(state.controlGap, CONTROL_GAP_STEPS),
-    feedback: `Controls moved ${direction === 'farther' ? 'farther apart' : 'closer together'}.`,
+    consecutiveSuccesses: state.phase === 'spacing' ? 0 : state.consecutiveSuccesses,
+    feedback: state.phase === 'spacing'
+      ? `Controls moved ${direction === 'farther' ? 'farther apart' : 'closer together'}. Try this spacing three times.`
+      : `Controls moved ${direction === 'farther' ? 'farther apart' : 'closer together'}.`,
     revision: state.revision + 1,
   })),
 

@@ -8,9 +8,11 @@ Guide and WebMCP are the product. The built-in barrier simulator is an illustrat
 
 > Agents should not just use the web for us. They should be able to use it with us.
 
-| Fixed baseline | Closed-loop personalization |
-|---|---|
-| ![Dense Northstar baseline](./docs/screenshots/guide-home.png) | ![Safe pointer calibration](./docs/screenshots/guide-calibration.png) |
+| Fixed baseline | Safe local calibration | Approved result |
+|---|---|---|
+| ![Dense Northstar baseline](./docs/screenshots/guide-home.png) | ![Safe pointer calibration](./docs/screenshots/guide-calibration.png) | ![Calibration result preview](./docs/screenshots/guide-calibration-result.png) |
+
+The implemented calibration was developed from this [generated interface design study](./docs/design/calibration-vision.png), then refined against the real interaction and safety constraints.
 
 ## Live Demo
 
@@ -74,6 +76,8 @@ The practice button cannot navigate, modify an appointment, or change account da
 - pointer versus keyboard activation counts.
 
 Raw coordinates are used transiently for hit testing and are never retained. Aggregate practice data is discarded after approval or cancellation. The approved profile contains only a preferred input method, minimum target size, minimum control gap, review protection, focus visibility, and focused-density preference.
+
+The three-step comfort check keeps the active task visually central. It shows three attempts at the current setting, keeps live size and spacing values beside the practice target, lets the person adjust the active measurement locally, and resets that step's attempt count whenever its measurement changes. The final step compares the original compact appointment actions with the proposed composed controls before approval.
 
 Calibration is session-only by default. **Remember these preferences on Northstar** is an explicit opt-in to versioned local storage. Only the approved profile and bounded human region overrides are stored; Reset Demo clears them.
 

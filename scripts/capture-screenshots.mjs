@@ -90,20 +90,24 @@ await page.waitForTimeout(500);
 
 const practice = page.getByRole('button', { name: 'Practice appointment' });
 await clickHitTestPoint(practice, false);
-await page.getByText(/practice target increased to 44 pixels/i).waitFor();
+await page.getByText(/made the target 44px tall/i).waitFor();
 await page.waitForTimeout(100);
 await page.screenshot({ path: new URL('guide-calibration.png', outputDirectory).pathname });
 
 for (let attempt = 0; attempt < 3; attempt += 1) {
   await clickHitTestPoint(practice, true);
 }
-await page.getByText('Now test the spacing').waitFor();
+await page.getByText('Now try the spacing').waitFor();
 
 await clickHitTestPoint(practice, false);
-await page.getByText(/control gap increased to 16 pixels/i).waitFor();
+await page.getByText(/moved the controls 16px apart/i).waitFor();
 for (let attempt = 0; attempt < 3; attempt += 1) {
   await clickHitTestPoint(practice, true);
 }
+
+await page.getByRole('heading', { name: 'Does this feel comfortable?' }).waitFor();
+await page.waitForTimeout(900);
+await page.screenshot({ path: new URL('guide-calibration-result.png', outputDirectory).pathname });
 
 const approve = page.getByRole('button', { name: /This feels comfortable/ });
 await approve.focus();

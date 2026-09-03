@@ -9,7 +9,7 @@ import {
 
 export const REMEMBERED_PREFERENCES_KEY = 'northstar.functional-preferences.v1';
 
-const targetSizes = new Set([44, 52, 64, 72]);
+const targetSizes = new Set([28, 44, 52, 64, 72]);
 const controlGaps = new Set([8, 16, 24, 32]);
 
 export function normalizeFunctionalProfile(value: unknown): FunctionalProfile | null {
