@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { REMEMBERED_PREFERENCES_KEY } from '../adaptation/persistence';
+import { normalizeFunctionalProfile, REMEMBERED_PREFERENCES_KEY } from '../adaptation/persistence';
 import { useSimulationStore } from '../simulation/simulationStore';
 import { usePortalStore } from '../state/portalStore';
 import { REQUIRED_SUCCESSFUL_ATTEMPTS } from './calibrationEngine';
@@ -106,8 +106,9 @@ describe('pointer precision calibration', () => {
     const portal = usePortalStore.getState();
     expect(portal.functionalProfile).toMatchObject({
       input: { minimumTargetSize: 44, minimumControlGap: 16 },
-      presentation: { density: 'focused' },
+      presentation: { density: 'standard' },
     });
+    expect(portal.accessibility.density).toBe('standard');
     expect(portal.reschedule).toMatchObject({ phase: 'choosing', dialogOpen: true, selectedSlotId: null });
     expect(portal.appointment.date).toBe('2026-09-10');
     expect(portal.activityLog.find((event) => event.type === 'calibration_started')).toMatchObject({ actor: 'guide' });
@@ -140,6 +141,22 @@ describe('pointer precision calibration', () => {
       profile: usePortalStore.getState().functionalProfile,
       componentOverrides: {},
     });
+  });
+
+  it('does not restore legacy task-focused density as a person preference', () => {
+    const normalized = normalizeFunctionalProfile({
+      version: 1,
+      input: {
+        preferredMethod: 'pointer',
+        minimumTargetSize: 44,
+        minimumControlGap: 16,
+        accidentalActivationProtection: 'review',
+        focusVisibility: 'enhanced',
+      },
+      presentation: { density: 'focused' },
+    });
+
+    expect(normalized?.presentation.density).toBe('standard');
   });
 
   it('never reads or changes the separate simulator state', () => {

@@ -6,7 +6,7 @@ import {
   resolveAdaptationManifest,
   sanitizeComponentAdaptation,
 } from './manifest';
-import type { FunctionalProfile } from './types';
+import type { ActiveTaskExperience, FunctionalProfile } from './types';
 
 const calibratedProfile: FunctionalProfile = {
   version: 1,
@@ -18,6 +18,20 @@ const calibratedProfile: FunctionalProfile = {
     focusVisibility: 'enhanced',
   },
   presentation: { density: 'focused' },
+};
+
+const focusedTask: ActiveTaskExperience = {
+  goal: 'reschedule_appointment',
+  assistanceLevel: 'collaborate',
+  informationDensity: 'focused',
+  languageStyle: 'plain',
+  workflowLayout: 'step-by-step',
+  navigationPresentation: 'focused',
+  guideVisibility: 'visible',
+  timeSelection: 'person',
+  regionAdjustments: {},
+  temporaryAccessibilityKeys: [],
+  previousAccessibility: {},
 };
 
 describe('bounded adaptation manifest', () => {
@@ -79,6 +93,62 @@ describe('bounded adaptation manifest', () => {
     });
   });
 
+  it('composes task context structurally before component-specific human overrides', () => {
+    const taskManifest = resolveAdaptationManifest(
+      defaultAccessibility,
+      null,
+      {},
+      focusedTask,
+    );
+    expect(taskManifest.appointment_summary).toMatchObject({
+      informationPriority: 'primary',
+      secondaryContent: 'collapsed',
+      labelStyle: 'plain-language',
+    });
+    expect(taskManifest.appointment_actions).toMatchObject({
+      layout: 'column',
+      activationProtection: 'review',
+      destructiveActionPlacement: 'separate',
+    });
+    expect(taskManifest.forms.layout).toBe('step-by-step');
+
+    const overridden = resolveAdaptationManifest(
+      defaultAccessibility,
+      null,
+      { appointment_actions: { layout: 'row', labelStyle: 'descriptive' } },
+      focusedTask,
+    );
+    expect(overridden.appointment_actions).toMatchObject({
+      layout: 'row',
+      labelStyle: 'descriptive',
+      activationProtection: 'review',
+    });
+  });
+
+  it('rearranges the same task components into a one-page experience', () => {
+    const manifest = resolveAdaptationManifest(defaultAccessibility, null, {}, {
+      ...focusedTask,
+      workflowLayout: 'one-page',
+    });
+    expect(manifest.appointment_actions.layout).toBe('row');
+    expect(manifest.forms.layout).toBe('row');
+  });
+
+  it('applies bounded task region placement before human overrides', () => {
+    const manifest = resolveAdaptationManifest(defaultAccessibility, null, {
+      secondary_content: { placement: 'first' },
+    }, {
+      ...focusedTask,
+      regionAdjustments: {
+        secondary_content: { placement: 'last' },
+        status_indicators: { placement: 'first' },
+      },
+    });
+
+    expect(manifest.status_indicators.placement).toBe('first');
+    expect(manifest.secondary_content.placement).toBe('first');
+  });
+
   it('drops unsupported and arbitrary properties at the manifest boundary', () => {
     const unsafe = {
       minimumTargetSize: 72,
@@ -88,6 +158,8 @@ describe('bounded adaptation manifest', () => {
       html: '<button>Injected</button>',
       x: 100,
       y: 100,
+      layout: 'freeform',
+      placement: 'top-left',
     } as never;
 
     expect(sanitizeComponentAdaptation('appointment_actions', unsafe)).toEqual({ minimumTargetSize: 72 });

@@ -5,6 +5,7 @@ import { useSimulationStore } from '../simulation/simulationStore';
 import { useCalibrationStore } from '../calibration/calibrationStore';
 import { usePortalStore } from '../state/portalStore';
 import { App } from './App';
+import { defaultTaskExperience } from '../adaptation/types';
 
 describe('Guide portal UI', () => {
   beforeEach(() => {
@@ -83,5 +84,36 @@ describe('Guide portal UI', () => {
     expect(screen.getByRole('radiogroup', { name: 'Available reschedule times' })).toBeInTheDocument();
     expect(usePortalStore.getState().reschedule).toMatchObject({ phase: 'choosing', selectedSlotId: null });
     expect(usePortalStore.getState().appointment.date).toBe('2026-09-10');
+  });
+
+  it('renders and refines a task-composed experience without replacing semantic controls', async () => {
+    render(<App />);
+    act(() => {
+      usePortalStore.getState().applyTaskExperience(
+        defaultTaskExperience,
+        { controlSize: 'large', spacing: 'increased' },
+        true,
+        'guide',
+      );
+    });
+
+    expect(await screen.findByText('Personalized for this task')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Reschedule your appointment' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Monday, September 14/ })).toBeInTheDocument();
+    expect(usePortalStore.getState().reschedule.selectedSlotId).toBeNull();
+
+    fireEvent.click(screen.getByRole('radio', { name: /Monday, September 14/ }));
+    act(() => {
+      usePortalStore.getState().applyTaskExperience(
+        { ...defaultTaskExperience, workflowLayout: 'one-page' },
+        {},
+        true,
+        'guide',
+      );
+    });
+
+    expect(screen.getByRole('radiogroup', { name: 'Available reschedule times' })).toBeInTheDocument();
+    expect(screen.getByText('September 14, 2026', { selector: '[data-new="true"] strong' })).toBeInTheDocument();
+    expect(usePortalStore.getState().reschedule.selectedSlotId).toBe('slot_2026_09_14_1500');
   });
 });

@@ -60,7 +60,15 @@ function NavigationItem({
 export function Sidebar() {
   const currentSection = usePortalStore((state) => state.currentSection);
   const openSection = usePortalStore((state) => state.openSection);
+  const taskExperience = usePortalStore((state) => state.taskExperience);
   const navigationRegion = useAdaptationRegion('primary_navigation');
+  const focusedNavigation = taskExperience?.navigationPresentation === 'focused';
+  const primaryNavigation = focusedNavigation
+    ? navigation.filter((item) => item.section === 'home' || item.section === 'appointments')
+    : navigation;
+  const secondaryNavigation = focusedNavigation
+    ? navigation.filter((item) => item.section !== 'home' && item.section !== 'appointments')
+    : [];
 
   return (
     <aside className={styles.sidebar}>
@@ -76,7 +84,7 @@ export function Sidebar() {
 
       <nav {...navigationRegion} aria-label="Portal sections">
         <ul className={styles.navList}>
-          {navigation.map((item) => (
+          {primaryNavigation.map((item) => (
             <NavigationItem
               key={item.section}
               item={item}
@@ -85,6 +93,21 @@ export function Sidebar() {
             />
           ))}
         </ul>
+        {focusedNavigation ? (
+          <details className={styles.focusedNavigationMore}>
+            <summary>Other portal sections</summary>
+            <ul className={styles.navList}>
+              {secondaryNavigation.map((item) => (
+                <NavigationItem
+                  key={item.section}
+                  item={item}
+                  active={currentSection === item.section}
+                  onOpen={(section) => openSection(section, 'you')}
+                />
+              ))}
+            </ul>
+          </details>
+        ) : null}
       </nav>
 
       <nav className={styles.legacyExtraNav} aria-label="Additional patient services">

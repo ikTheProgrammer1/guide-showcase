@@ -1,5 +1,5 @@
-import { AnimatePresence, motion } from 'motion/react';
-import { ArrowLeft, CalendarCheck, Check, CheckCircle2, Clock3, RotateCcw, X } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { ArrowLeft, CalendarCheck, Check, CheckCircle2, Clock3, RotateCcw, Sparkles, X } from 'lucide-react';
 import { useEffect, useRef, type KeyboardEvent } from 'react';
 import { useAdaptationRegion } from '../../adaptation/useAdaptation';
 import { originalAppointment, rescheduleSlots } from '../../data/demoData';
@@ -56,8 +56,12 @@ function SlotButton({ slot, selected, tabStop }: { slot: RescheduleSlot; selecte
 }
 
 export function RescheduleDialog() {
+  const reduceMotion = useReducedMotion();
   const appointment = usePortalStore((state) => state.appointment);
   const reschedule = usePortalStore((state) => state.reschedule);
+  const functionalProfile = usePortalStore((state) => state.functionalProfile);
+  const taskExperience = usePortalStore((state) => state.taskExperience);
+  const accessibility = usePortalStore((state) => state.accessibility);
   const close = usePortalStore((state) => state.closeReschedule);
   const back = usePortalStore((state) => state.backToRescheduleChoices);
   const confirm = usePortalStore((state) => state.confirmReschedule);
@@ -68,6 +72,7 @@ export function RescheduleDialog() {
   const dialogRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
+  const onePage = taskExperience?.workflowLayout === 'one-page';
 
   const dismiss = () => {
     cancelGuidePresence();
@@ -121,7 +126,13 @@ export function RescheduleDialog() {
   return (
     <AnimatePresence>
       {reschedule.dialogOpen ? (
-        <motion.div className={styles.dialogBackdrop} data-simulation-surface="true" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        <motion.div
+          className={styles.dialogBackdrop}
+          data-simulation-surface="true"
+          initial={reduceMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+        >
           <motion.section
             ref={dialogRef}
             className={styles.dialog}
@@ -129,10 +140,10 @@ export function RescheduleDialog() {
             aria-modal="true"
             aria-labelledby="reschedule-title"
             onKeyDown={handleDialogKeys}
-            initial={{ opacity: 0, y: 24, scale: 0.98 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 18, scale: 0.98 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            exit={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 18, scale: 0.98 }}
+            transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
           >
             {reschedule.phase === 'complete' ? (
               <div className={styles.successPanel} role="status" aria-live="polite">
@@ -158,10 +169,43 @@ export function RescheduleDialog() {
             ) : (
               <>
                 {standardHeader}
+                {functionalProfile ? (
+                  <div className={styles.reschedulePersonalizationNotice} role="status" aria-label="Personalized appointment controls">
+                    <Sparkles size={18} aria-hidden="true" />
+                    <span>
+                      <strong>Personalized for your interaction</strong>
+                      {functionalProfile.input.minimumTargetSize}px minimum targets · {functionalProfile.input.minimumControlGap}px spacing · separated appointment actions
+                    </span>
+                  </div>
+                ) : null}
+                {taskExperience ? (
+                  <div className={styles.taskPersonalizationNotice}>
+                    <Sparkles size={18} aria-hidden="true" />
+                    <span role="status" aria-label="Task-focused interface changes">
+                      <strong>Personalized for you</strong>
+                      {[
+                        'Rescheduling is prioritized',
+                        taskExperience.languageStyle === 'plain' ? 'labels use plain language' : 'labels use standard portal language',
+                        accessibility.controlSize === 'large' ? 'controls are larger' : 'controls use standard sizing',
+                        accessibility.spacing === 'increased' ? 'controls have more separation' : 'controls use standard spacing',
+                        taskExperience.informationDensity === 'focused'
+                          ? 'secondary information is collapsed'
+                          : taskExperience.informationDensity === 'detailed'
+                            ? 'supporting information stays expanded'
+                            : 'information uses a balanced level of detail',
+                      ].join(', ')}.
+                    </span>
+                    <button type="button" onClick={() => cancelGuidePresence()}>Stop Guide</button>
+                  </div>
+                ) : null}
                 <div className={styles.currentAppointmentStrip}><span>Current appointment</span><strong>{originalAppointment.dateLabel} · {originalAppointment.time}</strong></div>
 
-                <div {...formsRegion} className={styles.rescheduleStep}>
-                  {reschedule.phase === 'choosing' ? (
+                <div
+                  {...formsRegion}
+                  className={styles.rescheduleStep}
+                  data-workflow-layout={onePage ? 'one-page' : 'step-by-step'}
+                >
+                  {reschedule.phase === 'choosing' || onePage ? (
                     <div className={styles.slotColumn}>
                       <h3>Available times</h3>
                       <div role="radiogroup" aria-label="Available reschedule times" className={styles.slotList}>
@@ -176,7 +220,8 @@ export function RescheduleDialog() {
                       </div>
                       <p className={styles.stepHint}>Selecting a time opens a separate review. It does not change the appointment.</p>
                     </div>
-                  ) : (
+                  ) : null}
+                  {reschedule.phase === 'reviewing' ? (
                     <aside className={styles.reviewPanel} aria-live="polite">
                       <span className={styles.reviewLabel}>Review change</span>
                       <div className={styles.timeComparison}>
@@ -192,7 +237,7 @@ export function RescheduleDialog() {
                         </button>
                       </div>
                     </aside>
-                  )}
+                  ) : null}
                 </div>
 
                 <button className={`${styles.iconButton} ${styles.dialogDismiss}`} onClick={dismiss} aria-label="Close reschedule dialog"><X size={20} aria-hidden="true" /></button>

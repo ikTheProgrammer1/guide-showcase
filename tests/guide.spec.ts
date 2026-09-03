@@ -174,6 +174,21 @@ test('approved non-persisted adaptation returns to legacy after reload', async (
   await expectLegacyBaseline(page);
 });
 
+test('temporary task personalization returns to legacy after reload', async ({ page }) => {
+  await installWebMCP(page);
+  await page.goto('/');
+  await callToolWithoutOptions(page, 'personalize_for_task', {
+    goal: 'reschedule_appointment',
+    guideVisibility: 'minimal',
+    timeSelection: 'person',
+  });
+  await expect(page.locator('[data-personalized="true"]')).toBeVisible();
+  expect(await page.evaluate((key) => window.localStorage.getItem(key), rememberedPreferencesKey)).toBeNull();
+
+  await page.reload();
+  await expectLegacyBaseline(page);
+});
+
 test('explicitly remembered profile restores the personalized interface after reload', async ({ page }) => {
   await installWebMCP(page);
   await page.goto('/');
@@ -252,6 +267,92 @@ test('points to the reschedule entry point before and after composition without 
   expect(adapted).toMatchObject({ ok: true, presentedVisually: true });
   expect((await callTool(page, 'get_portal_state', {}) as { state: { currentSection: string; reschedule: { dialogOpen: boolean } } }).state)
     .toMatchObject({ currentSection: 'home', reschedule: { dialogOpen: false } });
+});
+
+test('uses one WebMCP call for immediate task personalization and preserves the human time choice', async ({ page }) => {
+  await installWebMCP(page);
+  await page.goto('/');
+  await expectLegacyBaseline(page);
+
+  const result = await callToolWithoutOptions(page, 'personalize_for_task', {
+    goal: 'reschedule_appointment',
+    assistanceLevel: 'collaborate',
+    informationDensity: 'focused',
+    languageStyle: 'plain',
+    workflowLayout: 'step-by-step',
+    navigationPresentation: 'focused',
+    guideVisibility: 'visible',
+    timeSelection: 'person',
+    openWorkflow: true,
+  }) as {
+    ok: boolean;
+    chooserOpen: boolean;
+    selectedSlot: string | null;
+    committed: boolean;
+    presentedVisually: boolean;
+  };
+
+  expect(result).toMatchObject({
+    ok: true,
+    chooserOpen: true,
+    selectedSlot: null,
+    committed: false,
+    presentedVisually: true,
+  });
+  await expect(page.locator('[data-personalized="true"]')).toBeVisible();
+  await expect(page.getByText('Personalized for this task')).toBeVisible();
+  await expect(page.getByRole('status', { name: 'Task-focused interface changes' })).toContainText(
+    'Rescheduling is prioritized',
+  );
+  await expect(page.getByRole('heading', { name: 'Reschedule your appointment' })).toBeVisible();
+  await expect(page.getByRole('radio', { name: /Monday, September 14/ })).toBeVisible();
+  await expect(page.getByText('Other portal sections')).toBeVisible();
+
+  const context = await callTool(page, 'get_northstar_context', {}) as {
+    context: {
+      rescheduleWorkflow: {
+        decisionOwner: string;
+        steps: Array<{ id: string; status: string }>;
+      };
+    };
+  };
+  expect(context.context.rescheduleWorkflow.decisionOwner).toBe('person');
+  expect(context.context.rescheduleWorkflow.steps.find((step) => step.id === 'confirm_replacement'))
+    .toMatchObject({ status: 'blocked' });
+
+  const blockedSelection = await callTool(page, 'select_reschedule_slot', {
+    appointmentId: 'appointment_robert_2026_09_10',
+    slotId: 'slot_2026_09_14_1500',
+  }) as { ok: boolean; error: { code: string } };
+  expect(blockedSelection).toMatchObject({
+    ok: false,
+    error: { code: 'human_decision_required' },
+  });
+
+  await page.getByRole('radio', { name: /Monday, September 14/ }).click();
+  const beforeRefinement = await callTool(page, 'get_portal_state', {}) as {
+    state: { rescheduleRevision: number; reschedule: { selectedSlotId: string | null } };
+  };
+  await callTool(page, 'personalize_for_task', {
+    goal: 'reschedule_appointment',
+    workflowLayout: 'one-page',
+  });
+  const afterRefinement = await callTool(page, 'get_portal_state', {}) as {
+    state: { rescheduleRevision: number; reschedule: { selectedSlotId: string | null } };
+  };
+  expect(afterRefinement.state).toMatchObject({
+    rescheduleRevision: beforeRefinement.state.rescheduleRevision,
+    reschedule: { selectedSlotId: 'slot_2026_09_14_1500' },
+  });
+  await expect(page.getByRole('radiogroup', { name: 'Available reschedule times' })).toBeVisible();
+  await expect(page.locator('[data-new="true"]')).toContainText('September 14, 2026');
+  await expect.poll(() => toolNames(page)).toContain('confirm_reschedule');
+
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Return to original presentation' }).click();
+  await expect(page.locator('[data-personalized="false"]')).toBeVisible();
+  await expect(page.getByText('Personalized for this task')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Upcoming appointments' })).toBeVisible();
 });
 
 test('keeps slot selection static and removes dynamic confirmation immediately after commit', async ({ page }) => {
@@ -779,7 +880,7 @@ test('does not expose simulation state or alter WebMCP discovery', async ({ page
   const stateDuring = await callTool(page, 'get_portal_state', {});
 
   expect(namesDuring).toEqual(namesBefore);
-  expect(namesDuring).toHaveLength(11);
+  expect(namesDuring).toHaveLength(13);
   expect(namesDuring.every((name) => !name.includes('simulation'))).toBe(true);
   expect(stateDuring).toEqual(stateBefore);
   expect(JSON.stringify(stateDuring)).not.toContain('parkinsons');
@@ -844,6 +945,9 @@ test('runs the complete Parkinson’s hero flow through calibration, human choic
   await page.keyboard.press('Enter');
 
   await expect(page.getByRole('heading', { name: 'Reschedule your appointment' })).toBeVisible();
+  await expect(page.getByRole('status', { name: 'Personalized appointment controls' })).toContainText(
+    '44px minimum targets · 16px spacing · separated appointment actions',
+  );
   const composedState = await callTool(page, 'get_portal_state', {}) as {
     state: {
       appointment: { date: string };

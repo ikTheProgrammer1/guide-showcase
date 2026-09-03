@@ -1,4 +1,14 @@
 import { hasPersonalization, resolveAdaptationManifest } from '../adaptation/manifest';
+import {
+  resolveTaskExperience,
+  taskExperienceSummary,
+} from '../adaptation/taskExperience';
+import {
+  assistanceLevels,
+  semanticComponentIds,
+  taskGoals,
+  type TaskExperienceInput,
+} from '../adaptation/types';
 import { startPointerPrecisionCalibration } from '../calibration/startCalibration';
 import { useCalibrationStore } from '../calibration/calibrationStore';
 import { demoBill, demoInsurance, rescheduleSlots } from '../data/demoData';
@@ -10,6 +20,7 @@ import {
   type PortalSection,
   type SemanticTarget,
 } from '../types';
+import { buildNorthstarContext } from './workflowContext';
 
 export const semanticTargetMetadata: Record<
   SemanticTarget,
@@ -74,7 +85,21 @@ function portalSnapshot() {
     state.accessibility,
     state.functionalProfile,
     state.componentOverrides,
+    state.taskExperience,
   );
+  const taskExperience = state.taskExperience
+    ? {
+        goal: state.taskExperience.goal,
+        assistanceLevel: state.taskExperience.assistanceLevel,
+        informationDensity: state.taskExperience.informationDensity,
+        languageStyle: state.taskExperience.languageStyle,
+        workflowLayout: state.taskExperience.workflowLayout,
+        navigationPresentation: state.taskExperience.navigationPresentation,
+        guideVisibility: state.taskExperience.guideVisibility,
+        timeSelection: state.taskExperience.timeSelection,
+        regionAdjustments: state.taskExperience.regionAdjustments,
+      }
+    : null;
   return {
     interfaceMode: personalized ? 'adapted' : 'legacy',
     currentSection: state.currentSection,
@@ -90,11 +115,13 @@ function portalSnapshot() {
     rescheduleRevision: state.rescheduleRevision,
     personalization: {
       functionalProfile: state.functionalProfile,
+      taskExperience,
       componentOverrides: state.componentOverrides,
       effectiveManifest: resolveAdaptationManifest(
         state.accessibility,
         state.functionalProfile,
         state.componentOverrides,
+        state.taskExperience,
       ),
       rememberPreferences: state.rememberPreferences,
       manifestRevision: state.manifestRevision,
@@ -150,10 +177,195 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
       execute: async () => ({ ok: true, state: portalSnapshot() }),
     },
     {
+      name: 'get_northstar_context',
+      title: 'Understand Northstar capabilities',
+      description:
+        'Read Northstar’s supported goals, complete workflow steps, current availability, blocked and future actions, human decisions, consequential boundaries, assistance levels, and bounded interface adaptations. Use this instead of guessing from the visual layout.',
+      inputSchema: noInputSchema,
+      annotations: { readOnlyHint: true, untrustedContentHint: false },
+      execute: async () => ({ ok: true, context: buildNorthstarContext(usePortalStore.getState()) }),
+    },
+    {
+      name: 'personalize_for_task',
+      title: 'Personalize Northstar for a task',
+      description:
+        'Primary personalization capability. Immediately compose Northstar’s existing semantic regions around the person’s goal, functional difficulty, presentation preferences, and desired help level. Use one call for requests such as “show me only what matters, use simple language, and help me reschedule, but let me choose the time” or for an initial response to difficult controls. This may open the non-committing chooser, but it never selects a time, confirms an appointment, changes permissions, hides required warnings, or injects arbitrary interface code. Reuse this tool to refine the live arrangement, such as switching between step-by-step and one-page presentation.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          goal: {
+            type: 'string',
+            enum: taskGoals,
+            description: 'The supported Northstar outcome the interface should prioritize.',
+          },
+          assistanceLevel: {
+            type: 'string',
+            enum: assistanceLevels,
+            description: 'How much help to present. This never replaces confirmation rules.',
+          },
+          informationDensity: {
+            type: 'string',
+            enum: ['focused', 'balanced', 'detailed'],
+            description: 'How prominently primary and supporting information are presented.',
+          },
+          languageStyle: {
+            type: 'string',
+            enum: ['standard', 'plain'],
+            description: 'Whether labels use standard portal language or plainer task language.',
+          },
+          workflowLayout: {
+            type: 'string',
+            enum: ['step-by-step', 'one-page'],
+            description: 'Whether workflow choices and review appear sequentially or together.',
+          },
+          navigationPresentation: {
+            type: 'string',
+            enum: ['focused', 'full'],
+            description: 'Focused keeps unrelated sections discoverable under progressive disclosure; full shows all section controls.',
+          },
+          guideVisibility: {
+            type: 'string',
+            enum: ['visible', 'minimal'],
+            description: 'Whether Guide visibly points and explains after the immediate website transformation.',
+          },
+          timeSelection: {
+            type: 'string',
+            enum: ['person', 'shared'],
+            description: 'Who may choose a replacement time. Use person when the person says they want to choose.',
+          },
+          regionAdjustments: {
+            type: 'array',
+            maxItems: 6,
+            description: 'Optional bounded adjustments to website-authored semantic regions. Unsupported combinations are ignored.',
+            items: {
+              type: 'object',
+              properties: {
+                region: { type: 'string', enum: semanticComponentIds },
+                placement: { type: 'string', enum: ['default', 'first', 'last'] },
+                minimumTargetSize: { type: 'number', enum: [28, 36, 38, 44, 52, 56, 64, 72] },
+                minimumControlGap: { type: 'number', enum: [5, 8, 10, 16, 24, 32] },
+                layout: { type: 'string', enum: ['row', 'column', 'step-by-step'] },
+                informationPriority: { type: 'string', enum: ['all', 'primary'] },
+                secondaryContent: { type: 'string', enum: ['visible', 'collapsed'] },
+                labelStyle: { type: 'string', enum: ['concise', 'descriptive', 'plain-language'] },
+                statusPresentation: { type: 'string', enum: ['color-and-text', 'icon-shape-text'] },
+                activationProtection: { type: 'string', enum: ['standard', 'review'] },
+                focusVisibility: { type: 'string', enum: ['standard', 'enhanced'] },
+                destructiveActionPlacement: { type: 'string', enum: ['inline', 'separate'] },
+              },
+              required: ['region'],
+              additionalProperties: false,
+            },
+          },
+          textScale: { type: 'number', enum: [100, 125, 150, 175, 200] },
+          contrast: { type: 'string', enum: ['standard', 'high'] },
+          controlSize: { type: 'string', enum: ['standard', 'large'] },
+          controlSpacing: { type: 'string', enum: ['standard', 'increased'] },
+          colorIndependentStatus: { type: 'boolean' },
+          emphasizeInteractive: { type: 'boolean' },
+          openWorkflow: {
+            type: 'boolean',
+            description: 'Open the safe non-committing workflow entry when true. Defaults to true.',
+          },
+        },
+        required: ['goal'],
+        additionalProperties: false,
+      },
+      annotations: { readOnlyHint: false, untrustedContentHint: false },
+      execute: async (input, options) => {
+        const signal = options?.signal;
+        if (signal?.aborted) return cancelledResult('cancelled');
+        if (input.goal !== 'reschedule_appointment') {
+          return failed('unsupported_goal', 'That task experience is not available in this demonstration.');
+        }
+
+        const before = usePortalStore.getState();
+        const taskInput = input as unknown as TaskExperienceInput;
+        const resolved = resolveTaskExperience(
+          before.taskExperience,
+          taskInput,
+        );
+        const latestHumanOverrides = new Map(
+          before.recentHumanOverrides.map((override) => [override.field, override.value]),
+        );
+        if (taskInput.informationDensity === undefined && latestHumanOverrides.has('density')) {
+          resolved.experience.informationDensity = latestHumanOverrides.get('density') === 'simplified'
+            ? 'focused'
+            : 'balanced';
+        }
+        const explicitAccessibilityKeys = new Set<string>([
+          ...(taskInput.textScale !== undefined ? ['textScale'] : []),
+          ...(taskInput.contrast !== undefined ? ['contrast'] : []),
+          ...(taskInput.controlSize !== undefined ? ['controlSize'] : []),
+          ...(taskInput.controlSpacing !== undefined ? ['spacing'] : []),
+          ...(taskInput.colorIndependentStatus !== undefined ? ['colorIndependentStatus'] : []),
+          ...(taskInput.emphasizeInteractive !== undefined ? ['emphasizeInteractive'] : []),
+        ]);
+        resolved.accessibilityPatch = Object.fromEntries(
+          Object.entries(resolved.accessibilityPatch).filter(([key]) => (
+            explicitAccessibilityKeys.has(key) || !latestHumanOverrides.has(key)
+          )),
+        ) as Partial<AccessibilitySettings>;
+        const changed = before.applyTaskExperience(
+          resolved.experience,
+          resolved.accessibilityPatch,
+          resolved.openWorkflow,
+          'guide',
+        );
+
+        let spokenByPage = false;
+        let guidePresented = false;
+        let presentationInterrupted = signal?.aborted === true;
+        if (resolved.experience.guideVisibility === 'visible' && !presentationInterrupted) {
+          await new Promise<void>((resolve) => {
+            if (typeof requestAnimationFrame === 'function') {
+              requestAnimationFrame(() => resolve());
+            } else {
+              resolve();
+            }
+          });
+          if (signal?.aborted) {
+            presentationInterrupted = true;
+          } else {
+            const presentation = await runGuideAction({
+              target: usePortalStore.getState().reschedule.dialogOpen
+                ? 'appointment_slot_sep_11'
+                : 'reschedule_button',
+              message: `Personalized for you: ${taskExperienceSummary(resolved.experience)}. You choose the time.`,
+              signal,
+            });
+            guidePresented = presentation.ok && presentation.presentedVisually;
+            spokenByPage = presentation.ok && presentation.spokenByPage;
+            presentationInterrupted = !presentation.ok && presentation.code === 'cancelled';
+          }
+        }
+
+        const state = usePortalStore.getState();
+        return {
+          ok: true,
+          changed,
+          taskExperience: resolved.experience,
+          interfaceMode: 'adapted',
+          chooserOpen: state.reschedule.dialogOpen,
+          selectedSlot: state.reschedule.selectedSlotId,
+          committed: false,
+          uiRevision: state.uiRevision,
+          rescheduleRevision: state.rescheduleRevision,
+          presentedVisually: true,
+          guidePresented,
+          spokenByPage,
+          presentationInterrupted,
+          next: resolved.experience.timeSelection === 'person'
+            ? 'The person chooses one available time. Northstar will then expose review and confirmation state.'
+            : 'Choose or explicitly delegate selection of one available time, then review before confirmation.',
+        };
+      },
+    },
+    {
       name: 'configure_accessibility',
       title: 'Adapt the portal',
       description:
-        'Apply one or more explicitly requested Northstar settings, such as “make text 175%” or “use stronger contrast.” Preserve omitted settings. For vague pointer-acquisition difficulty without requested values, use start_interface_calibration instead.',
+        'Apply one or more explicitly requested Northstar settings, such as “make text 175%” or “use stronger contrast,” while preserving omitted settings. For a complete task-centered reorganization, use personalize_for_task. Calibration is optional fine-tuning when the person asks for it or the first adaptation is insufficient.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -233,6 +445,7 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
             state.accessibility,
             state.functionalProfile,
             state.componentOverrides,
+            state.taskExperience,
           ) ? 'adapted' : 'legacy',
           uiRevision: state.uiRevision,
           presentedVisually: result.presentedVisually,
@@ -244,7 +457,7 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
       name: 'start_interface_calibration',
       title: 'Start interface calibration',
       description:
-        'Open a safe, local pointer-precision calibration when the person describes functional difficulty acquiring controls, such as shaking hands or repeatedly missing buttons, without specifying a target size. Do not call from a diagnosis word alone. This selects a calibration family, never a diagnosis or disability template. The webpage handles practice attempts locally and never automatically confirms an appointment.',
+        'Optional fine-tuning after an initial adaptation when the person repeatedly misses controls, does not know what target size or spacing works, or explicitly asks to calibrate. Do not require calibration before helping, and do not call from a diagnosis word alone. This opens safe local practice, selects a calibration family rather than a disability template, and never automatically confirms an appointment.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -395,7 +608,7 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
       name: 'open_reschedule',
       title: 'Open appointment rescheduling',
       description:
-        'Visibly guide Robert to the reschedule control and open the non-committing time chooser. Nothing changes until a selected time is explicitly confirmed.',
+        'Open the existing non-committing time chooser when the person asks only to begin rescheduling. If they also ask for simpler language, focus, layout, or other presentation changes, use personalize_for_task instead. Nothing changes until a selected time is explicitly confirmed.',
       inputSchema: {
         type: 'object',
         properties: { appointmentId: { type: 'string', enum: ['appointment_robert_2026_09_10'] } },
@@ -491,6 +704,12 @@ export function createSelectSlotTool(): WebMCP.ModelContextTool {
       }
       if (!state.reschedule.dialogOpen) {
         return failed('chooser_closed', 'Open the reschedule workflow before selecting a time.');
+      }
+      if (state.taskExperience?.timeSelection === 'person') {
+        return failed(
+          'human_decision_required',
+          'The person asked to choose the appointment time. Keep the chooser open and wait for their selection.',
+        );
       }
 
       const slotId = input.slotId as string;

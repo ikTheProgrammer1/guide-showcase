@@ -23,6 +23,8 @@ describe('WebMCP tool contracts', () => {
     const tools = createStaticTools();
     expect(tools.map((tool) => tool.name)).toEqual([
       'get_portal_state',
+      'get_northstar_context',
+      'personalize_for_task',
       'configure_accessibility',
       'start_interface_calibration',
       'guide_to',
@@ -41,6 +43,193 @@ describe('WebMCP tool contracts', () => {
     expect(stateTool?.annotations?.readOnlyHint).toBe(true);
     expect(guideTool?.annotations?.readOnlyHint).toBe(false);
     expect(calibrationTool?.annotations?.readOnlyHint).toBe(false);
+    expect(tools.find((tool) => tool.name === 'get_northstar_context')?.annotations?.readOnlyHint).toBe(true);
+    expect(tools.find((tool) => tool.name === 'personalize_for_task')?.annotations?.readOnlyHint).toBe(false);
+  });
+
+  it('exposes complete workflow context including blocked future actions and human decisions', async () => {
+    const tool = createStaticTools().find((candidate) => candidate.name === 'get_northstar_context')!;
+    const result = await tool.execute({}, { signal }) as {
+      context: {
+        rescheduleWorkflow: {
+          decisionOwner: string;
+          steps: Array<{
+            id: string;
+            status: string;
+            consequential: boolean;
+            requiresExplicitDelegation?: boolean;
+          }>;
+        };
+        supportedAdaptations: { arbitraryDomOrCodeAllowed: boolean };
+      };
+    };
+    const confirm = result.context.rescheduleWorkflow.steps.find(
+      (step) => step.id === 'confirm_replacement',
+    );
+
+    expect(confirm).toMatchObject({
+      status: 'blocked',
+      consequential: true,
+      requiresExplicitDelegation: true,
+    });
+    expect(result.context.supportedAdaptations.arbitraryDomOrCodeAllowed).toBe(false);
+  });
+
+  it('reports completed choice, review, and confirmation steps after a commit', async () => {
+    const store = usePortalStore.getState();
+    store.openReschedule('you');
+    usePortalStore.getState().selectRescheduleSlot('slot_2026_09_14_1500', 'you');
+    usePortalStore.getState().confirmReschedule('slot_2026_09_14_1500', 'guide');
+    const tool = createStaticTools().find((candidate) => candidate.name === 'get_northstar_context')!;
+    const result = await tool.execute({}, { signal }) as {
+      context: { rescheduleWorkflow: { steps: Array<{ id: string; status: string }> } };
+    };
+    const statuses = Object.fromEntries(
+      result.context.rescheduleWorkflow.steps.map((step) => [step.id, step.status]),
+    );
+
+    expect(statuses).toMatchObject({
+      choose_replacement_time: 'complete',
+      review_change: 'complete',
+      confirm_replacement: 'complete',
+      undo_change: 'available',
+    });
+  });
+
+  it('uses one bounded call to personalize and open the chooser without selecting or committing', async () => {
+    const tool = createStaticTools().find((candidate) => candidate.name === 'personalize_for_task')!;
+    const executeWithoutOptions = tool.execute as (
+      input: Record<string, unknown>,
+    ) => Promise<unknown>;
+    const result = await executeWithoutOptions({
+      goal: 'reschedule_appointment',
+      assistanceLevel: 'collaborate',
+      informationDensity: 'focused',
+      languageStyle: 'plain',
+      workflowLayout: 'step-by-step',
+      navigationPresentation: 'focused',
+      timeSelection: 'person',
+      openWorkflow: true,
+    });
+    const state = usePortalStore.getState();
+
+    expect(result).toMatchObject({
+      ok: true,
+      interfaceMode: 'adapted',
+      chooserOpen: true,
+      selectedSlot: null,
+      committed: false,
+      presentedVisually: true,
+    });
+    expect(state.taskExperience).toMatchObject({
+      goal: 'reschedule_appointment',
+      languageStyle: 'plain',
+      informationDensity: 'focused',
+      timeSelection: 'person',
+    });
+    expect(state.reschedule).toMatchObject({ phase: 'choosing', selectedSlotId: null });
+    expect(state.appointment.date).toBe('2026-09-10');
+  });
+
+  it('keeps task personalization bounded to semantic enums without DOM or code parameters', () => {
+    const tool = createStaticTools().find((candidate) => candidate.name === 'personalize_for_task')!;
+    const schema = tool.inputSchema as {
+      properties: {
+        regionAdjustments: {
+          maxItems: number;
+          items: { properties: Record<string, unknown>; additionalProperties: boolean };
+        };
+      };
+      additionalProperties: boolean;
+    };
+    const serialized = JSON.stringify(schema);
+
+    expect(schema.additionalProperties).toBe(false);
+    expect(schema.properties.regionAdjustments.maxItems).toBe(6);
+    expect(schema.properties.regionAdjustments.items.additionalProperties).toBe(false);
+    expect(Object.keys(schema.properties.regionAdjustments.items.properties)).toContain('region');
+    expect(serialized).not.toMatch(/selector|css|html|coordinate|javascript|domMutation/i);
+  });
+
+  it('ignores invalid direct-call region values even if a client skips schema validation', async () => {
+    const tool = createStaticTools().find((candidate) => candidate.name === 'personalize_for_task')!;
+    const result = await tool.execute({
+      goal: 'reschedule_appointment',
+      guideVisibility: 'minimal',
+      workflowLayout: 'freeform',
+      regionAdjustments: [
+        { region: 'unknown_region', placement: 'top-left', css: 'display:none' },
+        { region: 'appointment_actions', placement: 'top-left', layout: 'freeform' },
+      ],
+    } as never, { signal });
+
+    expect(result).toMatchObject({ ok: true });
+    expect(usePortalStore.getState().taskExperience).toMatchObject({
+      workflowLayout: 'step-by-step',
+      regionAdjustments: { appointment_actions: {} },
+    });
+  });
+
+  it('keeps show-level personalization non-activating unless workflow opening is explicit', async () => {
+    const tool = createStaticTools().find((candidate) => candidate.name === 'personalize_for_task')!;
+    const result = await tool.execute({
+      goal: 'reschedule_appointment',
+      assistanceLevel: 'show',
+      guideVisibility: 'minimal',
+    }, { signal });
+
+    expect(result).toMatchObject({ ok: true, chooserOpen: false, committed: false });
+    expect(usePortalStore.getState()).toMatchObject({
+      currentSection: 'appointments',
+      reschedule: { dialogOpen: false, selectedSlotId: null },
+    });
+  });
+
+  it('preserves newer manual presentation choices over inferred task defaults', async () => {
+    const state = usePortalStore.getState();
+    state.setAccessibility({ controlSize: 'large', density: 'simplified' }, 'you');
+    usePortalStore.getState().setAccessibility({ controlSize: 'standard', density: 'standard' }, 'you');
+    const tool = createStaticTools().find((candidate) => candidate.name === 'personalize_for_task')!;
+
+    await tool.execute({
+      goal: 'reschedule_appointment',
+      guideVisibility: 'minimal',
+    }, { signal });
+
+    expect(usePortalStore.getState().accessibility.controlSize).toBe('standard');
+    expect(usePortalStore.getState().taskExperience?.informationDensity).toBe('balanced');
+  });
+
+  it('keeps agent slot selection blocked when the task reserves the decision for the person', async () => {
+    usePortalStore.getState().applyTaskExperience(
+      {
+        goal: 'reschedule_appointment',
+        assistanceLevel: 'collaborate',
+        informationDensity: 'focused',
+        languageStyle: 'plain',
+        workflowLayout: 'step-by-step',
+        navigationPresentation: 'focused',
+        guideVisibility: 'visible',
+        timeSelection: 'person',
+        regionAdjustments: {},
+      },
+      {},
+      true,
+      'guide',
+    );
+    const result = await createSelectSlotTool().execute(
+      {
+        appointmentId: 'appointment_robert_2026_09_10',
+        slotId: 'slot_2026_09_14_1500',
+      },
+      { signal },
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: 'human_decision_required' },
+    });
+    expect(usePortalStore.getState().reschedule.selectedSlotId).toBeNull();
   });
 
   it('exposes one bounded calibration tool with no diagnosis or DOM parameters', () => {

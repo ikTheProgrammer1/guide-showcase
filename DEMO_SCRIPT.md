@@ -1,104 +1,97 @@
-# Guide Demo Script — 2:55 Target
+# Guide Demo Script — 2:45 Target
 
-Record the queryless production URL in ChatGPT’s built-in browser at 1440 × 900 and 100% browser zoom. Start with **Reset demo**. Keep Site Tools activity visible when practical.
+Record the queryless production URL in ChatGPT’s built-in browser at 1440 × 900 and 100% browser zoom. Start with **Reset demo** and keep Site Tools activity visible when practical.
 
-## 0:00–0:16 — One Interface for Everyone
+## 0:00–0:20 — One Fixed Interface
 
-**Screen:** Hold on the dense Northstar portal: compact navigation, small appointment controls, abbreviations, competing panels, and color-led statuses.
-
-**Narration:**
-
-“Most websites still give everyone one fixed interface. Essential services often look like this.”
-
-## 0:16–0:38 — An Honest Demonstration
-
-**Screen:** Open **Simulate a barrier → Mobility → Parkinson’s**. Aim at compact **MODIFY APPT** during the seeded phase. The displaced cursor lands outside the button and **Missed target** appears.
+**Screen:** Hold on dense Northstar: compact navigation, small abbreviated actions, administrative language, competing panels, and color-led status.
 
 **Narration:**
 
-“This simulator illustrates one pointer-precision barrier; it does not reproduce anyone’s disability. The miss comes from the elements under the real and displaced coordinates. It is not hard-coded for this button.”
+“Websites usually force every person through the same fixed interface. Essential services can be functional and still be difficult to understand or operate.”
 
-## 0:38–0:58 — One Semantic WebMCP Call
+## 0:20–0:42 — Describe the Need
 
 **Prompt:**
 
-> My hand shakes and I keep missing buttons. Help me use this page.
+> I don’t understand this portal. I need to change my appointment. Show me only what matters, use simple language, and help me—but let me choose the time.
 
-**Expected tool call:** start_interface_calibration with domain pointer_precision and goal reschedule_appointment.
-
-**Screen:** Show the tool activity, then the safe calibration. The tool returns immediately.
+**Expected discovery:** `get_northstar_context`, then 1 `personalize_for_task` call with the rescheduling goal, focused information, plain language, collaboration, and person-owned time selection.
 
 **Narration:**
 
-“The phrase identifies a calibration family, not a diagnosis or a preset. ChatGPT calls one bounded WebMCP tool. The repeated practice loop stays local, so every adjustment is immediate.”
+“Northstar tells my chosen agent what goals it supports, what each workflow accomplishes, which steps are possible or blocked, which decisions belong to me, and which actions have consequences.”
 
-## 0:58–1:28 — Calibrate Locally
+## 0:42–1:08 — The Website Reshapes Itself
 
-**Screen:** Hold briefly on the three-step comfort check, attempt indicators, and live measurement dock. Try the safe practice appointment button. Show an honest simulator-driven miss, then repeat successful attempts as the target grows. In the spacing step, demonstrate one miss or choose **Farther apart**, then complete the successful attempts.
-
-**Narration:**
-
-“This button cannot navigate or change an appointment. Northstar keeps only non-identifying aggregates—never raw coordinates—and changes one variable at a time: size first, then spacing.”
-
-## 1:28–1:48 — Human Approval, Component Composition
-
-**Screen:** On **Does this feel comfortable?**, show the original-versus-proposed appointment-action preview. Briefly show Larger/Smaller and Closer/Farther controls. Optionally select **Remember these preferences on Northstar**, then approve.
+**Screen:** Show the same page become the modern focused rescheduling experience immediately. Hold on the change explanation, larger separated controls, current appointment, and unselected times.
 
 **Narration:**
 
-“Nothing applies until I approve it. Northstar stores functional preferences, not Parkinson’s, simulator state, or miss history. Each semantic region composes only the properties it safely supports.”
+“With one bounded WebMCP request, the website—not the agent—recomposes its own semantic components. Rescheduling is prominent, labels are plain, unrelated sections stay discoverable, and controls are easier to operate. Nothing was reloaded, injected, selected, or confirmed.”
 
-**Screen:** The real rescheduling chooser opens locally. Hold on its large separated options and the unchanged current appointment.
+## 1:08–1:28 — Refine the Interface
 
-## 1:48–2:08 — Human Choice
+**Prompt:**
 
-**Screen:** Select **Monday, September 14 · 3:00 PM** manually. Show the separate current-versus-new review. Point out **Back to times**.
+> This is better, but show everything on one page instead of separate steps.
+
+**Expected tool:** `personalize_for_task` with `workflowLayout: "one-page"`.
+
+**Screen:** The existing time choices and review components rearrange. Optionally open **Personalize interface** briefly to show the same bounded region controls are available without AI.
 
 **Narration:**
 
-“Calibration continues into the real task, but stops before the decision. I choose the time. The appointment still cannot change without explicit confirmation.”
+“Personalization is not a universal simple mode. The person can refine individual regions, or return to the original presentation. Their latest explicit choice wins.”
 
-## 2:08–2:31 — Delegated Completion
+## 1:28–1:48 — Human Choice
+
+**Screen:** Select **Monday, September 14 · 3:00 PM** manually. Show the current-versus-new review and **Back to times**.
+
+**Narration:**
+
+“I asked to choose the time, so the agent-side selection tool is blocked. My manual choice enters the same shared state and is attributed to me.”
+
+## 1:48–2:13 — Delegated Completion
 
 **Prompt:**
 
 > That works. Finish it.
 
-**Expected tools:** get_portal_state, then confirm_reschedule for the currently selected slot.
+**Expected tools:** `get_portal_state`, then the dynamically available `confirm_reschedule` for the current human selection.
 
-**Screen:** Guide moves to Confirm, previews the before-and-after time, commits, and shows success. Site Tools activity shows confirm_reschedule disappearing immediately.
-
-**Narration:**
-
-“Only after I delegate does Guide re-read the appointment, selected slot, and workflow revision. A stale instruction is rejected instead of overwriting my choice.”
-
-## 2:31–2:42 — Undo
-
-**Screen:** Choose **Undo change**. Show the original September 10 appointment restored, then Done.
+**Screen:** Guide previews the old and new appointment, confirms, and shows success. Site Tools activity shows `confirm_reschedule` disappearing immediately.
 
 **Narration:**
 
-“The person keeps the last word. Consequential changes have review, Back, and Undo.”
+“Only after explicit delegation does Guide re-read the appointment, slot, and workflow revision. A stale instruction fails instead of overwriting me. The result remains reversible.”
 
-## 2:42–2:55 — Close
+## 2:13–2:26 — Undo & Manual Control
 
-**Screen:** Briefly show the bounded manifest, the start_interface_calibration schema, and the separate simulation store. Return to personalized Northstar and stop the simulation.
+**Screen:** Choose **Undo change**. Show the original September 10 time restored. Briefly point out **Stop Guide**, **Return to original presentation**, **Personalize interface**, and **Reset demo**.
 
 **Narration:**
 
-“Guide is not arbitrary DOM automation and it is not a disability template. It is a site-supported negotiation between a person, an agent, and one semantic interface.”
+“The person keeps the last word: Back, Stop, manual controls, the original view, Undo, and a full deterministic Reset remain available.”
+
+## 2:26–2:45 — Optional Fine-Tuning & Close
+
+**Screen:** Briefly show **Calibrate pointer precision** and its harmless **Practice appointment** target. Do not complete it in the primary flow.
+
+**Narration:**
+
+“Calibration is optional fine-tuning, never a test or a diagnosis. Raw pointer coordinates stay local and are not stored. Guide’s thesis is broader: the agent does not merely operate a website—it helps the website become the interface this person needs, then uses it with them.”
 
 ## Recording Checklist
 
-- Keep the final video under three minutes.
-- Show the production URL and tools actually discovered by the supported client.
-- Use the exact vague functional-needs prompt and verify it selects start_interface_calibration, not configure_accessibility.
-- Separately demonstrate that “make the text 175%” still selects configure_accessibility.
-- Show only one WebMCP calibration call; all practice attempts happen locally.
-- Keep the Parkinson’s simulator active through practice and the real appointment selection.
-- Show a genuine miss from DOM hit testing and no nearest-control retargeting.
-- Show explicit comfort approval, no preselected time, one manual time choice, delegated confirmation, and Undo.
-- State that remembered preferences are optional, local, bounded, and diagnosis-free.
-- Keep Dyslexia and Concentration difficulty out of the hero.
+- Show the queryless production URL starting in the dense legacy portal.
+- Verify the client discovers current production tools instead of assuming readiness.
+- Use the exact primary prompt and 1 `personalize_for_task` call.
+- Show a structural change, not only text zoom or contrast.
+- Show the chooser with no selected time.
+- Show the person-owned selection guard, manual time choice, fresh-state confirmation, tool removal, and Undo.
+- Demonstrate the one-page refinement without losing the selection.
+- Keep required information discoverable and confirmation explicit.
+- Describe calibration and the simulator only as optional, separate demonstration aids.
 - Do not imply a real healthcare integration, disability reproduction, diagnosis, disabled-user testing, or accessibility certification.
 - Upload the video publicly and add the link to Devpost manually.

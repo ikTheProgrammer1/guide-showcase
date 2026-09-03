@@ -63,6 +63,29 @@ await page.getByRole('status', { name: 'WebMCP status: Guide available' }).waitF
 await page.waitForTimeout(500);
 await page.screenshot({ path: new URL('guide-home.png', outputDirectory).pathname });
 
+await page.evaluate(async () => {
+  const tools = window.__guideScreenshotTools;
+  const tool = tools.get('personalize_for_task');
+  await tool.execute({
+    goal: 'reschedule_appointment',
+    assistanceLevel: 'collaborate',
+    informationDensity: 'focused',
+    languageStyle: 'plain',
+    workflowLayout: 'step-by-step',
+    navigationPresentation: 'focused',
+    guideVisibility: 'visible',
+    timeSelection: 'person',
+    openWorkflow: true,
+  });
+});
+await page.getByRole('heading', { name: 'Reschedule your appointment' }).waitFor();
+await page.waitForTimeout(700);
+await page.screenshot({ path: new URL('guide-task-personalized.png', outputDirectory).pathname });
+
+await page.reload();
+await page.getByRole('status', { name: 'WebMCP status: Guide available' }).waitFor();
+await page.waitForTimeout(300);
+
 await page.getByRole('button', { name: 'Simulate a barrier' }).click();
 await page.getByRole('button', { name: 'Mobility', exact: true }).click();
 await page.getByRole('button', { name: 'Parkinson’s' }).click();

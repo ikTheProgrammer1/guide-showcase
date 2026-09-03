@@ -61,6 +61,11 @@ const optionSets: Partial<Record<ComponentAdaptationKey, Array<{ value: string |
     { value: 'inline', label: 'With other actions' },
     { value: 'separate', label: 'Separate area' },
   ],
+  placement: [
+    { value: 'default', label: 'Default position' },
+    { value: 'first', label: 'Move first' },
+    { value: 'last', label: 'Move last' },
+  ],
 };
 
 const optionLabels: Record<ComponentAdaptationKey, string> = {
@@ -74,6 +79,7 @@ const optionLabels: Record<ComponentAdaptationKey, string> = {
   activationProtection: 'Action protection',
   focusVisibility: 'Keyboard focus',
   destructiveActionPlacement: 'Destructive actions',
+  placement: 'Position in section',
 };
 
 export function PersonalizeInterface() {

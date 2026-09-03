@@ -1,18 +1,16 @@
 # Guide
 
-**What if a website could learn how you use it—without diagnosing you—and compose a more comfortable interface with you?**
+**Describe what you need → the website reshapes itself → complete the task with your agent.**
 
-Guide is a WebMCP-native interaction layer inside Northstar Health, a fictional patient-services portal. A person can describe a functional barrier to ChatGPT, safely calibrate one interaction dimension on the webpage, approve the result, and continue the real task in an interface composed from those preferences.
+Guide is a WebMCP-native experience inside Northstar Health, a fictional patient-services portal. It demonstrates a website that can become the right interface for a particular person instead of forcing everyone through the same fixed design.
 
-Guide and WebMCP are the product. The built-in barrier simulator is an illustrative demonstration aid.
+The person uses their preferred client agent. Northstar exposes its real goals, workflow state, adaptation options, prerequisites, decisions, and consequences. The agent requests a bounded website-authored experience, and the same semantic React interface reorganizes immediately around the person and task.
 
-> Agents should not just use the web for us. They should be able to use it with us.
+> The agent does not merely operate the website. It helps the website become the interface this particular person needs, then uses that interface with them.
 
-| Fixed baseline | Safe local calibration | Approved result |
+| Dense starting portal | Immediate task personalization | Optional fine-tuning |
 |---|---|---|
-| ![Dense Northstar baseline](./docs/screenshots/guide-home.png) | ![Safe pointer calibration](./docs/screenshots/guide-calibration.png) | ![Calibration result preview](./docs/screenshots/guide-calibration-result.png) |
-
-The implemented calibration was developed from this [generated interface design study](./docs/design/calibration-vision.png), then refined against the real interaction and safety constraints.
+| ![Dense Northstar baseline](./docs/screenshots/guide-home.png) | ![Task-personalized rescheduling](./docs/screenshots/guide-task-personalized.png) | ![Safe pointer calibration](./docs/screenshots/guide-calibration.png) |
 
 ## Live Demo
 
@@ -21,29 +19,44 @@ The implemented calibration was developed from this [generated interface design 
 
 Everything in Northstar is fictional. There is no healthcare connection, authentication, upload, payment processing, medical advice, or financial advice.
 
-## The Central Experience
+## Primary Experience
 
-Northstar starts as a dense but functional institutional portal. It does not have a second “accessible template.” Every view uses one semantic React component tree.
+A fresh visitor sees a plausible, dense 2008–2015 patient portal: compact controls, administrative language, competing navigation, and equally prominent information. The personalized experience is the result, never the default.
 
-For the hero flow:
+The hero prompt is:
 
-1. The person activates the illustrative Parkinson’s pointer-precision simulator and genuinely misses the compact appointment control.
-2. They say: “My hand shakes and I keep missing buttons. Help me use this page.”
-3. ChatGPT selects `start_interface_calibration({ domain: "pointer_precision", goal: "reschedule_appointment" })` once.
-4. Northstar immediately opens a safe, non-operational practice target.
-5. Practice attempts stay local. Northstar adjusts one measured variable at a time: target size first, then control spacing.
-6. After several successful attempts, the person can request larger, smaller, closer, or farther-apart controls.
-7. Nothing is applied until the person explicitly says the result feels comfortable.
-8. Northstar stores only the approved functional profile and composes compatible semantic regions independently.
-9. The rescheduling chooser opens locally with no selected time. The person chooses a slot.
-10. Guide may confirm only after explicit delegation and a fresh appointment, slot, and revision check.
-11. The person can undo the change.
+> I don’t understand this portal. I need to change my appointment. Show me only what matters, use simple language, and help me—but let me choose the time.
 
-The webpage never maps a diagnosis such as “Parkinson’s” to a disability template. Diagnosis words are neither calibration inputs nor saved profile fields. A vague functional statement routes to calibration; an explicit request such as “make text 175%” remains a direct `configure_accessibility` request.
+The client agent can first read `get_northstar_context`, which describes supported goals, full workflows, current and future availability, blocked steps, human decisions, consequences, adaptation options, and safety rules. It then calls `personalize_for_task` once.
 
-## Safe, Bounded Composition
+Northstar synchronously begins the visible transformation before Guide animation or speech:
 
-Northstar resolves an adaptation manifest for six semantic component regions:
+- appointment rescheduling becomes the active goal;
+- unrelated navigation remains discoverable under progressive disclosure;
+- the appointment and safe next step become prominent;
+- labels use plain language;
+- controls become larger, separated, and easier to identify;
+- destructive actions stay separate;
+- secondary information collapses but remains available;
+- the non-committing chooser opens with no selected time;
+- a short page explanation states what changed.
+
+The person selects a time manually. Only after they say “That works. Finish it” may Guide re-read the shared state, preview the old and new times, and invoke the dynamically available confirmation. The person can go Back or Undo.
+
+A second request such as “Show everything on one page” reuses the same tool and the same components. It changes the bounded task manifest without discarding the current human selection.
+
+## Moldable, Website-Owned Composition
+
+Northstar resolves one semantic tree from 4 layers:
+
+```text
+Northstar defaults
+  → approved functional preferences
+  → temporary task experience
+  → component-specific human overrides
+```
+
+Six semantic regions declare their own capabilities:
 
 - `primary_navigation`
 - `appointment_summary`
@@ -52,169 +65,114 @@ Northstar resolves an adaptation manifest for six semantic component regions:
 - `forms`
 - `secondary_content`
 
-Each region declares its own supported subset of bounded properties: target size, spacing, row/column/step-by-step layout, information priority, secondary-content visibility, label style, status representation, focus visibility, review protection, and destructive-action placement.
+Bounded properties include target size, spacing, row/column/step-by-step layout, region placement, information priority, disclosure, label style, status representation, focus visibility, review protection, and destructive-action separation. The manual **Personalize interface** editor uses the same manifest and remains available without AI.
 
-The profile is projected only into compatible regions. Human changes from the single **Personalize interface** control are sanitized and applied last, so they outrank composed defaults. WebMCP exposes none of the following:
+WebMCP never accepts arbitrary CSS, selectors, HTML, coordinates, scripts, generated controls, or unrestricted DOM manipulation. Personalization can reorganize presentation, but it cannot add capabilities, change data or permissions, remove required warnings, bypass human decisions, or weaken confirmation rules.
 
-- arbitrary CSS or selectors;
-- HTML generation;
-- screen or DOM coordinates;
-- unrestricted DOM manipulation;
-- raw pointer telemetry.
+## Assistance & Authority
 
-Destructive actions remain separate after calibration, consequential changes retain an explicit review, and appointment confirmation is never automatic.
+Northstar describes 5 assistance levels to compatible agents:
 
-## Pointer-Precision Calibration
+- **Show** identifies a relevant place without activation.
+- **Explain** describes what a control does and what would happen.
+- **Guide** focuses the interface and presents the next safe step.
+- **Collaborate** prepares the workflow, shares turns, and pauses for human decisions.
+- **Act** performs explicitly authorized actions after review and fresh validation.
 
-Pointer precision is the one complete P0 calibration. The registry contains typed extension points for visual, color, language, attention, and keyboard calibration families, but those are intentionally not exposed until they can be demonstrated honestly.
+Making a page easier never grants permission for a consequential action. When `timeSelection: "person"`, the agent-side slot-selection tool returns `human_decision_required`; manual selection remains available. Human overrides are recorded and outrank earlier agent choices. Confirmation captures the appointment, slot, and `rescheduleRevision`, then revalidates all 3 immediately before committing.
 
-The practice button cannot navigate, modify an appointment, or change account data. Pointer events are immediately reduced to non-identifying aggregates:
+## WebMCP Surface
 
-- attempt and success counts;
-- miss count and total approximate miss distance;
-- correction count;
-- pointer versus keyboard activation counts.
-
-Raw coordinates are used transiently for hit testing and are never retained. Aggregate practice data is discarded after approval or cancellation. The approved profile contains only a preferred input method, minimum target size, minimum control gap, review protection, focus visibility, and focused-density preference.
-
-The three-step comfort check keeps the active task visually central. It shows three attempts at the current setting, keeps live size and spacing values beside the practice target, lets the person adjust the active measurement locally, and resets that step's attempt count whenever its measurement changes. The final step compares the original compact appointment actions with the proposed composed controls before approval.
-
-Calibration is session-only by default. **Remember these preferences on Northstar** is an explicit opt-in to versioned local storage. Only the approved profile and bounded human region overrides are stored; Reset Demo clears them.
-
-## WebMCP Tools
-
-Guide uses the secure-context imperative API, `document.modelContext.registerTool()`. The AI client supplies language understanding; the website owns semantics, calibration, state, rendering, and visible presence.
+Guide uses the secure-context imperative API, `document.modelContext.registerTool()`.
 
 | Tool | Lifecycle | Behavior |
 |---|---|---|
-| `get_portal_state` | Always | Reads the visible portal, revisions, pending action, human overrides, and approved component personalization. Calibration attempts and simulator state are excluded. |
-| `configure_accessibility` | Always | Applies explicit text, contrast, density, control, spacing, status, emphasis, and optional read-aloud settings. |
-| `start_interface_calibration` | Always | Opens bounded pointer-precision calibration and returns immediately; all practice continues locally. |
-| `guide_to` | Always | Points, highlights, and explains a semantic target without activating it. |
-| `open_section` | Always | Opens one of seven portal sections. |
+| `get_portal_state` | Always | Reads visible state, revisions, task experience, pending action, and human overrides. Simulator and calibration attempts are excluded. |
+| `get_northstar_context` | Always | Reads supported goals, end-to-end workflows, availability, prerequisites, human decisions, consequences, adaptations, and safety rules. |
+| `personalize_for_task` | Always | Immediately composes one bounded task experience; may open a non-committing workflow, never selects or confirms. Reused for refinements. |
+| `configure_accessibility` | Always | Applies explicit settings such as 175% text or stronger contrast while preserving omitted settings. |
+| `start_interface_calibration` | Always | Opens optional local pointer-precision fine-tuning and returns immediately. |
+| `guide_to` | Always | Points and explains without activation or focus movement. |
+| `open_section` | Always | Opens 1 of 7 portal sections. |
 | `get_upcoming_appointments` | Always | Reads the fictional appointment. |
-| `get_reschedule_options` | Always | Reads the three fictional alternative times without opening a workflow. |
-| `open_reschedule` | Always | Opens the non-committing chooser. |
-| `select_reschedule_slot` | Always | Selects a visible slot but never commits it. |
-| `get_bill_details` | Always | Returns the controlled fictional $160 / $120 / $40 breakdown. |
-| `get_insurance_status` | Always | Returns the controlled fictional active policy. |
-| `confirm_reschedule` | Valid reviewed slot only | Revalidates and commits after delegation, then unregisters immediately. |
+| `get_reschedule_options` | Always | Reads the 3 alternative times without opening or changing the workflow. |
+| `open_reschedule` | Always | Opens the existing non-committing chooser when no structural personalization was requested. |
+| `select_reschedule_slot` | Always | Prepares a visible slot for review unless the current task reserves the choice for the person. Never commits. |
+| `get_bill_details` | Always | Reads the controlled fictional $160 / $120 / $40 breakdown. |
+| `get_insurance_status` | Always | Reads the controlled fictional policy status. |
+| `confirm_reschedule` | Valid reviewed slot only | Revalidates and commits after explicit delegation, then unregisters immediately. |
 
-`guide_to.message` is length-bounded and rendered only as React text. All tool schemas use closed JSON objects and enums. `untrustedContentHint: false` is used only for controlled fictional constants and normalized store values.
+All schemas are closed and bounded. `untrustedContentHint: false` is limited to controlled fictional constants and normalized application values. Tool handlers tolerate clients that omit execution options while preserving cancellation whenever an `AbortSignal` exists.
 
-The existing revision safety model remains intact:
+## Optional Fine-Tuning
 
-- `uiRevision` repositions Guide after visible structure or geometry changes;
-- `navigationRevision` detects a changed section;
-- `rescheduleRevision` protects the current workflow and selected time;
-- `manifestRevision` tracks approved profiles and bounded region overrides.
+Calibration is a refinement, not a gate. It may be offered when the first adaptation is insufficient, the person repeatedly misses controls, they do not know what size or spacing works, or they explicitly ask to fine-tune.
 
-Guide never calls `.focus()` while pointing. Dialog focus changes are intentional and local to the modal workflow. A stale confirmation returns `selection_changed` rather than overwriting a person’s latest choice.
+Pointer precision is the 1 complete calibration. The safe **Practice appointment** button cannot navigate or change data. Pointer events are reduced immediately to non-identifying aggregates; raw coordinates, individual misses, diagnoses, simulator labels, and calibration history are never stored. Northstar adjusts target size, then spacing, and applies a functional profile only after several successful attempts plus explicit comfort approval.
 
-## Integrated Barrier Demonstration
+Preferences remain temporary by default. **Remember these preferences on Northstar** stores only the approved versioned functional profile and bounded component overrides. Temporary task context is never persisted. **Reset demo** clears remembered preferences, task context, calibration, simulation, appointment changes, and activity history.
 
-The human-controlled **Simulate a barrier** panel is separate from the portal, calibration, approved profile, and WebMCP state.
+## Simulator Boundary
 
-Its Parkinson’s option applies deterministic pointer displacement only to fine mouse/trackpad input. The generic hit test compares the actionable element actually under each coordinate:
+The human-controlled barrier simulator is a separate demonstration aid. It is excluded from WebMCP context, portal state, task composition, profiles, and AI reasoning.
 
-```ts
-const physicalControl = document.elementFromPoint(x, y)?.closest(actionableSelector);
-const simulatedControl = document.elementFromPoint(simulatedX, simulatedY)?.closest(actionableSelector);
-```
+Its Parkinson’s option illustrates pointer displacement by comparing the actionable elements actually under physical and displaced coordinates with `document.elementFromPoint(...).closest(...)`. There is no nearest-control search, retargeting, replacement click, or appointment-specific failure. Keyboard, touch, WebMCP, and programmatic actions remain unaffected.
 
-Activation is allowed only when both resolve to the same element. There is no nearest-control search, click redirection, replacement click, or appointment-specific failure branch. Keyboard, touch, WebMCP, and programmatic actions remain unaffected. The same algorithm applies to the safe practice target, so the simulator can naturally influence the demonstration without calibration reading simulator state.
-
-Color-difference effects use fixed matrices from the published [Machado color-vision model](https://profs.ic.uff.br/~laffernandes/content/publications/journal/2009_tvcg_15%286%29/machado_oliveira_fernandes-tvcg-15%286%29-2009-corrected.pdf). Dyslexia and Concentration difficulty stay visibly labeled **Illustrative** and are not part of the hero story.
-
-These effects approximate isolated interaction barriers only. They do not reproduce anyone’s disability, diagnose a condition, replace testing with disabled people, or establish accessibility compliance.
+The simulator does not reproduce anyone’s disability, diagnose a condition, replace testing with disabled people, or establish accessibility compliance.
 
 ## Architecture
 
 ```text
-Person speaks or types a functional need
-                  │
-                  ▼
-ChatGPT discovers bounded WebMCP tools
-                  │
-                  ├── explicit setting ──► configure_accessibility
-                  │
-                  └── vague barrier ─────► start_interface_calibration
-                                             │ returns immediately
-                                             ▼
-                                      local safe practice loop
-                                             │ human approval
-                                             ▼
-                            approved functional profile (no diagnosis)
-                                             │
-                                             ▼
-                         bounded per-region adaptation manifest
-                                             │
-              human overrides ──────────────┘ applied last
-                                             ▼
-                           one semantic React component tree
+Person describes goal + difficulty + presentation + desired help
+                              │
+                              ▼
+             client discovers Northstar context and tools
+                              │
+             one bounded personalize_for_task request
+                              │
+                synchronous website-owned composition
+                              │
+                              ▼
+                 one live semantic React interface
+                              │
+              human choice ↔ Guide collaboration
+                              │
+             fresh validation → confirmation → Undo
 
-Separate simulation store ── human-only illustrative effects
-  never read by calibration, portal state, or WebMCP
+Optional calibration ── local aggregate-only refinement
+Separate simulator ──── human-only illustrative effects
 ```
 
-- `src/adaptation/` — capabilities, manifest resolver, profile types, and opt-in persistence
-- `src/calibration/` — typed registry, aggregate-only engine, session store, and startup controller
-- `src/webmcp/` — closed schemas, handlers, annotations, and dynamic registration
-- `src/presence/` — serialized pointing, semantic targets, cancellation, and bounded speech
-- `src/state/` — portal state, revisions, attribution, confirmation, Undo, and reset
-- `src/simulation/` — isolated simulator, reversible effects, and target-agnostic DOM hit testing
+- `src/adaptation/` — capability registry, task resolver, manifest, and opt-in persistence
+- `src/webmcp/` — closed schemas, current workflow context, handlers, and lifecycle registration
+- `src/state/` — shared portal state, task experience, revision safety, attribution, Undo, and Reset
+- `src/presence/` — serialized semantic pointing, cancellation, and bounded speech
+- `src/calibration/` — optional local aggregate-only pointer fine-tuning
+- `src/simulation/` — isolated effects and target-agnostic hit testing
 
-## Local Development
+## Local Development & Verification
 
 Requires Node.js 22+ and npm 11+.
 
 ```bash
 npm install
 npm run dev
-```
-
-Open `http://127.0.0.1:5173`. Direct paths such as `/appointments` load through the SPA fallback. Browsers without WebMCP retain the fully functional manual portal and show an honest compatibility notice.
-
-Guide tools require a supported ChatGPT desktop account and model using the built-in browser, or a WebMCP-enabled Chrome environment. For local Chrome testing, enable:
-
-```text
-chrome://flags/#enable-webmcp-testing
-```
-
-Availability depends on the current account, selected model, page, permissions, and enabled Site Tools.
-
-## Verification
-
-```bash
 npm run check
 npm run test:e2e
 npm run screenshots
 git diff --check
 ```
 
-Vitest and React Testing Library cover manifest capability boundaries, profile composition, human override precedence, aggregate-only calibration, one-variable-at-a-time adjustment, opt-in persistence, reset, attribution, stale actions, Undo, tool schemas, and simulator isolation.
+Direct routes such as `/appointments` use the SPA fallback. Browsers without WebMCP retain the fully functional manual portal and show an honest notice.
 
-Playwright runs against desktop and 375 px layouts with an injected imperative WebMCP implementation. It covers all tool lifecycles, the full hero flow, real hit testing, local calibration, dynamic confirmation removal, keyboard operation, reduced motion, 200% text, speech outcomes, focus safety, direct routes, and axe scans.
+Guide tools require a supported ChatGPT desktop account and model using the built-in browser, or a WebMCP-enabled Chrome environment. For local Chrome testing, enable `chrome://flags/#enable-webmcp-testing`. Availability depends on the account, selected model, page, permissions, and enabled Site Tools.
 
-See [Accessibility QA](./docs/accessibility-qa.md) and [Natural-language tool-selection evaluations](./docs/tool-selection-evals.md). Automated and manual results are implementation evidence, not an accessibility certification.
+Vitest and React Testing Library cover manifest boundaries, task composition, region placement, human precedence, persistence, reset, calibration privacy, stale actions, Undo, tool contracts, and simulator isolation. Playwright covers the one-call hero, one-page refinement, dynamic confirmation, desktop/mobile layouts, keyboard behavior, reduced motion, 200% text, focus safety, speech outcomes, real hit testing, direct routes, and axe scans.
 
-## Suggested Live Scenario
+See [Accessibility QA](./docs/accessibility-qa.md), [Site Tools evaluations](./docs/tool-selection-evals.md), and the [sub-three-minute demo script](./DEMO_SCRIPT.md). Automated and manual evidence is not accessibility certification.
 
-1. Reset Northstar and activate **Simulate a barrier → Mobility → Parkinson’s**.
-2. Show a genuine miss on compact **MODIFY APPT**.
-3. Ask: “My hand shakes and I keep missing buttons. Help me use this page.”
-4. Confirm ChatGPT calls `start_interface_calibration` once.
-5. Complete the local practice loop and explicitly approve the result.
-6. Keep the simulator active while Northstar opens the composed rescheduling chooser.
-7. Select **September 14 at 3:00 PM** manually.
-8. Ask: “That works. Finish it.”
-9. Let Guide revalidate and confirm, then demonstrate **Undo change**.
-10. Stop the simulation.
+## Privacy & License
 
-See [DEMO_SCRIPT.md](./DEMO_SCRIPT.md) for the sub-three-minute narration and shot list.
-
-## Privacy and License
-
-Northstar is frontend-only. Portal data, simulator state, and practice aggregates are session-only. The sole persistence path is the person’s explicit **Remember these preferences on Northstar** choice, which writes only the approved versioned functional profile and bounded region overrides to local storage. Reset Demo removes it.
+Northstar is frontend-only. Portal state, temporary task context, simulator state, and calibration aggregates are session-only. The sole persistence path requires explicit consent and stores only approved bounded preferences. Reset removes it.
 
 [MIT](./LICENSE) © 2026 Nicolas Matta

@@ -2,10 +2,13 @@ import { create } from 'zustand';
 import { clearRememberedPreferences, readRememberedPreferences, writeRememberedPreferences } from '../adaptation/persistence';
 import { sanitizeComponentAdaptation } from '../adaptation/manifest';
 import type {
+  ActiveTaskExperience,
   ComponentAdaptation,
   FunctionalProfile,
   SemanticComponentId,
+  TaskExperience,
 } from '../adaptation/types';
+import type { TaskAccessibilityKey } from '../adaptation/taskExperience';
 import {
   defaultAccessibility,
   originalAppointment,
@@ -39,6 +42,7 @@ export interface PortalStore {
   recentHumanOverrides: HumanOverride[];
   pendingAction: PendingAction | null;
   functionalProfile: FunctionalProfile | null;
+  taskExperience: ActiveTaskExperience | null;
   componentOverrides: Partial<Record<SemanticComponentId, ComponentAdaptation>>;
   rememberPreferences: boolean;
   manifestRevision: number;
@@ -57,6 +61,13 @@ export interface PortalStore {
   confirmReschedule: (slotId: string, actor: Actor) => boolean;
   undoReschedule: (actor: Actor) => boolean;
   applyFunctionalProfile: (profile: FunctionalProfile, actor: Actor, remember: boolean) => void;
+  applyTaskExperience: (
+    experience: TaskExperience,
+    accessibilityPatch: Partial<AccessibilitySettings>,
+    openWorkflow: boolean,
+    actor: Actor,
+  ) => boolean;
+  clearTaskExperience: (actor: Actor) => boolean;
   setComponentAdaptation: (
     component: SemanticComponentId,
     patch: ComponentAdaptation,
@@ -119,6 +130,7 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
   recentHumanOverrides: [],
   pendingAction: null,
   functionalProfile: rememberedPreferences?.profile ?? null,
+  taskExperience: null,
   componentOverrides: rememberedPreferences?.componentOverrides ?? {},
   rememberPreferences: Boolean(rememberedPreferences),
   manifestRevision: rememberedPreferences ? 1 : 0,
@@ -156,8 +168,27 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
           ? entries.map(([field, value]) => ({ field, value: value as string | number | boolean, timestamp: Date.now() }))
           : [];
 
+      let taskExperience = state.taskExperience;
+      if (taskExperience) {
+        const changedKeys = new Set(entries.map(([field]) => field));
+        const temporaryAccessibilityKeys = taskExperience.temporaryAccessibilityKeys.filter(
+          (key) => !changedKeys.has(key),
+        );
+        taskExperience = {
+          ...taskExperience,
+          informationDensity: Object.hasOwn(patch, 'density')
+            ? patch.density === 'simplified' ? 'focused' : 'balanced'
+            : taskExperience.informationDensity,
+          temporaryAccessibilityKeys,
+        };
+      }
+
       return {
         accessibility: nextAccessibility,
+        taskExperience,
+        manifestRevision: state.manifestRevision + (
+          state.taskExperience && Object.hasOwn(patch, 'density') ? 1 : 0
+        ),
         uiRevision: state.uiRevision + 1,
         recentHumanOverrides: [...state.recentHumanOverrides, ...overrides].slice(-8),
         activityLog: appendEvent(
@@ -335,6 +366,115 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
     }
   },
 
+  applyTaskExperience: (experience, accessibilityPatch, openWorkflow, actor) => {
+    const before = get();
+    const accessibilityEntries = Object.entries(accessibilityPatch).filter(
+      ([key, value]) => before.accessibility[key as keyof AccessibilitySettings] !== value,
+    ) as Array<[TaskAccessibilityKey, AccessibilitySettings[TaskAccessibilityKey]]>;
+    const publicBefore = before.taskExperience
+      ? {
+          goal: before.taskExperience.goal,
+          assistanceLevel: before.taskExperience.assistanceLevel,
+          informationDensity: before.taskExperience.informationDensity,
+          languageStyle: before.taskExperience.languageStyle,
+          workflowLayout: before.taskExperience.workflowLayout,
+          navigationPresentation: before.taskExperience.navigationPresentation,
+          guideVisibility: before.taskExperience.guideVisibility,
+          timeSelection: before.taskExperience.timeSelection,
+          regionAdjustments: before.taskExperience.regionAdjustments,
+        }
+      : null;
+    const experienceChanged = JSON.stringify(publicBefore) !== JSON.stringify(experience);
+    const shouldNavigate = before.currentSection !== 'appointments';
+    const shouldOpenWorkflow = openWorkflow && !before.reschedule.dialogOpen;
+    if (!experienceChanged && accessibilityEntries.length === 0 && !shouldNavigate && !shouldOpenWorkflow) {
+      return false;
+    }
+
+    set((state) => {
+      const previousAccessibility = { ...(state.taskExperience?.previousAccessibility ?? {}) };
+      const temporaryAccessibilityKeys = new Set(
+        state.taskExperience?.temporaryAccessibilityKeys ?? [],
+      );
+      for (const [key] of accessibilityEntries) {
+        if (!temporaryAccessibilityKeys.has(key)) {
+          previousAccessibility[key] = state.accessibility[key] as never;
+        }
+        temporaryAccessibilityKeys.add(key);
+      }
+
+      const nextAccessibility = { ...state.accessibility, ...accessibilityPatch };
+      const nextTaskExperience: ActiveTaskExperience = {
+        ...experience,
+        previousAccessibility,
+        temporaryAccessibilityKeys: [...temporaryAccessibilityKeys],
+      };
+      const nextReschedule = shouldOpenWorkflow
+        ? { phase: 'choosing' as const, dialogOpen: true, selectedSlotId: null }
+        : state.reschedule;
+
+      return {
+        currentSection: 'appointments',
+        accessibility: nextAccessibility,
+        taskExperience: nextTaskExperience,
+        reschedule: nextReschedule,
+        pendingAction: shouldOpenWorkflow ? null : state.pendingAction,
+        appointmentUndo: shouldOpenWorkflow ? null : state.appointmentUndo,
+        manifestRevision: state.manifestRevision + 1,
+        uiRevision: state.uiRevision + 1,
+        navigationRevision: shouldNavigate
+          ? state.navigationRevision + 1
+          : state.navigationRevision,
+        rescheduleRevision: shouldOpenWorkflow
+          ? state.rescheduleRevision + 1
+          : state.rescheduleRevision,
+        activityLog: appendEvent(
+          state.activityLog,
+          makeEvent(
+            actor,
+            'interface_personalized',
+            `${actor === 'guide' ? 'Guide personalized' : 'You personalized'} the interface for appointment rescheduling`,
+          ),
+        ),
+      };
+    });
+    return true;
+  },
+
+  clearTaskExperience: (actor) => {
+    const before = get();
+    if (!before.taskExperience) return false;
+    const restoredAccessibility = { ...before.accessibility };
+    for (const key of before.taskExperience.temporaryAccessibilityKeys) {
+      const previous = before.taskExperience.previousAccessibility[key];
+      if (previous !== undefined) {
+        (restoredAccessibility as Record<string, unknown>)[key] = previous;
+      }
+    }
+    set((state) => ({
+      accessibility: restoredAccessibility,
+      taskExperience: null,
+      manifestRevision: state.manifestRevision + 1,
+      uiRevision: state.uiRevision + 1,
+      recentHumanOverrides: actor === 'you'
+        ? [...state.recentHumanOverrides, {
+            field: 'taskExperience',
+            value: 'cleared',
+            timestamp: Date.now(),
+          }].slice(-8)
+        : state.recentHumanOverrides,
+      activityLog: appendEvent(
+        state.activityLog,
+        makeEvent(
+          actor,
+          'task_presentation_restored',
+          `${actor === 'guide' ? 'Guide restored' : 'You restored'} the previous portal presentation`,
+        ),
+      ),
+    }));
+    return true;
+  },
+
   setComponentAdaptation: (component, patch, actor) => {
     const sanitized = sanitizeComponentAdaptation(component, patch);
     const previous = get().componentOverrides[component] ?? {};
@@ -454,6 +594,7 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
       recentHumanOverrides: [],
       pendingAction: null,
       functionalProfile: null,
+      taskExperience: null,
       componentOverrides: {},
       rememberPreferences: false,
       manifestRevision: state.manifestRevision + 1,

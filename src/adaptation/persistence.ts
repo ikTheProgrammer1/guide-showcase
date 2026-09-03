@@ -38,7 +38,10 @@ export function normalizeFunctionalProfile(value: unknown): FunctionalProfile | 
       accidentalActivationProtection: 'review',
       focusVisibility: 'enhanced',
     },
-    presentation: { density: presentation.density },
+    // Pointer calibration establishes input preferences only. Older remembered
+    // profiles may contain task-focused density; do not restore that as a
+    // persistent person-level preference.
+    presentation: { density: 'standard' },
   };
 }
 

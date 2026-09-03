@@ -3,6 +3,7 @@ import type { AccessibilitySettings } from '../types';
 import {
   semanticComponentIds,
   type AdaptationManifest,
+  type ActiveTaskExperience,
   type ComponentAdaptation,
   type ComponentAdaptationKey,
   type FunctionalProfile,
@@ -24,7 +25,7 @@ export const componentCapabilities: Record<SemanticComponentId, ComponentCapabil
   appointment_summary: {
     label: 'Appointment summary',
     description: 'The visible details for the upcoming appointment.',
-    supports: ['layout', 'informationPriority', 'secondaryContent', 'labelStyle'],
+    supports: ['layout', 'informationPriority', 'secondaryContent', 'labelStyle', 'placement'],
   },
   appointment_actions: {
     label: 'Appointment actions',
@@ -37,12 +38,13 @@ export const componentCapabilities: Record<SemanticComponentId, ComponentCapabil
       'activationProtection',
       'focusVisibility',
       'destructiveActionPlacement',
+      'placement',
     ],
   },
   status_indicators: {
     label: 'Statuses',
     description: 'Appointment, billing, insurance, and message status indicators.',
-    supports: ['statusPresentation', 'labelStyle', 'informationPriority'],
+    supports: ['statusPresentation', 'labelStyle', 'informationPriority', 'placement'],
   },
   forms: {
     label: 'Forms and choices',
@@ -54,12 +56,13 @@ export const componentCapabilities: Record<SemanticComponentId, ComponentCapabil
       'labelStyle',
       'activationProtection',
       'focusVisibility',
+      'placement',
     ],
   },
   secondary_content: {
     label: 'Secondary content',
     description: 'Earlier visits, shortcuts, and supporting portal information.',
-    supports: ['informationPriority', 'secondaryContent', 'labelStyle'],
+    supports: ['informationPriority', 'secondaryContent', 'labelStyle', 'placement'],
   },
 };
 
@@ -76,6 +79,7 @@ export const baseAdaptationManifest: AdaptationManifest = {
     informationPriority: 'all',
     secondaryContent: 'visible',
     labelStyle: 'concise',
+    placement: 'default',
   },
   appointment_actions: {
     minimumTargetSize: 28,
@@ -85,11 +89,13 @@ export const baseAdaptationManifest: AdaptationManifest = {
     activationProtection: 'standard',
     focusVisibility: 'standard',
     destructiveActionPlacement: 'inline',
+    placement: 'default',
   },
   status_indicators: {
     statusPresentation: 'color-and-text',
     labelStyle: 'concise',
     informationPriority: 'all',
+    placement: 'default',
   },
   forms: {
     minimumTargetSize: 38,
@@ -98,11 +104,13 @@ export const baseAdaptationManifest: AdaptationManifest = {
     labelStyle: 'descriptive',
     activationProtection: 'review',
     focusVisibility: 'standard',
+    placement: 'default',
   },
   secondary_content: {
     informationPriority: 'all',
     secondaryContent: 'visible',
     labelStyle: 'concise',
+    placement: 'default',
   },
 };
 
@@ -123,8 +131,26 @@ export function sanitizeComponentAdaptation(
   patch: ComponentAdaptation,
 ): ComponentAdaptation {
   const supported = new Set(componentCapabilities[component].supports);
+  const validValues: Record<ComponentAdaptationKey, readonly unknown[]> = {
+    minimumTargetSize: [28, 36, 38, 44, 52, 56, 64, 72],
+    minimumControlGap: [5, 8, 10, 16, 24, 32],
+    layout: ['row', 'column', 'step-by-step'],
+    informationPriority: ['all', 'primary'],
+    secondaryContent: ['visible', 'collapsed'],
+    labelStyle: ['concise', 'descriptive', 'plain-language'],
+    statusPresentation: ['color-and-text', 'icon-shape-text'],
+    activationProtection: ['standard', 'review'],
+    focusVisibility: ['standard', 'enhanced'],
+    destructiveActionPlacement: ['inline', 'separate'],
+    placement: ['default', 'first', 'last'],
+  };
   return Object.fromEntries(
-    Object.entries(patch).filter(([key, value]) => supported.has(key as ComponentAdaptationKey) && value !== undefined),
+    Object.entries(patch).filter(([key, value]) => {
+      const adaptationKey = key as ComponentAdaptationKey;
+      return supported.has(adaptationKey)
+        && value !== undefined
+        && validValues[adaptationKey].includes(value);
+    }),
   ) as ComponentAdaptation;
 }
 
@@ -132,6 +158,7 @@ export function resolveAdaptationManifest(
   accessibility: AccessibilitySettings,
   profile: FunctionalProfile | null,
   overrides: Partial<Record<SemanticComponentId, ComponentAdaptation>>,
+  taskExperience: ActiveTaskExperience | null = null,
 ): AdaptationManifest {
   const manifest = cloneManifest();
 
@@ -194,6 +221,49 @@ export function resolveAdaptationManifest(
     }
   }
 
+  if (taskExperience) {
+    const focused = taskExperience.informationDensity === 'focused';
+    const detailed = taskExperience.informationDensity === 'detailed';
+    const plainLanguage = taskExperience.languageStyle === 'plain';
+    const onePage = taskExperience.workflowLayout === 'one-page';
+
+    mergeComponent(manifest, 'primary_navigation', {
+      layout: 'column',
+      labelStyle: plainLanguage ? 'plain-language' : 'descriptive',
+      focusVisibility: 'enhanced',
+    });
+    mergeComponent(manifest, 'appointment_summary', {
+      layout: onePage ? 'row' : 'column',
+      informationPriority: focused ? 'primary' : 'all',
+      secondaryContent: focused ? 'collapsed' : 'visible',
+      labelStyle: plainLanguage ? 'plain-language' : 'descriptive',
+      placement: 'first',
+    });
+    mergeComponent(manifest, 'appointment_actions', {
+      layout: onePage ? 'row' : 'column',
+      labelStyle: plainLanguage ? 'plain-language' : 'descriptive',
+      activationProtection: 'review',
+      focusVisibility: 'enhanced',
+      destructiveActionPlacement: 'separate',
+    });
+    mergeComponent(manifest, 'forms', {
+      layout: onePage ? 'row' : 'step-by-step',
+      labelStyle: plainLanguage ? 'plain-language' : 'descriptive',
+      activationProtection: 'review',
+      focusVisibility: 'enhanced',
+    });
+    mergeComponent(manifest, 'secondary_content', {
+      informationPriority: focused ? 'primary' : 'all',
+      secondaryContent: detailed ? 'visible' : focused ? 'collapsed' : 'visible',
+      labelStyle: plainLanguage ? 'plain-language' : 'descriptive',
+      placement: 'last',
+    });
+    for (const component of semanticComponentIds) {
+      const adjustment = taskExperience.regionAdjustments?.[component];
+      if (adjustment) mergeComponent(manifest, component, adjustment);
+    }
+  }
+
   for (const component of semanticComponentIds) {
     const patch = overrides[component];
     if (patch) mergeComponent(manifest, component, patch);
@@ -206,8 +276,9 @@ export function hasPersonalization(
   accessibility: AccessibilitySettings,
   profile: FunctionalProfile | null,
   overrides: Partial<Record<SemanticComponentId, ComponentAdaptation>>,
+  taskExperience: ActiveTaskExperience | null = null,
 ) {
-  if (profile || Object.keys(overrides).length > 0) return true;
+  if (profile || taskExperience || Object.keys(overrides).length > 0) return true;
   return Object.entries(defaultAccessibility).some(
     ([key, value]) => accessibility[key as keyof AccessibilitySettings] !== value,
   );

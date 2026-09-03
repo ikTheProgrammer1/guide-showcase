@@ -1,7 +1,8 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Sparkles } from 'lucide-react';
 import { useEffect } from 'react';
 import { hasPersonalization } from '../adaptation/manifest';
+import { taskExperienceSummary } from '../adaptation/taskExperience';
 import { InterfaceCalibration } from '../components/guide/InterfaceCalibration';
 import { AgentPresence } from '../components/guide/AgentPresence';
 import { Header } from '../components/layout/Header';
@@ -49,14 +50,22 @@ function CurrentSection() {
 }
 
 export function App() {
+  const reduceMotion = useReducedMotion();
   const accessibility = usePortalStore((state) => state.accessibility);
   const currentSection = usePortalStore((state) => state.currentSection);
   const status = useWebMCPTools();
   const activeSimulation = useSimulationStore((state) => state.activeSimulation);
   const functionalProfile = usePortalStore((state) => state.functionalProfile);
   const componentOverrides = usePortalStore((state) => state.componentOverrides);
+  const taskExperience = usePortalStore((state) => state.taskExperience);
+  const clearTaskExperience = usePortalStore((state) => state.clearTaskExperience);
   const portalSurfaceRef = useSemanticTarget<HTMLElement>('portal_surface');
-  const personalized = hasPersonalization(accessibility, functionalProfile, componentOverrides);
+  const personalized = hasPersonalization(
+    accessibility,
+    functionalProfile,
+    componentOverrides,
+    taskExperience,
+  );
 
   useEffect(() => () => cancelGuidePresence(), []);
 
@@ -78,6 +87,9 @@ export function App() {
       data-text-scale={accessibility.textScale}
       data-status-mode={accessibility.colorIndependentStatus ? 'independent' : 'color-led'}
       data-personalized={personalized ? 'true' : 'false'}
+      data-task-experience={taskExperience?.goal ?? 'none'}
+      data-task-density={taskExperience?.informationDensity ?? 'none'}
+      data-task-layout={taskExperience?.workflowLayout ?? 'none'}
       data-simulation={activeSimulation ?? 'none'}
       style={{ '--text-scale': accessibility.textScale / 100 } as React.CSSProperties}
     >
@@ -105,12 +117,24 @@ export function App() {
             <motion.div
               className={styles.adaptationBanner}
               role="status"
-              initial={{ opacity: 0, y: -8 }}
+              initial={reduceMotion ? false : { opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.2 }}
+              transition={{ duration: reduceMotion ? 0 : 0.45, delay: reduceMotion ? 0 : 0.2 }}
             >
               <span className={styles.adaptationMark}><Sparkles size={16} aria-hidden="true" /></span>
-              <span><strong>Interface personalized</strong> from approved preferences and bounded region settings.</span>
+              <span>
+                <strong>{taskExperience ? 'Personalized for this task' : 'Interface personalized'}</strong>{' '}
+                {taskExperience
+                  ? `${taskExperienceSummary(taskExperience)}.`
+                  : functionalProfile
+                  ? `for your interaction: ${functionalProfile.input.minimumTargetSize}px minimum targets, ${functionalProfile.input.minimumControlGap}px spacing, and separated appointment actions.`
+                  : 'from your explicit accessibility preferences and bounded region settings.'}
+              </span>
+              {taskExperience ? (
+                <button type="button" onClick={() => clearTaskExperience('you')}>
+                  Return to original presentation
+                </button>
+              ) : null}
             </motion.div>
           ) : null}
 
@@ -119,10 +143,10 @@ export function App() {
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentSection}
-                  initial={{ opacity: 0, y: 12, scale: 0.995 }}
+                  initial={reduceMotion ? false : { opacity: 0, y: 12, scale: 0.995 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: personalized ? 0.42 : 0.24, ease: [0.22, 1, 0.36, 1] }}
+                  exit={reduceMotion ? { opacity: 1 } : { opacity: 0, y: -8 }}
+                  transition={{ duration: reduceMotion ? 0 : personalized ? 0.42 : 0.24, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <CurrentSection />
                 </motion.div>

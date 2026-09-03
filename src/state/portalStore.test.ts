@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { originalAppointment } from '../data/demoData';
+import { defaultTaskExperience } from '../adaptation/types';
 import { usePortalStore } from './portalStore';
 
 describe('portalStore', () => {
@@ -120,6 +121,81 @@ describe('portalStore', () => {
     });
   });
 
+  it('applies a complete task experience immediately without choosing a time', () => {
+    const state = usePortalStore.getState();
+    const changed = state.applyTaskExperience(
+      defaultTaskExperience,
+      {
+        controlSize: 'large',
+        spacing: 'increased',
+        colorIndependentStatus: true,
+        emphasizeInteractive: true,
+      },
+      true,
+      'guide',
+    );
+    const personalized = usePortalStore.getState();
+
+    expect(changed).toBe(true);
+    expect(personalized.currentSection).toBe('appointments');
+    expect(personalized.taskExperience).toMatchObject(defaultTaskExperience);
+    expect(personalized.accessibility).toMatchObject({
+      controlSize: 'large',
+      spacing: 'increased',
+      colorIndependentStatus: true,
+      emphasizeInteractive: true,
+    });
+    expect(personalized.reschedule).toMatchObject({
+      phase: 'choosing',
+      dialogOpen: true,
+      selectedSlotId: null,
+    });
+    expect(personalized.appointment).toEqual(originalAppointment);
+    expect(personalized.activityLog.at(-1)).toMatchObject({
+      actor: 'guide',
+      type: 'interface_personalized',
+    });
+  });
+
+  it('refines the task layout without invalidating a valid human selection', () => {
+    const state = usePortalStore.getState();
+    state.applyTaskExperience(defaultTaskExperience, {}, true, 'guide');
+    usePortalStore.getState().selectRescheduleSlot('slot_2026_09_14_1500', 'you');
+    const selected = usePortalStore.getState();
+
+    selected.applyTaskExperience(
+      { ...defaultTaskExperience, workflowLayout: 'one-page' },
+      {},
+      true,
+      'guide',
+    );
+    const refined = usePortalStore.getState();
+    expect(refined.taskExperience?.workflowLayout).toBe('one-page');
+    expect(refined.reschedule.selectedSlotId).toBe('slot_2026_09_14_1500');
+    expect(refined.rescheduleRevision).toBe(selected.rescheduleRevision);
+  });
+
+  it('restores only temporary task accessibility and preserves a later human override', () => {
+    const state = usePortalStore.getState();
+    state.applyTaskExperience(
+      defaultTaskExperience,
+      { controlSize: 'large', spacing: 'increased' },
+      true,
+      'guide',
+    );
+    usePortalStore.getState().setAccessibility({ controlSize: 'standard' }, 'you');
+    usePortalStore.getState().clearTaskExperience('you');
+
+    const restored = usePortalStore.getState();
+    expect(restored.taskExperience).toBeNull();
+    expect(restored.accessibility.controlSize).toBe('standard');
+    expect(restored.accessibility.spacing).toBe('standard');
+    expect(restored.recentHumanOverrides.find((override) => override.field === 'controlSize')).toMatchObject({
+      field: 'controlSize',
+      value: 'standard',
+    });
+  });
+
   it('resets every demo subsystem without adding a reset activity item', () => {
     const state = usePortalStore.getState();
     const revisions = {
@@ -145,6 +221,7 @@ describe('portalStore', () => {
     expect(reset.insuranceUpdateOpen).toBe(false);
     expect(reset.activityLog).toEqual([]);
     expect(reset.recentHumanOverrides).toEqual([]);
+    expect(reset.taskExperience).toBeNull();
     expect(reset.uiRevision).toBeGreaterThan(revisions.ui);
     expect(reset.navigationRevision).toBeGreaterThan(revisions.navigation);
     expect(reset.rescheduleRevision).toBeGreaterThan(revisions.reschedule);

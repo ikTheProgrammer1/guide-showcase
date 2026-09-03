@@ -129,6 +129,6 @@ export function createFunctionalProfile(
       accidentalActivationProtection: 'review',
       focusVisibility: 'enhanced',
     },
-    presentation: { density: 'focused' },
+    presentation: { density: 'standard' },
   };
 }

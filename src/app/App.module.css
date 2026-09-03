@@ -635,6 +635,31 @@
   list-style: none;
 }
 
+.focusedNavigationMore {
+  margin-top: 0.75rem;
+  color: #cfe0da;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.focusedNavigationMore summary {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  padding: 0.65rem 0.8rem;
+  cursor: pointer;
+  font-size: 0.78em;
+  font-weight: 700;
+}
+
+.focusedNavigationMore[open] summary {
+  color: white;
+}
+
+.focusedNavigationMore summary:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.07);
+}
+
 .navButton {
   width: 100%;
   min-height: var(--control-height);
@@ -1811,6 +1836,78 @@
 }
 
 .currentAppointmentStrip strong {
+  color: var(--ink);
+}
+
+.reschedulePersonalizationNotice {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0 1.5rem 1rem;
+  padding: 0.72rem 0.85rem;
+  color: var(--teal-dark);
+  background: color-mix(in srgb, var(--teal-pale) 78%, white);
+  border: 1px solid color-mix(in srgb, var(--teal) 32%, var(--line));
+  border-radius: 0.8rem;
+  font-size: 0.82em;
+}
+
+.taskPersonalizationNotice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: start;
+  margin: 0 1.4rem;
+  padding: 0.8rem 0.9rem;
+  color: var(--teal-dark);
+  background: color-mix(in srgb, var(--teal-pale) 82%, white);
+  border: 1px solid color-mix(in srgb, var(--teal) 32%, var(--line));
+  border-radius: 0.8rem;
+}
+
+.taskPersonalizationNotice button {
+  min-height: 2.75rem;
+  padding: 0.55rem 0.75rem;
+  color: var(--teal-dark);
+  background: white;
+  border: 1px solid color-mix(in srgb, var(--teal) 38%, var(--line));
+  border-radius: 0.65rem;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 720;
+}
+
+.taskPersonalizationNotice button:hover {
+  color: white;
+  background: var(--teal-dark);
+}
+
+.taskPersonalizationNotice svg {
+  margin-top: 0.1rem;
+  color: #7b430c;
+}
+
+.taskPersonalizationNotice span,
+.taskPersonalizationNotice strong {
+  display: block;
+}
+
+.taskPersonalizationNotice strong {
+  margin-bottom: 0.12rem;
+  color: var(--ink);
+}
+
+.reschedulePersonalizationNotice svg {
+  flex: 0 0 auto;
+  color: #4b2700;
+}
+
+.reschedulePersonalizationNotice span {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.reschedulePersonalizationNotice strong {
   color: var(--ink);
 }
 
@@ -3272,6 +3369,7 @@
   width: min(68rem, 96vw);
   max-height: min(51rem, 94vh);
   overflow-y: auto;
+  overscroll-behavior: contain;
   color: var(--ink);
   background:
     linear-gradient(140deg, rgba(255, 255, 255, 0.84), transparent 32%),
@@ -4140,6 +4238,14 @@
   display: none;
 }
 
+[data-adaptation-region][data-placement='first'] {
+  order: -1;
+}
+
+[data-adaptation-region][data-placement='last'] {
+  order: 20;
+}
+
 .unifiedDashboard,
 .unifiedAppointments {
   display: grid;
@@ -4573,6 +4679,13 @@
   padding: 1.4rem;
 }
 
+.rescheduleStep[data-workflow-layout='one-page'] {
+  display: grid;
+  grid-template-columns: minmax(15rem, 0.9fr) minmax(18rem, 1.1fr);
+  gap: 1.1rem;
+  align-items: start;
+}
+
 .rescheduleStep .slotList {
   gap: var(--region-control-gap, 10px);
 }
@@ -4632,6 +4745,9 @@
   .unifiedAppointmentActions { justify-self: stretch; }
   .unifiedDetailGrid { grid-template-columns: 1fr; }
   .unifiedStatusGrid { grid-template-columns: 1fr; }
+  .rescheduleStep[data-workflow-layout='one-page'] { grid-template-columns: 1fr; }
+  .taskPersonalizationNotice { grid-template-columns: auto minmax(0, 1fr); }
+  .taskPersonalizationNotice button { grid-column: 1 / -1; width: 100%; }
   .calibrationProgress > li:not(:last-child)::after { display: none; }
 }
 

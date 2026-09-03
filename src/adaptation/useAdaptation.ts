@@ -7,9 +7,10 @@ export function useAdaptationManifest() {
   const accessibility = usePortalStore((state) => state.accessibility);
   const functionalProfile = usePortalStore((state) => state.functionalProfile);
   const componentOverrides = usePortalStore((state) => state.componentOverrides);
+  const taskExperience = usePortalStore((state) => state.taskExperience);
   return useMemo(
-    () => resolveAdaptationManifest(accessibility, functionalProfile, componentOverrides),
-    [accessibility, componentOverrides, functionalProfile],
+    () => resolveAdaptationManifest(accessibility, functionalProfile, componentOverrides, taskExperience),
+    [accessibility, componentOverrides, functionalProfile, taskExperience],
   );
 }
 
@@ -23,6 +24,7 @@ type AdaptationRegionAttributes = HTMLAttributes<HTMLElement> & {
   'data-activation-protection': string | undefined;
   'data-focus-visibility': string | undefined;
   'data-destructive-placement': string | undefined;
+  'data-placement': string | undefined;
 };
 
 export function useAdaptationRegion(component: SemanticComponentId): AdaptationRegionAttributes {
@@ -38,6 +40,7 @@ export function useAdaptationRegion(component: SemanticComponentId): AdaptationR
     'data-activation-protection': adaptation.activationProtection,
     'data-focus-visibility': adaptation.focusVisibility,
     'data-destructive-placement': adaptation.destructiveActionPlacement,
+    'data-placement': adaptation.placement,
     style: {
       '--region-target-size': `${adaptation.minimumTargetSize ?? 36}px`,
       '--region-control-gap': `${adaptation.minimumControlGap ?? 8}px`,
