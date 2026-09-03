@@ -55,7 +55,7 @@ export function SimulationEffects() {
 
     const showMiss = (point: Point) => {
       const now = performance.now();
-      if (now - lastMissAt < 90) return;
+      if (now - lastMissAt < 90) return false;
       lastMissAt = now;
       if (missTimer.current !== null) window.clearTimeout(missTimer.current);
       setMiss({ ...point, id: now });
@@ -63,6 +63,7 @@ export function SimulationEffects() {
         setMiss(null);
         missTimer.current = null;
       }, 700);
+      return true;
     };
 
     const updateCursor = () => {
@@ -85,12 +86,24 @@ export function SimulationEffects() {
     };
 
     const shouldBlock = (x: number, y: number) => {
-      if (!simulationSurfaceAtPoint(x, y)) return { blocked: false, point: { x, y } };
+      if (!simulationSurfaceAtPoint(x, y)) {
+        return { blocked: false, point: { x, y }, physicalControl: null, simulatedControl: null };
+      }
       const point = displaced(x, y);
       const physicalControl = actionableAtPoint(x, y);
-      if (!physicalControl) return { blocked: false, point };
+      if (!physicalControl) return { blocked: false, point, physicalControl, simulatedControl: null };
       const simulatedControl = actionableAtPoint(point.x, point.y);
-      return { blocked: physicalControl !== simulatedControl, point };
+      return { blocked: physicalControl !== simulatedControl, point, physicalControl, simulatedControl };
+    };
+
+    const notifyCalibrationMiss = (decision: ReturnType<typeof shouldBlock>, x: number, y: number) => {
+      window.dispatchEvent(new CustomEvent('guide:simulated-pointer-miss', {
+        detail: {
+          physicalControl: decision.physicalControl,
+          simulatedControl: decision.simulatedControl,
+          displacement: Math.hypot(decision.point.x - x, decision.point.y - y),
+        },
+      }));
     };
 
     const blockPointerDown = (event: PointerEvent) => {
@@ -100,7 +113,7 @@ export function SimulationEffects() {
       if (!decision.blocked) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      showMiss(decision.point);
+      if (showMiss(decision.point)) notifyCalibrationMiss(decision, event.clientX, event.clientY);
     };
 
     const blockClick = (event: MouseEvent) => {
@@ -110,7 +123,7 @@ export function SimulationEffects() {
       if (!decision.blocked) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      showMiss(decision.point);
+      if (showMiss(decision.point)) notifyCalibrationMiss(decision, event.clientX, event.clientY);
     };
 
     document.addEventListener('pointermove', move, { passive: true });

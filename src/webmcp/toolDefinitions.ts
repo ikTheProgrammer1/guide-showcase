@@ -1,4 +1,7 @@
-import { demoBill, demoInsurance, isPortalAdapted, rescheduleSlots } from '../data/demoData';
+import { hasPersonalization, resolveAdaptationManifest } from '../adaptation/manifest';
+import { startPointerPrecisionCalibration } from '../calibration/startCalibration';
+import { useCalibrationStore } from '../calibration/calibrationStore';
+import { demoBill, demoInsurance, rescheduleSlots } from '../data/demoData';
 import { runGuideAction } from '../presence/presenceController';
 import { semanticTargetForSlot, usePortalStore } from '../state/portalStore';
 import {
@@ -67,8 +70,13 @@ const sectionTarget: Record<PortalSection, SemanticTarget> = {
 
 function portalSnapshot() {
   const state = usePortalStore.getState();
+  const personalized = hasPersonalization(
+    state.accessibility,
+    state.functionalProfile,
+    state.componentOverrides,
+  );
   return {
-    interfaceMode: isPortalAdapted(state.accessibility) ? 'adapted' : 'legacy',
+    interfaceMode: personalized ? 'adapted' : 'legacy',
     currentSection: state.currentSection,
     appointment: state.appointment,
     reschedule: state.reschedule,
@@ -80,6 +88,17 @@ function portalSnapshot() {
     uiRevision: state.uiRevision,
     navigationRevision: state.navigationRevision,
     rescheduleRevision: state.rescheduleRevision,
+    personalization: {
+      functionalProfile: state.functionalProfile,
+      componentOverrides: state.componentOverrides,
+      effectiveManifest: resolveAdaptationManifest(
+        state.accessibility,
+        state.functionalProfile,
+        state.componentOverrides,
+      ),
+      rememberPreferences: state.rememberPreferences,
+      manifestRevision: state.manifestRevision,
+    },
     insuranceUpdateOpen: state.insuranceUpdateOpen,
   };
 }
@@ -125,7 +144,7 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
       name: 'get_portal_state',
       title: 'Get portal state',
       description:
-        'Read what Robert currently sees in the fictional Northstar Health portal, including its legacy or adapted presentation, human overrides, and pending actions. Call this before continuing a shared workflow.',
+        'Read what Robert currently sees in the fictional Northstar Health portal, including bounded component personalization, human overrides, and pending actions. Calibration attempts and simulator state are intentionally excluded. Call this before continuing a shared workflow.',
       inputSchema: noInputSchema,
       annotations: { readOnlyHint: true, untrustedContentHint: false },
       execute: async () => ({ ok: true, state: portalSnapshot() }),
@@ -209,10 +228,59 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
           changed,
           previousAccessibility,
           accessibility: state.accessibility,
-          interfaceMode: isPortalAdapted(state.accessibility) ? 'adapted' : 'legacy',
+          interfaceMode: hasPersonalization(
+            state.accessibility,
+            state.functionalProfile,
+            state.componentOverrides,
+          ) ? 'adapted' : 'legacy',
           uiRevision: state.uiRevision,
           presentedVisually: result.presentedVisually,
           spokenByPage: result.spokenByPage,
+        };
+      },
+    },
+    {
+      name: 'start_interface_calibration',
+      title: 'Start interface calibration',
+      description:
+        'Open a safe, local pointer-precision calibration when the person describes difficulty acquiring controls, such as shaking hands or repeatedly missing buttons. This selects a functional calibration family, never a diagnosis or disability template. The webpage handles practice attempts locally and never automatically confirms an appointment.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          domain: {
+            type: 'string',
+            enum: ['pointer_precision'],
+            description: 'The implemented functional calibration family. Use pointer_precision for difficulty accurately acquiring controls.',
+          },
+          goal: {
+            type: 'string',
+            enum: ['reschedule_appointment'],
+            description: 'The bounded portal task to continue locally after the person approves their preferences.',
+          },
+        },
+        required: ['domain', 'goal'],
+        additionalProperties: false,
+      },
+      annotations: { readOnlyHint: false, untrustedContentHint: false },
+      execute: async (input, { signal }) => {
+        if (signal.aborted) return cancelledResult('cancelled');
+        if (input.domain !== 'pointer_precision' || input.goal !== 'reschedule_appointment') {
+          return failed('unsupported_calibration', 'That calibration is not available in this demonstration.');
+        }
+
+        const calibrationId = startPointerPrecisionCalibration('guide');
+        const calibration = useCalibrationStore.getState();
+        return {
+          ok: true,
+          calibrationId,
+          domain: calibration.domain,
+          goal: calibration.goal,
+          phase: calibration.phase,
+          localPractice: true,
+          profileApplied: false,
+          presentedVisually: calibration.isOpen,
+          spokenByPage: false,
+          next: 'The person completes safe practice attempts and explicitly approves the resulting preferences on the webpage.',
         };
       },
     },

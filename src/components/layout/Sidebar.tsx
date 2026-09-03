@@ -8,6 +8,7 @@ import {
   Settings,
   ShieldCheck,
 } from 'lucide-react';
+import { useAdaptationRegion } from '../../adaptation/useAdaptation';
 import { useSemanticTarget } from '../../presence/targetRegistry';
 import { usePortalStore } from '../../state/portalStore';
 import type { PortalSection, SemanticTarget } from '../../types';
@@ -59,6 +60,7 @@ function NavigationItem({
 export function Sidebar() {
   const currentSection = usePortalStore((state) => state.currentSection);
   const openSection = usePortalStore((state) => state.openSection);
+  const navigationRegion = useAdaptationRegion('primary_navigation');
 
   return (
     <aside className={styles.sidebar}>
@@ -72,7 +74,7 @@ export function Sidebar() {
         </div>
       </div>
 
-      <nav aria-label="Portal sections">
+      <nav {...navigationRegion} aria-label="Portal sections">
         <ul className={styles.navList}>
           {navigation.map((item) => (
             <NavigationItem

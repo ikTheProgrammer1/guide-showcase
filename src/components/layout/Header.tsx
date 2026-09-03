@@ -2,6 +2,7 @@ import { RotateCcw, Sparkles, WifiOff } from 'lucide-react';
 import { useSemanticTarget } from '../../presence/targetRegistry';
 import { resetDemoExperience } from '../../state/resetDemo';
 import type { WebMCPStatus } from '../../webmcp/useWebMCPTools';
+import { PersonalizeInterface } from '../guide/PersonalizeInterface';
 import styles from '../../app/App.module.css';
 
 export function Header({ webMcpStatus }: { webMcpStatus: WebMCPStatus }) {
@@ -14,6 +15,7 @@ export function Header({ webMcpStatus }: { webMcpStatus: WebMCPStatus }) {
         <h1>Patient Services</h1>
       </div>
       <div className={styles.headerActions}>
+        <PersonalizeInterface />
         <div
           ref={guideStatusRef}
           className={styles.connectionPill}

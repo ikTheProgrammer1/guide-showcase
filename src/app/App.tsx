@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useEffect } from 'react';
+import { hasPersonalization } from '../adaptation/manifest';
+import { InterfaceCalibration } from '../components/guide/InterfaceCalibration';
 import { AgentPresence } from '../components/guide/AgentPresence';
 import { Header } from '../components/layout/Header';
 import { Sidebar } from '../components/layout/Sidebar';
@@ -11,7 +13,6 @@ import { Insurance } from '../components/portal/Insurance';
 import { PlaceholderSection } from '../components/portal/PlaceholderSection';
 import { RescheduleDialog } from '../components/portal/RescheduleDialog';
 import { SettingsPage } from '../components/portal/SettingsPage';
-import { isPortalAdapted } from '../data/demoData';
 import { cancelGuidePresence } from '../presence/presenceController';
 import { useSemanticTarget } from '../presence/targetRegistry';
 import { usePortalStore } from '../state/portalStore';
@@ -49,11 +50,12 @@ function CurrentSection() {
 export function App() {
   const accessibility = usePortalStore((state) => state.accessibility);
   const currentSection = usePortalStore((state) => state.currentSection);
-  const openSection = usePortalStore((state) => state.openSection);
   const status = useWebMCPTools();
   const activeSimulation = useSimulationStore((state) => state.activeSimulation);
+  const functionalProfile = usePortalStore((state) => state.functionalProfile);
+  const componentOverrides = usePortalStore((state) => state.componentOverrides);
   const portalSurfaceRef = useSemanticTarget<HTMLElement>('portal_surface');
-  const interfaceMode = isPortalAdapted(accessibility) ? 'adapted' : 'legacy';
+  const personalized = hasPersonalization(accessibility, functionalProfile, componentOverrides);
 
   useEffect(() => () => cancelGuidePresence(), []);
 
@@ -67,7 +69,7 @@ export function App() {
       data-emphasize={accessibility.emphasizeInteractive ? 'true' : 'false'}
       data-text-scale={accessibility.textScale}
       data-status-mode={accessibility.colorIndependentStatus ? 'independent' : 'color-led'}
-      data-interface={interfaceMode}
+      data-personalized={personalized ? 'true' : 'false'}
       data-simulation={activeSimulation ?? 'none'}
       style={{ '--text-scale': accessibility.textScale / 100 } as React.CSSProperties}
     >
@@ -91,7 +93,7 @@ export function App() {
             </div>
           ) : null}
 
-          {interfaceMode === 'adapted' ? (
+          {personalized ? (
             <motion.div
               className={styles.adaptationBanner}
               role="status"
@@ -100,10 +102,7 @@ export function App() {
               transition={{ duration: 0.45, delay: 0.2 }}
             >
               <span className={styles.adaptationMark}><Sparkles size={16} aria-hidden="true" /></span>
-              <span><strong>Interface adapted</strong> around your current readability preferences.</span>
-              <button onClick={() => openSection('settings', 'you')}>
-                <SlidersHorizontal size={15} aria-hidden="true" /> Review settings
-              </button>
+              <span><strong>Interface personalized</strong> from approved preferences and bounded region settings.</span>
             </motion.div>
           ) : null}
 
@@ -111,11 +110,11 @@ export function App() {
             <main ref={portalSurfaceRef} id="portal-content" className={styles.mainContent} tabIndex={-1}>
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={`${currentSection}-${interfaceMode}`}
+                  key={currentSection}
                   initial={{ opacity: 0, y: 12, scale: 0.995 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: interfaceMode === 'adapted' ? 0.52 : 0.24, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: personalized ? 0.42 : 0.24, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <CurrentSection />
                 </motion.div>
@@ -126,6 +125,7 @@ export function App() {
       </div>
 
       <RescheduleDialog />
+      <InterfaceCalibration />
       <SimulationEffects />
       <AgentPresence />
     </div>

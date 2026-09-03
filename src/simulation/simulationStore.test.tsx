@@ -149,7 +149,7 @@ describe('barrier simulator', () => {
     expect(portal.textContent).toBe(before);
 
     useSimulationStore.getState().activateSimulation('small-vocabulary');
-    expect(screen.getByText('PCP', { selector: '[class*="jargonOriginal"]' })).toBeInTheDocument();
+    expect(screen.getByText('MRN', { selector: '[class*="jargonOriginal"]' })).toBeInTheDocument();
     const masks = screen.getAllByText('unfamiliar term');
     expect(masks.every((mask) => mask.getAttribute('aria-hidden') === 'true')).toBe(true);
   });

@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { useCalibrationStore } from '../calibration/calibrationStore';
+import { useSimulationStore } from '../simulation/simulationStore';
 import { usePortalStore } from '../state/portalStore';
 import {
   accessibilityKeys,
@@ -13,6 +15,8 @@ const signal = new AbortController().signal;
 describe('WebMCP tool contracts', () => {
   beforeEach(() => {
     usePortalStore.getState().resetDemo();
+    useCalibrationStore.getState().resetCalibration();
+    useSimulationStore.getState().resetSimulation();
   });
 
   it('publishes the complete static semantic surface with truthful read-only hints', () => {
@@ -20,6 +24,7 @@ describe('WebMCP tool contracts', () => {
     expect(tools.map((tool) => tool.name)).toEqual([
       'get_portal_state',
       'configure_accessibility',
+      'start_interface_calibration',
       'guide_to',
       'open_section',
       'get_upcoming_appointments',
@@ -32,8 +37,78 @@ describe('WebMCP tool contracts', () => {
 
     const stateTool = tools.find((tool) => tool.name === 'get_portal_state');
     const guideTool = tools.find((tool) => tool.name === 'guide_to');
+    const calibrationTool = tools.find((tool) => tool.name === 'start_interface_calibration');
     expect(stateTool?.annotations?.readOnlyHint).toBe(true);
     expect(guideTool?.annotations?.readOnlyHint).toBe(false);
+    expect(calibrationTool?.annotations?.readOnlyHint).toBe(false);
+  });
+
+  it('exposes one bounded calibration tool with no diagnosis or DOM parameters', () => {
+    const tool = createStaticTools().find((candidate) => candidate.name === 'start_interface_calibration');
+    const schema = tool?.inputSchema as {
+      properties: Record<string, { enum: string[] }>;
+      required: string[];
+      additionalProperties: boolean;
+    };
+
+    expect(Object.keys(schema.properties)).toEqual(['domain', 'goal']);
+    expect(schema.properties.domain.enum).toEqual(['pointer_precision']);
+    expect(schema.properties.goal.enum).toEqual(['reschedule_appointment']);
+    expect(schema.required).toEqual(['domain', 'goal']);
+    expect(schema.additionalProperties).toBe(false);
+    expect(JSON.stringify(schema)).not.toMatch(/diagnosis|parkinson|selector|css|html|coordinate|"x"|"y"/i);
+  });
+
+  it('opens calibration immediately and leaves repeated attempts to the webpage', async () => {
+    const tool = createStaticTools().find((candidate) => candidate.name === 'start_interface_calibration')!;
+    const result = await tool.execute(
+      { domain: 'pointer_precision', goal: 'reschedule_appointment' },
+      { signal },
+    );
+
+    expect(result).toMatchObject({
+      ok: true,
+      domain: 'pointer_precision',
+      goal: 'reschedule_appointment',
+      phase: 'target-size',
+      localPractice: true,
+      profileApplied: false,
+      presentedVisually: true,
+    });
+    expect(useCalibrationStore.getState()).toMatchObject({ isOpen: true, startedBy: 'guide' });
+    expect(usePortalStore.getState().functionalProfile).toBeNull();
+  });
+
+  it('does not open calibration when execution was already cancelled', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const tool = createStaticTools().find((candidate) => candidate.name === 'start_interface_calibration')!;
+    const result = await tool.execute(
+      { domain: 'pointer_precision', goal: 'reschedule_appointment' },
+      { signal: controller.signal },
+    );
+
+    expect(result).toMatchObject({ ok: false, error: { code: 'cancelled' } });
+    expect(useCalibrationStore.getState().isOpen).toBe(false);
+  });
+
+  it('reports approved component personalization without leaking calibration or simulator state', async () => {
+    useSimulationStore.getState().activateSimulation('parkinsons');
+    usePortalStore.getState().setComponentAdaptation('appointment_actions', { minimumTargetSize: 64 }, 'you');
+    const tool = createStaticTools().find((candidate) => candidate.name === 'get_portal_state')!;
+    const result = await tool.execute({}, { signal });
+    const serialized = JSON.stringify(result);
+
+    expect(result).toMatchObject({
+      ok: true,
+      state: {
+        interfaceMode: 'adapted',
+        personalization: {
+          componentOverrides: { appointment_actions: { minimumTargetSize: 64 } },
+        },
+      },
+    });
+    expect(serialized).not.toMatch(/parkinson|activeSimulation|aggregates|missDistance|calibrationId/);
   });
 
   it('uses bounded enum-only semantic targets', () => {

@@ -80,6 +80,46 @@ describe('portalStore', () => {
     expect(adapted.confirmReschedule('slot_2026_09_14_1500', 'guide')).toBe(true);
   });
 
+  it('supports Back, explicit confirmation, and human Undo without stale rollback', () => {
+    const state = usePortalStore.getState();
+    state.openReschedule('you');
+    state.selectRescheduleSlot('slot_2026_09_12_1130', 'you');
+    state.backToRescheduleChoices('you');
+
+    expect(usePortalStore.getState().reschedule).toMatchObject({ phase: 'choosing', selectedSlotId: null });
+    expect(usePortalStore.getState().pendingAction).toBeNull();
+
+    usePortalStore.getState().selectRescheduleSlot('slot_2026_09_14_1500', 'you');
+    expect(usePortalStore.getState().confirmReschedule('slot_2026_09_14_1500', 'guide')).toBe(true);
+    expect(usePortalStore.getState().appointment.date).toBe('2026-09-14');
+    expect(usePortalStore.getState().undoReschedule('you')).toBe(true);
+    expect(usePortalStore.getState().appointment).toEqual(originalAppointment);
+    expect(usePortalStore.getState().reschedule.phase).toBe('undone');
+    expect(usePortalStore.getState().activityLog.at(-1)).toMatchObject({ actor: 'you', type: 'reschedule_undone' });
+  });
+
+  it('keeps bounded human component overrides above an approved profile', () => {
+    const state = usePortalStore.getState();
+    state.applyFunctionalProfile({
+      version: 1,
+      input: {
+        preferredMethod: 'pointer',
+        minimumTargetSize: 64,
+        minimumControlGap: 24,
+        accidentalActivationProtection: 'review',
+        focusVisibility: 'enhanced',
+      },
+      presentation: { density: 'focused' },
+    }, 'you', false);
+    state.setComponentAdaptation('appointment_actions', { minimumTargetSize: 52 }, 'you');
+
+    expect(usePortalStore.getState().componentOverrides.appointment_actions).toEqual({ minimumTargetSize: 52 });
+    expect(usePortalStore.getState().recentHumanOverrides.at(-1)).toMatchObject({
+      field: 'componentOverrides.appointment_actions.minimumTargetSize',
+      value: 52,
+    });
+  });
+
   it('resets every demo subsystem without adding a reset activity item', () => {
     const state = usePortalStore.getState();
     const revisions = {

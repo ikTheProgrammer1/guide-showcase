@@ -3223,3 +3223,1062 @@
     transition: none;
   }
 }
+
+/* Component-level personalization and calibration */
+
+.personalizeButton {
+  min-height: 2.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  padding: 0.48rem 0.72rem;
+  color: var(--teal-dark);
+  background: color-mix(in srgb, var(--surface-strong) 88%, var(--teal-pale));
+  border: 1px solid var(--line-strong);
+  border-radius: 0.65rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78em;
+  font-weight: 720;
+}
+
+.personalizeButton:hover {
+  border-color: var(--teal);
+  box-shadow: 0 5px 16px rgba(14, 104, 98, 0.11);
+}
+
+.personalizeBackdrop,
+.calibrationBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(8, 31, 29, 0.66);
+  backdrop-filter: blur(8px);
+}
+
+.personalizeDialog,
+.calibrationDialog {
+  width: min(68rem, 96vw);
+  max-height: min(51rem, 94vh);
+  overflow-y: auto;
+  color: var(--ink);
+  background:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.84), transparent 32%),
+    var(--surface-strong);
+  border: 1px solid color-mix(in srgb, var(--teal) 25%, var(--line));
+  border-radius: 1.35rem;
+  box-shadow: 0 32px 100px rgba(4, 28, 25, 0.34);
+}
+
+.personalizeHeader,
+.calibrationHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.3rem 1.4rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.personalizeHeader h2,
+.calibrationHeader h2,
+.comfortReview h3,
+.practiceInstructions h3 {
+  margin: 0.15rem 0 0;
+  font-family: 'Newsreader Variable', serif;
+  font-weight: 590;
+  letter-spacing: -0.018em;
+}
+
+.personalizeHeader h2,
+.calibrationHeader h2 {
+  font-size: 1.75em;
+}
+
+.personalizeHeader p,
+.calibrationHeader p,
+.regionEditor > p,
+.comfortReview p,
+.practiceInstructions p {
+  margin: 0.25rem 0 0;
+  color: var(--ink-soft);
+}
+
+.calibrationCallout {
+  width: calc(100% - 2.8rem);
+  min-height: 4.3rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.8rem;
+  align-items: center;
+  margin: 1rem 1.4rem 0;
+  padding: 0.75rem;
+  color: var(--ink);
+  background: linear-gradient(110deg, var(--amber-pale), color-mix(in srgb, var(--teal-pale) 55%, white));
+  border: 1px solid color-mix(in srgb, var(--amber) 45%, var(--line));
+  border-radius: 0.9rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.calibrationCallout > span:first-child,
+.calibrationIdentity > span {
+  width: 2.55rem;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  color: #422304;
+  background: var(--amber);
+  border-radius: 50% 50% 50% 18%;
+}
+
+.calibrationCallout strong,
+.calibrationCallout small {
+  display: block;
+}
+
+.calibrationCallout small {
+  margin-top: 0.15rem;
+  color: var(--ink-soft);
+}
+
+.personalizeBody {
+  display: grid;
+  grid-template-columns: minmax(14rem, 0.74fr) minmax(0, 1.5fr);
+  gap: 1rem;
+  padding: 1.4rem;
+}
+
+.regionList {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+}
+
+.regionList button {
+  min-height: 3.45rem;
+  display: block;
+  padding: 0.65rem 0.75rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.72rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.regionList button[aria-pressed='true'] {
+  background: var(--teal-pale);
+  border-color: var(--teal);
+  box-shadow: inset 4px 0 0 var(--teal);
+}
+
+.regionList strong,
+.regionList small {
+  display: block;
+}
+
+.regionList small {
+  margin-top: 0.14rem;
+  color: var(--ink-soft);
+}
+
+.regionEditor {
+  min-width: 0;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--paper) 78%, white);
+  border: 1px solid var(--line);
+  border-radius: 0.95rem;
+}
+
+.regionEditorHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.regionEditorHeading h3 {
+  margin: 0.1rem 0 0;
+  font-family: 'Newsreader Variable', serif;
+  font-size: 1.32em;
+}
+
+.regionFields {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.regionFields fieldset,
+.comfortAdjustments fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+}
+
+.regionFields legend,
+.comfortAdjustments legend {
+  padding: 0 0.35rem;
+  color: var(--ink-soft);
+  font-size: 0.76em;
+  font-weight: 720;
+}
+
+.optionButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.optionButtons button,
+.comfortAdjustments button {
+  min-height: 2.5rem;
+  padding: 0.48rem 0.7rem;
+  color: var(--ink);
+  background: white;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.62rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8em;
+  font-weight: 690;
+}
+
+.optionButtons button[aria-pressed='true'] {
+  color: white;
+  background: var(--teal);
+  border-color: var(--teal);
+}
+
+.calibrationDialog {
+  width: min(64rem, 96vw);
+  overflow: hidden auto;
+}
+
+.calibrationIdentity {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.calibrationHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.stopCalibrationButton,
+.resetCalibrationButton {
+  min-height: 2.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0.5rem 0.72rem;
+  color: var(--danger);
+  background: white;
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--line));
+  border-radius: 0.7rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8em;
+  font-weight: 720;
+}
+
+.resetCalibrationButton {
+  color: var(--ink-soft);
+  border-color: var(--line-strong);
+}
+
+.calibrationProgress {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 0.85rem 1.4rem;
+  background: color-mix(in srgb, var(--paper) 78%, white);
+  border-bottom: 1px solid var(--line);
+}
+
+.calibrationProgress > span {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--ink-soft);
+  font-size: 0.78em;
+  font-weight: 700;
+}
+
+.calibrationProgress > span:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 1rem;
+  width: min(5vw, 4rem);
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.calibrationProgress i {
+  width: 1.65rem;
+  height: 1.65rem;
+  display: grid;
+  place-items: center;
+  color: var(--ink-soft);
+  background: white;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  font-style: normal;
+}
+
+.calibrationProgress > span[data-current='true'] {
+  color: var(--teal-dark);
+}
+
+.calibrationProgress > span[data-current='true'] i,
+.calibrationProgress > span[data-complete='true'] i {
+  color: white;
+  background: var(--teal);
+  border-color: var(--teal);
+}
+
+.practiceLayout {
+  display: grid;
+  grid-template-columns: minmax(16rem, 0.75fr) minmax(22rem, 1.25fr);
+  gap: 1.3rem;
+  padding: 1.4rem;
+}
+
+.practiceInstructions {
+  align-self: center;
+}
+
+.practiceInstructions h3,
+.comfortReview h3 {
+  font-size: 1.55em;
+}
+
+.practiceSafety {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  padding: 0.7rem;
+  color: var(--teal-dark);
+  background: var(--teal-pale);
+  border-radius: 0.72rem;
+}
+
+.practiceSafety strong,
+.practiceSafety span {
+  display: block;
+}
+
+.practiceCount {
+  font-size: 0.82em;
+  font-weight: 720;
+}
+
+.practiceSurface {
+  min-height: 19rem;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1rem;
+  padding: clamp(1rem, 4vw, 2.5rem);
+  background:
+    linear-gradient(rgba(14, 104, 98, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 104, 98, 0.055) 1px, transparent 1px),
+    #f8f4e8;
+  background-size: 1.5rem 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--amber) 45%, var(--line));
+  border-radius: 1rem;
+}
+
+.practiceGrid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--practice-gap, 8px);
+}
+
+.practiceTarget,
+.practiceDecoy {
+  padding: 0.28rem 0.5rem;
+  border-radius: 0.2rem;
+  cursor: pointer;
+  font: 700 0.7em Tahoma, sans-serif;
+}
+
+.practiceTarget {
+  color: #0d3455;
+  background: linear-gradient(#fff, #d4d8db);
+  border: 1px solid #70777c;
+  box-shadow: 0 0 0 3px rgba(228, 139, 47, 0.12);
+  transition: min-width 0.32s ease, min-height 0.32s ease, padding 0.32s ease;
+}
+
+.practiceDecoy {
+  min-height: 28px;
+  color: #59635f;
+  background: #eceae4;
+  border: 1px solid #aaa9a4;
+  opacity: 0.75;
+}
+
+.practiceCaption {
+  color: var(--ink-soft);
+  font-size: 0.74em;
+}
+
+.calibrationFeedback {
+  min-height: 3rem;
+  margin: 0 1.4rem;
+  padding: 0.7rem 0.85rem;
+  color: var(--teal-dark);
+  background: color-mix(in srgb, var(--teal-pale) 72%, white);
+  border-left: 4px solid var(--teal);
+  border-radius: 0.3rem 0.72rem 0.72rem 0.3rem;
+  font-size: 0.84em;
+}
+
+.calibrationDisclaimer {
+  margin: 0;
+  padding: 0.85rem 1.4rem 1.2rem;
+  color: var(--ink-soft);
+  font-size: 0.7em;
+}
+
+.comfortReview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 0.9fr);
+  gap: 1rem 1.3rem;
+  padding: 1.4rem;
+}
+
+.measurementSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.measurementSummary span {
+  padding: 0.7rem;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 0.72rem;
+  font-size: 0.78em;
+}
+
+.measurementSummary strong {
+  display: block;
+  color: var(--ink);
+  font-size: 1.35em;
+}
+
+.comfortAdjustments {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.comfortAdjustments fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.comfortAdjustments button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.rememberPreference {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.65rem;
+  align-items: start;
+  padding: 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+}
+
+.rememberPreference input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.1rem;
+  accent-color: var(--teal);
+}
+
+.rememberPreference strong,
+.rememberPreference small {
+  display: block;
+}
+
+.rememberPreference small {
+  margin-top: 0.15rem;
+  color: var(--ink-soft);
+}
+
+.approveCalibrationButton {
+  grid-column: 1 / -1;
+  min-height: 3.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: white;
+  background: var(--teal);
+  border: 1px solid var(--teal-dark);
+  border-radius: 0.85rem;
+  box-shadow: 0 12px 24px rgba(14, 104, 98, 0.2);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 760;
+}
+
+[data-adaptation-region] button:not(.textButton),
+[data-adaptation-region] a[href],
+[data-adaptation-region] input,
+[data-adaptation-region] select {
+  min-block-size: var(--region-target-size, 36px);
+}
+
+[data-adaptation-region='primary_navigation'] .navList,
+[data-adaptation-region='appointment_actions'],
+[data-adaptation-region='forms'] .slotList,
+[data-adaptation-region='forms'] .reviewActions {
+  gap: var(--region-control-gap, 8px);
+}
+
+[data-focus-visibility='enhanced'] :focus-visible,
+[data-adaptation-region][data-focus-visibility='enhanced']:focus-visible {
+  outline: 4px solid var(--amber) !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 0 7px rgba(255, 255, 255, 0.94) !important;
+}
+
+[data-secondary='collapsed'] [data-secondary-detail='true'] {
+  display: none;
+}
+
+.unifiedDashboard,
+.unifiedAppointments {
+  display: grid;
+  gap: calc(0.65rem * var(--space-factor));
+}
+
+.portalBreadcrumb {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: #4c5b62;
+  font: 700 0.68em Tahoma, sans-serif;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.unifiedNoticeStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.85rem;
+  padding: 0.42rem 0.55rem;
+  color: #122f42;
+  background: #fff6cb;
+  border: 1px solid #b99d4b;
+  font: 700 0.7em Tahoma, sans-serif;
+  text-transform: uppercase;
+}
+
+.unifiedPanel {
+  min-width: 0;
+  background: #f8f9f8;
+  border: 1px solid #858f91;
+  border-radius: 0.16rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
+  transition: padding 0.35s ease, border-radius 0.35s ease, box-shadow 0.35s ease, background 0.35s ease;
+}
+
+.unifiedPanelHeader {
+  min-height: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.28rem 0.55rem;
+  color: white;
+  background: linear-gradient(#4e6e89, #294d6b);
+}
+
+.unifiedPanelHeader h2 {
+  margin: 0;
+  font: 700 0.76em Tahoma, sans-serif;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.unifiedPanelHeader .eyebrow {
+  display: none;
+}
+
+.unifiedPanelHeader button,
+.unifiedAppointmentActions button,
+.unifiedQuickLinks button,
+.unifiedVisitList button {
+  min-height: var(--region-target-size, 28px);
+  padding: 0.22rem 0.52rem;
+  color: #0d3455;
+  background: linear-gradient(#fff, #d4d8db);
+  border: 1px solid #70777c;
+  border-radius: 0.15rem;
+  cursor: pointer;
+  font: 700 0.68em Tahoma, sans-serif;
+}
+
+.patientIdentity {
+  font: 700 0.65em Tahoma, sans-serif;
+}
+
+.unifiedAppointmentSummary {
+  display: grid;
+  grid-template-columns: auto minmax(12rem, 1fr) auto;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.55rem;
+}
+
+.unifiedDateTile {
+  width: 4rem;
+  min-height: 4rem;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  color: white;
+  background: #315976;
+  border: 1px solid #173a54;
+  font: 700 0.68em Tahoma, sans-serif;
+}
+
+.unifiedDateTile strong {
+  font-size: 1.8em;
+  line-height: 1;
+}
+
+.unifiedDateTile small {
+  margin-top: 0.15rem;
+}
+
+.unifiedAppointmentData h3,
+.unifiedProvider h3 {
+  margin: 0.18rem 0 0;
+  font-size: 0.95em;
+}
+
+.unifiedAppointmentData p,
+.unifiedProvider p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.78em;
+}
+
+.unifiedStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #205b41;
+  font-size: 0.68em;
+  font-weight: 780;
+  text-transform: uppercase;
+}
+
+.unifiedStatusMark {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: inline-grid;
+  place-items: center;
+  color: white;
+  background: #68767b;
+  border-radius: 50%;
+}
+
+.unifiedStatusMark[data-tone='good'] { background: var(--success); }
+.unifiedStatusMark[data-tone='alert'] { background: var(--danger); border-radius: 0.2rem; }
+
+.unifiedMetadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.8rem;
+  margin-top: 0.35rem;
+  color: #4f5e63;
+  font-size: 0.7em;
+}
+
+.unifiedMetadata span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.unifiedAppointmentActions {
+  display: flex;
+  align-items: center;
+  gap: var(--region-control-gap, 5px);
+}
+
+.primaryActionGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: inherit;
+}
+
+.unifiedAppointmentActions[data-layout='column'],
+.unifiedAppointmentActions[data-layout='step-by-step'] {
+  align-items: stretch;
+  flex-direction: column;
+  min-width: min(100%, 18rem);
+}
+
+.unifiedAppointmentActions[data-layout='column'] .primaryActionGroup,
+.unifiedAppointmentActions[data-layout='step-by-step'] .primaryActionGroup {
+  display: grid;
+  gap: inherit;
+}
+
+.unifiedAppointmentActions[data-layout='column'] button,
+.unifiedAppointmentActions[data-layout='step-by-step'] button {
+  width: 100%;
+  justify-content: center;
+  padding-inline: 1rem;
+  border-radius: 0.72rem;
+  font-family: 'Atkinson Hyperlegible Next Variable', sans-serif;
+  font-size: 0.9em;
+}
+
+.unifiedPrimaryAction,
+.unifiedAppointmentActions[data-layout='column'] .unifiedPrimaryAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  color: white;
+  background: var(--teal);
+  border-color: var(--teal-dark);
+}
+
+.destructiveActionGroup {
+  display: contents;
+}
+
+.destructiveActionGroup > span {
+  display: none;
+}
+
+.unifiedAppointmentActions[data-destructive-placement='separate'] .destructiveActionGroup {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: calc(var(--region-control-gap, 8px) * 0.5);
+  padding-top: calc(var(--region-control-gap, 8px) * 0.65);
+  border-top: 1px solid var(--line);
+}
+
+.unifiedAppointmentActions[data-destructive-placement='separate'] .destructiveActionGroup > span {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 0.68em;
+  font-weight: 720;
+}
+
+.unifiedAppointmentActions[data-destructive-placement='separate'] .destructiveActionGroup button {
+  color: var(--danger);
+  background: white;
+  border-color: color-mix(in srgb, var(--danger) 38%, var(--line));
+}
+
+.unifiedAppointmentPanel[data-priority='primary'],
+.unifiedAppointmentDetail[data-priority='primary'] {
+  background: var(--surface-strong);
+  border-color: color-mix(in srgb, var(--teal) 28%, var(--line));
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.unifiedAppointmentPanel[data-priority='primary'] .unifiedPanelHeader,
+.unifiedAppointmentDetail[data-priority='primary'] .unifiedPanelHeader {
+  padding: 0.8rem 1rem;
+  color: var(--ink);
+  background: transparent;
+  border-bottom: 1px solid var(--line);
+}
+
+.unifiedAppointmentPanel[data-priority='primary'] .unifiedPanelHeader h2,
+.unifiedAppointmentDetail[data-priority='primary'] .unifiedPanelHeader h2 {
+  font-family: 'Newsreader Variable', serif;
+  font-size: 1.25em;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.unifiedAppointmentPanel[data-priority='primary'] .unifiedPanelHeader .eyebrow,
+.unifiedAppointmentDetail[data-priority='primary'] .unifiedPanelHeader .eyebrow {
+  display: block;
+}
+
+.unifiedAppointmentPanel[data-priority='primary'] .unifiedAppointmentSummary {
+  padding: 1rem;
+}
+
+.unifiedStatusGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.42rem;
+}
+
+.unifiedStatusCard {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem;
+  color: var(--ink);
+  background: #f9f9f9;
+  border: 1px solid #8c9195;
+  border-top: 4px solid #58758c;
+  cursor: pointer;
+  text-align: left;
+}
+
+.unifiedStatusCard span,
+.unifiedStatusCard small,
+.unifiedStatusCard strong,
+.unifiedStatusCard em {
+  display: block;
+  min-width: 0;
+}
+
+.unifiedStatusCard small {
+  color: var(--ink-soft);
+  font-size: 0.64em;
+  font-weight: 720;
+  text-transform: uppercase;
+}
+
+.unifiedStatusCard strong { margin-top: 0.1rem; }
+.unifiedStatusCard em { color: var(--ink-soft); font-size: 0.65em; font-style: normal; font-weight: 700; }
+
+.unifiedStatusGrid[data-status-presentation='icon-shape-text'] {
+  gap: 0.8rem;
+}
+
+.unifiedStatusGrid[data-status-presentation='icon-shape-text'] .unifiedStatusCard {
+  min-height: 5rem;
+  padding: 0.8rem;
+  background: var(--surface-strong);
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+}
+
+.unifiedSecondaryGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(15rem, 0.65fr);
+  gap: 0.65rem;
+}
+
+.unifiedRecordList,
+.unifiedQuickLinks,
+.unifiedVisitList {
+  display: grid;
+}
+
+.unifiedRecordList > span,
+.unifiedVisitList > span {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.42rem 0.55rem;
+  border-bottom: 1px solid #c8cdce;
+  font-size: 0.72em;
+}
+
+.unifiedRecordList small,
+.unifiedVisitList small { color: var(--ink-soft); }
+
+.unifiedQuickLinks {
+  padding: 0.35rem;
+  gap: 0.28rem;
+}
+
+.unifiedQuickLinks button { text-align: left; }
+
+.unifiedSecondaryContent details,
+.unifiedEarlierVisits details {
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+}
+
+.unifiedSecondaryContent summary,
+.unifiedEarlierVisits summary {
+  padding: 0.72rem 0.85rem;
+  cursor: pointer;
+  font-weight: 720;
+}
+
+.unifiedSecondaryContent details .unifiedSecondaryGrid,
+.unifiedEarlierVisits details .unifiedVisitList {
+  padding: 0 0.7rem 0.7rem;
+}
+
+.requiredPortalInformation {
+  padding: 0.55rem;
+  color: var(--ink-soft);
+  background: color-mix(in srgb, var(--paper) 72%, white);
+  border: 1px solid var(--line);
+  font-size: 0.72em;
+}
+
+.requiredPortalInformation p { margin: 0.2rem 0 0; }
+
+.unifiedAppointmentDetail {
+  margin-top: 0.6rem;
+}
+
+.unifiedAppointmentBody {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.7fr) minmax(18rem, 1.25fr) auto;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.65rem;
+}
+
+.unifiedProvider {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.unifiedProvider > span {
+  width: 2.55rem;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: #315976;
+  border-radius: 0.2rem;
+  font-size: 0.72em;
+  font-weight: 760;
+}
+
+.unifiedDetailGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.unifiedDetailGrid > span {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.1rem 0.35rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.unifiedDetailGrid svg { grid-row: 1 / 3; width: 1rem; color: var(--teal); }
+.unifiedDetailGrid small { color: var(--ink-soft); font-size: 0.64em; }
+.unifiedDetailGrid strong { overflow-wrap: anywhere; font-size: 0.72em; }
+
+.unifiedEarlierVisits { margin-top: 0.5rem; }
+.unifiedEarlierVisits > h2 { margin: 0 0 0.4rem; font-family: 'Newsreader Variable', serif; font-size: 1.15em; }
+
+.rescheduleStep {
+  padding: 1.4rem;
+}
+
+.rescheduleStep .slotList {
+  gap: var(--region-control-gap, 10px);
+}
+
+.rescheduleStep .slotButton,
+.rescheduleStep .primaryButton,
+.rescheduleStep .secondaryButton {
+  min-height: var(--region-target-size, 38px);
+}
+
+.stepHint {
+  margin: 0.8rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.78em;
+}
+
+.reviewActions,
+.successActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--region-control-gap, 0.65rem);
+}
+
+.reviewActions > *,
+.successActions > * {
+  flex: 1 1 12rem;
+}
+
+.successIcon[data-undone='true'] { background: var(--teal); }
+
+@media (max-width: 980px) {
+  .unifiedStatusGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .unifiedAppointmentBody { grid-template-columns: 1fr 1fr; }
+  .unifiedAppointmentBody > .unifiedAppointmentActions { grid-column: 1 / -1; }
+  .unifiedSecondaryGrid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+  .headerActions { flex-wrap: wrap; justify-content: flex-end; }
+  .personalizeButton span { display: none; }
+  .personalizeBody,
+  .practiceLayout,
+  .comfortReview { grid-template-columns: 1fr; }
+  .rememberPreference,
+  .approveCalibrationButton { grid-column: 1; }
+  .regionList { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .unifiedAppointmentSummary,
+  .unifiedAppointmentBody { grid-template-columns: 1fr; }
+  .unifiedAppointmentActions { justify-self: stretch; }
+  .unifiedDetailGrid { grid-template-columns: 1fr; }
+  .unifiedStatusGrid { grid-template-columns: 1fr; }
+  .calibrationProgress > span:not(:last-child)::after { display: none; }
+}
+
+@media (max-width: 480px) {
+  .personalizeBackdrop,
+  .calibrationBackdrop { padding: 0; align-items: end; }
+  .personalizeDialog,
+  .calibrationDialog { width: 100%; max-height: 96vh; border-radius: 1.2rem 1.2rem 0 0; }
+  .personalizeHeader,
+  .calibrationHeader { padding: 1rem; }
+  .personalizeHeader h2,
+  .calibrationHeader h2 { font-size: 1.4em; }
+  .calibrationCallout { width: calc(100% - 2rem); margin: 1rem 1rem 0; }
+  .personalizeBody,
+  .practiceLayout,
+  .comfortReview { padding: 1rem; }
+  .regionList { grid-template-columns: 1fr; }
+  .calibrationHeader { align-items: center; }
+  .calibrationHeaderActions { gap: 0.3rem; }
+  .resetCalibrationButton { padding-inline: 0.55rem; }
+  .stopCalibrationButton { font-size: 0; }
+  .stopCalibrationButton svg { width: 1.1rem; }
+  .calibrationProgress { padding-inline: 1rem; }
+  .calibrationProgress > span { align-items: flex-start; flex-direction: column; font-size: 0.7em; }
+  .practiceSurface { min-height: 15rem; }
+  .portalBreadcrumb { align-items: flex-start; flex-direction: column; }
+}

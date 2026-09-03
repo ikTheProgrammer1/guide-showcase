@@ -53,6 +53,7 @@ export interface PortalStore {
   openReschedule: (actor: Actor) => void;
   closeReschedule: (actor: Actor) => void;
   selectRescheduleSlot: (slotId: string, actor: Actor) => boolean;
+  backToRescheduleChoices: (actor: Actor) => void;
   confirmReschedule: (slotId: string, actor: Actor) => boolean;
   undoReschedule: (actor: Actor) => boolean;
   applyFunctionalProfile: (profile: FunctionalProfile, actor: Actor, remember: boolean) => void;
@@ -222,6 +223,25 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
       ),
     }));
     return true;
+  },
+
+  backToRescheduleChoices: (actor) => {
+    const state = get();
+    if (!state.reschedule.dialogOpen || state.reschedule.phase !== 'reviewing') return;
+    set((current) => ({
+      reschedule: { phase: 'choosing', dialogOpen: true, selectedSlotId: null },
+      pendingAction: null,
+      uiRevision: current.uiRevision + 1,
+      rescheduleRevision: current.rescheduleRevision + 1,
+      recentHumanOverrides:
+        actor === 'you'
+          ? [...current.recentHumanOverrides, { field: 'selectedRescheduleSlot', value: 'cleared', timestamp: Date.now() }].slice(-8)
+          : current.recentHumanOverrides,
+      activityLog: appendEvent(
+        current.activityLog,
+        makeEvent(actor, 'reschedule_back', `${actor === 'guide' ? 'Guide returned' : 'You returned'} to available appointment times`),
+      ),
+    }));
   },
 
   confirmReschedule: (slotId, actor) => {
