@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "npm run build && playwright test",
+    "screenshots": "node scripts/capture-screenshots.mjs",
     "check": "npm run lint && npm run test && npm run build"
   },
   "dependencies": {

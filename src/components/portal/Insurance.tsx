@@ -45,7 +45,7 @@ export function Insurance() {
         <section className={styles.updatePanel} aria-labelledby="insurance-update-title">
           <header>
             <div><span className={styles.eyebrow}>Simulated workflow</span><h3 id="insurance-update-title">Update insurance</h3></div>
-            <button className={styles.iconButton} onClick={() => closeUpdate('you')} aria-label="Close insurance update"><X size={19} /></button>
+            <button className={styles.iconButton} onClick={() => closeUpdate('you')} aria-label="Close insurance update"><X size={19} aria-hidden="true" /></button>
           </header>
           {saved ? (
             <div className={styles.savedState}>

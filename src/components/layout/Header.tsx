@@ -19,7 +19,12 @@ export function Header({ webMcpStatus }: { webMcpStatus: WebMCPStatus }) {
         <h1>Good afternoon, Robert.</h1>
       </div>
       <div className={styles.headerActions}>
-        <div className={styles.connectionPill} data-ready={webMcpStatus === 'ready' ? 'true' : 'false'}>
+        <div
+          className={styles.connectionPill}
+          data-ready={webMcpStatus === 'ready' ? 'true' : 'false'}
+          role="status"
+          aria-label={webMcpStatus === 'ready' ? 'WebMCP status: Guide connected' : 'WebMCP status: Preview mode'}
+        >
           {webMcpStatus === 'ready' ? <Wifi size={15} aria-hidden="true" /> : <WifiOff size={15} aria-hidden="true" />}
           <span>{webMcpStatus === 'ready' ? 'Guide connected' : 'Preview mode'}</span>
         </div>

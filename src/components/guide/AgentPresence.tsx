@@ -29,11 +29,17 @@ export function AgentPresence() {
       );
     };
     update();
+    const targetElement = presence.target
+      ? document.querySelector(`[data-semantic-target="${presence.target}"]`)
+      : null;
+    const observer = targetElement && 'ResizeObserver' in window ? new ResizeObserver(update) : null;
+    if (targetElement && observer) observer.observe(targetElement);
     window.addEventListener('resize', update);
     window.addEventListener('scroll', update, true);
     return () => {
       window.removeEventListener('resize', update);
       window.removeEventListener('scroll', update, true);
+      observer?.disconnect();
     };
   }, [presence.target, presence.operationId, presence.visible]);
 
@@ -43,8 +49,9 @@ export function AgentPresence() {
         {presence.visible && highlight && presence.status !== 'moving' ? (
           <motion.div
             className={styles.targetHighlight}
+            style={highlight}
             initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1, ...highlight }}
+            animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.03 }}
             transition={{ duration: 0.24 }}
           />

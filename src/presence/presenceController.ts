@@ -23,6 +23,7 @@ interface GuideActionOptions {
 
 let sequence: Promise<unknown> = Promise.resolve();
 let hideTimer: number | null = null;
+let cancellationGeneration = 0;
 
 function reducedMotion() {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
@@ -151,6 +152,17 @@ async function performGuideAction(options: GuideActionOptions): Promise<GuideAct
       hidePresenceLater(operationId);
       return { ok: false, code: 'action_rejected' };
     }
+
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    const updatedTarget = getTargetElement(options.target);
+    if (updatedTarget) {
+      updatedTarget.scrollIntoView({
+        behavior: reducedMotion() ? 'auto' : 'smooth',
+        block: 'center',
+        inline: 'nearest',
+      });
+      store.setAgentPresence({ position: pointerPosition(options.target) });
+    }
   }
 
   store.setAgentPresence({ status: 'complete' });
@@ -159,12 +171,18 @@ async function performGuideAction(options: GuideActionOptions): Promise<GuideAct
 }
 
 export function runGuideAction(options: GuideActionOptions): Promise<GuideActionResult> {
-  const run = sequence.then(() => performGuideAction(options));
+  const generation = cancellationGeneration;
+  const run = sequence.then(() =>
+    generation === cancellationGeneration
+      ? performGuideAction(options)
+      : ({ ok: false, code: 'cancelled' } satisfies GuideActionResult),
+  );
   sequence = run.catch(() => undefined);
   return run;
 }
 
 export function cancelGuidePresence() {
+  cancellationGeneration += 1;
   if (hideTimer !== null) window.clearTimeout(hideTimer);
   hideTimer = null;
   window.speechSynthesis?.cancel();

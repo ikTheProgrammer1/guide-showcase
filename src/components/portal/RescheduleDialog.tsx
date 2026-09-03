@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { CalendarCheck, Check, CheckCircle2, Clock3, X } from 'lucide-react';
+import { useEffect, useRef, type KeyboardEvent } from 'react';
 import { originalAppointment, rescheduleSlots } from '../../data/demoData';
 import { cancelGuidePresence } from '../../presence/presenceController';
 import { useSemanticTarget } from '../../presence/targetRegistry';
@@ -39,10 +40,44 @@ export function RescheduleDialog() {
   const confirm = usePortalStore((state) => state.confirmReschedule);
   const selectedSlot = rescheduleSlots.find((slot) => slot.id === reschedule.selectedSlotId) ?? null;
   const confirmRef = useSemanticTarget<HTMLButtonElement>('confirm_reschedule_button');
+  const dialogRef = useRef<HTMLElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const previousFocus = useRef<HTMLElement | null>(null);
 
   const dismiss = () => {
     cancelGuidePresence();
     close('you');
+  };
+
+  useEffect(() => {
+    if (!reschedule.dialogOpen) return;
+    previousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const frame = requestAnimationFrame(() => titleRef.current?.focus());
+    return () => {
+      cancelAnimationFrame(frame);
+      previousFocus.current?.focus();
+    };
+  }, [reschedule.dialogOpen]);
+
+  const handleDialogKeys = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      dismiss();
+      return;
+    }
+    if (event.key !== 'Tab' || !dialogRef.current) return;
+
+    const controls = [...dialogRef.current.querySelectorAll<HTMLElement>('button:not(:disabled), [tabindex="0"]')];
+    if (controls.length === 0) return;
+    const first = controls[0];
+    const last = controls.at(-1)!;
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   };
 
   return (
@@ -55,10 +90,12 @@ export function RescheduleDialog() {
           exit={{ opacity: 0 }}
         >
           <motion.section
+            ref={dialogRef}
             className={styles.dialog}
             role="dialog"
             aria-modal="true"
             aria-labelledby="reschedule-title"
+            onKeyDown={handleDialogKeys}
             initial={{ opacity: 0, y: 24, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 18, scale: 0.98 }}
@@ -68,7 +105,7 @@ export function RescheduleDialog() {
               <div className={styles.successPanel}>
                 <div className={styles.successIcon}><CheckCircle2 size={34} aria-hidden="true" /></div>
                 <span className={styles.eyebrow}>Appointment updated</span>
-                <h2 id="reschedule-title">Your new time is confirmed.</h2>
+                <h2 ref={titleRef} id="reschedule-title" tabIndex={-1}>Your new time is confirmed.</h2>
                 <p>{appointment.provider} · {appointment.specialty}</p>
                 <div className={styles.confirmedTime}>
                   <CalendarCheck size={20} aria-hidden="true" />
@@ -82,7 +119,7 @@ export function RescheduleDialog() {
                 <header className={styles.dialogHeader}>
                   <div>
                     <span className={styles.eyebrow}>Choose a new time</span>
-                    <h2 id="reschedule-title">Reschedule your appointment</h2>
+                    <h2 ref={titleRef} id="reschedule-title" tabIndex={-1}>Reschedule your appointment</h2>
                     <p>Nothing changes until you confirm.</p>
                   </div>
                   <button className={styles.iconButton} onClick={dismiss} aria-label="Close reschedule dialog">

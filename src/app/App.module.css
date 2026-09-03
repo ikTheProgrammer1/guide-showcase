@@ -24,6 +24,7 @@
     var(--paper);
   font-size: calc(1rem * var(--text-scale, 1));
   line-height: 1.45;
+  overflow-x: clip;
 }
 
 .app[data-contrast='high'] {
@@ -338,6 +339,7 @@
   cursor: pointer;
   font-weight: 690;
   transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+  touch-action: manipulation;
 }
 
 .resetButton {
@@ -390,7 +392,9 @@
 
 .page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: calc(2rem * var(--space-factor));
+  min-width: 0;
 }
 
 .pageIntro {
@@ -405,6 +409,8 @@
   font-weight: 520;
   line-height: 0.99;
   letter-spacing: -0.04em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 
 .pageIntro p,
@@ -513,6 +519,7 @@
   border: 1px solid var(--line);
   border-radius: 1.25rem;
   box-shadow: var(--shadow);
+  min-width: 0;
 }
 
 .sectionHeading {
@@ -521,6 +528,11 @@
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.2rem;
+  min-width: 0;
+}
+
+.sectionHeading > div {
+  min-width: 0;
 }
 
 .sectionHeading h2,
@@ -1312,6 +1324,7 @@
   width: min(62rem, 96vw);
   max-height: min(48rem, 94vh);
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--surface-strong);
   border: 1px solid var(--line);
   border-radius: 1.4rem;
@@ -1806,14 +1819,39 @@
   }
 }
 
-.app[data-text-scale='150'] .portalGrid,
 .app[data-text-scale='175'] .portalGrid,
 .app[data-text-scale='200'] .portalGrid {
   grid-template-columns: 1fr;
 }
 
-.app[data-text-scale='150'] .guideRail,
 .app[data-text-scale='175'] .guideRail,
 .app[data-text-scale='200'] .guideRail {
   position: static;
+}
+
+.app[data-text-scale='175'] .appointmentFeature,
+.app[data-text-scale='200'] .appointmentFeature {
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+.app[data-text-scale='175'] .appointmentFeature > button,
+.app[data-text-scale='200'] .appointmentFeature > button {
+  width: 100%;
+}
+
+.app[data-text-scale='200'] .segmented {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 650px) {
+  .app[data-text-scale='175'] .navList,
+  .app[data-text-scale='200'] .navList {
+    grid-template-columns: 1fr;
+  }
+
+  .app[data-text-scale='175'] .sectionHeading,
+  .app[data-text-scale='200'] .sectionHeading {
+    min-width: 0;
+  }
 }
