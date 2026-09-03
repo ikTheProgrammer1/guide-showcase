@@ -28,6 +28,7 @@ function LegacyHome() {
   const appointment = usePortalStore((state) => state.appointment);
   const openSection = usePortalStore((state) => state.openSection);
   const appointmentRef = useSemanticTarget<HTMLDivElement>('upcoming_appointment');
+  const rescheduleRef = useSemanticTarget<HTMLButtonElement>('reschedule_button');
   const billingRef = useSemanticTarget<HTMLDivElement>('billing_balance');
   const insuranceRef = useSemanticTarget<HTMLDivElement>('insurance_status');
 
@@ -52,7 +53,7 @@ function LegacyHome() {
           </table>
           <div className={styles.legacyActions}>
             <button onClick={() => openSection('appointments', 'you')}>VIEW APPT</button>
-            <button onClick={() => openSection('appointments', 'you')}>MODIFY APPT</button>
+            <button ref={rescheduleRef} aria-label="Reschedule appointment" onClick={() => openSection('appointments', 'you')}>MODIFY APPT</button>
             <button type="button">CANCEL APPT</button>
             <button type="button">PRINT</button>
           </div>
@@ -116,6 +117,7 @@ function AdaptedHome() {
   const colorIndependent = usePortalStore((state) => state.accessibility.colorIndependentStatus);
   const openSection = usePortalStore((state) => state.openSection);
   const appointmentRef = useSemanticTarget<HTMLDivElement>('upcoming_appointment');
+  const rescheduleRef = useSemanticTarget<HTMLButtonElement>('reschedule_button');
   const billingRef = useSemanticTarget<HTMLButtonElement>('billing_balance');
   const insuranceRef = useSemanticTarget<HTMLButtonElement>('insurance_status');
 
@@ -150,7 +152,7 @@ function AdaptedHome() {
               <span><Clock3 size={16} aria-hidden="true" /> {appointment.time}</span>
             </div>
           </div>
-          <button className={styles.secondaryButton} onClick={() => openSection('appointments', 'you')}>View details</button>
+          <button ref={rescheduleRef} className={styles.secondaryButton} onClick={() => openSection('appointments', 'you')}>Change appointment</button>
         </div>
       </section>
 

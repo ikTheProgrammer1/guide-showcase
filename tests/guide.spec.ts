@@ -95,6 +95,29 @@ async function enableReadAloudManually(page: Page) {
   await page.getByRole('button', { name: 'Read Guide aloud' }).click();
 }
 
+test('points to the reschedule entry point from both home layouts without activating it', async ({ page }) => {
+  await installWebMCP(page);
+  await page.goto('/');
+  await expect(page.locator('[data-semantic-target="reschedule_button"]')).toBeVisible();
+
+  const legacy = (await callTool(page, 'guide_to', {
+    target: 'reschedule_button',
+    message: 'The appointment change control is here.',
+  })) as { ok: boolean; presentedVisually: boolean };
+  expect(legacy).toMatchObject({ ok: true, presentedVisually: true });
+  expect((await callTool(page, 'get_portal_state', {}) as { state: { currentSection: string; reschedule: { dialogOpen: boolean } } }).state)
+    .toMatchObject({ currentSection: 'home', reschedule: { dialogOpen: false } });
+
+  await callTool(page, 'configure_accessibility', { density: 'simplified' });
+  const adapted = (await callTool(page, 'guide_to', {
+    target: 'reschedule_button',
+    message: 'The appointment change control is here.',
+  })) as { ok: boolean; presentedVisually: boolean };
+  expect(adapted).toMatchObject({ ok: true, presentedVisually: true });
+  expect((await callTool(page, 'get_portal_state', {}) as { state: { currentSection: string; reschedule: { dialogOpen: boolean } } }).state)
+    .toMatchObject({ currentSection: 'home', reschedule: { dialogOpen: false } });
+});
+
 test('keeps slot selection static and removes dynamic confirmation immediately after commit', async ({ page }) => {
   await installWebMCP(page);
   await page.goto('/');
