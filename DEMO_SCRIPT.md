@@ -1,85 +1,105 @@
-# Guide Demo Script — 2:35 Target
+# Guide Demo Script — 2:40 Target
 
-Record the deployed production URL in ChatGPT’s in-app browser at 1440×900. Start with **Reset demo**, 100% browser zoom, and the activity panel visible. Keep the source editor ready for the brief code shot.
+Record the production URL in ChatGPT’s in-app browser at 1440 × 900 and 100% browser zoom. Start with **Reset Demo**. Keep the source editor ready for one brief code shot.
 
-## 0:00–0:18 — The Gap
+## 0:00–0:12 — One Interface for Everyone
 
-**Screen:** The normal portal home page.
-
-**Narration:**
-
-“AI agents can use websites for us. But that often leaves people with two choices: follow instructions in chat, or hand everything over. Guide explores the space between them—a person and an agent sharing the same interface.”
-
-## 0:18–0:45 — Adapt
-
-**Prompt:**
-
-> The text is difficult for me to read and this page feels crowded. Make it easier for me to use.
-
-**Expected tools:** `get_portal_state`, then `configure_accessibility` with 150% or 175% text, high contrast, simplified density, large controls, and increased spacing.
+**Screen:** Hold on the dense Northstar Health portal. Let the crowded tables, compact navigation, abbreviations, small controls, and red/green status dots register.
 
 **Narration:**
 
-“With WebMCP, the page tells the agent how the interface itself can adapt. The change happens here, in the shared page, and Robert can override every setting.”
+“Most websites still present one fixed interface to everyone. And many essential services look like this.”
 
-## 0:45–1:08 — Show, Don’t Take Over
+## 0:12–0:38 — Adapt
 
 **Prompt:**
 
-> I need to move my appointment, but I don’t know where. Show me—don’t change anything yet.
+> I have trouble distinguishing red and green, the text is difficult to read, and this page feels overwhelming. Can you make it easier for me?
 
-**Expected tools:** `guide_to` targeting `appointments_navigation`, followed by `open_section` only if requested.
+**Expected tools:** `get_portal_state`, then one `configure_accessibility` call with 175% text, high contrast, simplified density, large controls, increased spacing, color-independent status, and emphasized interactions.
+
+**Screen:** The same Northstar application reorganizes into the calm modern interface. Guide ✦ appears after the transformation.
 
 **Narration:**
 
-“Guide has a visible presence. It can point without clicking, explain without taking control, and work with semantic targets instead of screen coordinates.”
+“Northstar exposes not only actions through WebMCP, but semantic ways its own interface can adapt. This is a structural reflow—not a zoomed screenshot.”
 
-## 1:08–1:38 — Collaborate
+## 0:38–1:00 — Show
 
 **Prompt:**
 
-> Show me the available times, but let me choose.
+> I need to change my appointment, but I don’t know how. Show me—don’t change anything yet.
 
-**Expected tool:** `get_reschedule_options`.
+**Expected tool:** `guide_to` targeting `appointments_navigation` or `reschedule_button`.
 
-**Screen:** Show `select_reschedule_slot` appearing in the client. Click **Monday, September 14 · 3:00 PM** manually.
+**Screen:** Guide flies to the control, highlights it, and says, “Your appointment can be changed here.” Nothing activates.
 
 **Narration:**
 
-“Guide opens the non-committing chooser. I make the decision myself. That manual click updates the same state the agent sees, and the confirmation capability appears only when it is relevant.”
+“Guide can direct attention without taking control. Its target is semantic, so it survives the layout transformation.”
 
-## 1:38–2:00 — Delegate
+## 1:00–1:18 — Explain
 
 **Prompt:**
 
-> You can finish it.
+> What does that do?
+
+**Expected tool:** `guide_to` with a short explanation.
+
+**Narration:**
+
+“The agent explains in the shared page instead of making me translate chat instructions back onto the interface.”
+
+## 1:18–1:52 — Guide & Collaborate
+
+**Prompt:**
+
+> Help me reschedule it, but let me choose the time.
+
+**Expected tools:** `get_reschedule_options`, then `open_reschedule`.
+
+**Screen:** The chooser shows the current appointment and three alternatives. `select_reschedule_slot` becomes available. Manually choose **Monday, September 14 · 3:00 PM**.
+
+**Narration:**
+
+“Guide prepares the workflow, but I make the decision. My click updates the exact same state the agent sees.”
+
+## 1:52–2:14 — Act
+
+**Prompt:**
+
+> That works. Finish it.
 
 **Expected tools:** `get_portal_state`, then `confirm_reschedule` with the human-selected slot.
 
-**Narration:**
-
-“Now I delegate the final step. Guide shows the current and new times, visibly targets Confirm, validates that my selection has not changed, and completes the fictional workflow.”
-
-## 2:00–2:18 — WebMCP-Native Code
-
-**Screen:** Show `document.modelContext.registerTool`, the `guide_to` schema, and the semantic target registry.
+**Screen:** Guide moves to Confirm, shows the before-and-after time, pauses, and commits. Hold on the success state.
 
 **Narration:**
 
-“This isn’t coordinate automation. The site exposes what its capabilities mean. A presence layer turns those semantic calls into visible attention, action previews, and shared history.”
+“When I delegate the last step, Guide re-reads my choice and refuses stale instructions. The action stays visible and attributable.”
 
-## 2:18–2:35 — Close
+## 2:14–2:29 — WebMCP-Native
 
-**Screen:** Success view, then the activity log showing Guide and You.
+**Screen:** Briefly show `document.modelContext.registerTool()`, the `configure_accessibility` schema, and the semantic target registry.
 
 **Narration:**
 
-“WebMCP gives agents capabilities. Guide makes those capabilities visible to the person. Agents shouldn’t just use the web for us. They should be able to use it with us.”
+“This is not screen-coordinate automation. ChatGPT is the client and language layer. Northstar owns semantic capabilities, adaptation, and visible presence.”
+
+## 2:29–2:40 — Close
+
+**Screen:** Adapted Northstar and the Guide success state.
+
+**Narration:**
+
+“What if websites didn’t have one interface for everyone? Guide lets agents reshape the web around people—and stay beside them when they need help. Agents shouldn’t just use the web for us. They should be able to use it with us.”
 
 ## Recording Checklist
 
-- Keep the final video below 3 minutes.
-- Include narration audio and no copyrighted music.
-- Show the actual production URL and actual discovered WebMCP tools.
-- Do not imply a real healthcare integration or real appointment change.
-- Upload the final video publicly to YouTube and add its link to Devpost manually.
+- Keep the finished video under 3 minutes.
+- Show the production URL and tools actually discovered by the client.
+- Keep the full legacy-to-adapted transition in one uninterrupted shot.
+- Use functional-needs language, not diagnosis presets or medical claims.
+- Show one human slot selection and one delegated confirmation.
+- Do not imply a real healthcare integration or appointment change.
+- Upload the final video publicly and add its link to Devpost manually.

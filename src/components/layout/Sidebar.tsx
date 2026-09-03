@@ -4,9 +4,9 @@ import {
   FileText,
   Home,
   Mail,
+  Compass,
   Settings,
   ShieldCheck,
-  Sparkles,
 } from 'lucide-react';
 import { useSemanticTarget } from '../../presence/targetRegistry';
 import { usePortalStore } from '../../state/portalStore';
@@ -64,11 +64,11 @@ export function Sidebar() {
     <aside className={styles.sidebar}>
       <div className={styles.brandLockup}>
         <div className={styles.brandMark} aria-hidden="true">
-          <Sparkles size={20} />
+          <Compass size={21} />
         </div>
         <div>
-          <strong>Guide</strong>
-          <span>Patient Portal</span>
+          <strong>Northstar Health</strong>
+          <span>Patient Services Portal</span>
         </div>
       </div>
 
@@ -83,6 +83,13 @@ export function Sidebar() {
             />
           ))}
         </ul>
+      </nav>
+
+      <nav className={styles.legacyExtraNav} aria-label="Additional patient services">
+        <button onClick={() => openSection('home', 'you')}>My Chart</button>
+        <button onClick={() => openSection('documents', 'you')}>Results</button>
+        <button onClick={() => openSection('messages', 'you')}>Rx Refills</button>
+        <button onClick={() => openSection('messages', 'you')}>Help</button>
       </nav>
 
       <div className={styles.sidebarFooter}>

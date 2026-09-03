@@ -1,11 +1,13 @@
-import { RotateCcw, Wifi, WifiOff } from 'lucide-react';
+import { RotateCcw, Sparkles, WifiOff } from 'lucide-react';
 import { cancelGuidePresence } from '../../presence/presenceController';
+import { useSemanticTarget } from '../../presence/targetRegistry';
 import { usePortalStore } from '../../state/portalStore';
 import type { WebMCPStatus } from '../../webmcp/useWebMCPTools';
 import styles from '../../app/App.module.css';
 
 export function Header({ webMcpStatus }: { webMcpStatus: WebMCPStatus }) {
   const resetDemo = usePortalStore((state) => state.resetDemo);
+  const guideStatusRef = useSemanticTarget<HTMLDivElement>('guide_status');
 
   const reset = () => {
     cancelGuidePresence();
@@ -15,18 +17,19 @@ export function Header({ webMcpStatus }: { webMcpStatus: WebMCPStatus }) {
   return (
     <header className={styles.header}>
       <div>
-        <span className={styles.headerKicker}>Wednesday · September 2</span>
-        <h1>Good afternoon, Robert.</h1>
+        <span className={styles.headerKicker}>Wednesday, September 2, 2026 · Last sign-in 8:42 AM</span>
+        <h1>Patient Services</h1>
       </div>
       <div className={styles.headerActions}>
         <div
+          ref={guideStatusRef}
           className={styles.connectionPill}
           data-ready={webMcpStatus === 'ready' ? 'true' : 'false'}
           role="status"
-          aria-label={webMcpStatus === 'ready' ? 'WebMCP status: Guide connected' : 'WebMCP status: Preview mode'}
+          aria-label={webMcpStatus === 'ready' ? 'WebMCP status: Guide available' : 'WebMCP status: Preview mode'}
         >
-          {webMcpStatus === 'ready' ? <Wifi size={15} aria-hidden="true" /> : <WifiOff size={15} aria-hidden="true" />}
-          <span>{webMcpStatus === 'ready' ? 'Guide connected' : 'Preview mode'}</span>
+          {webMcpStatus === 'ready' ? <Sparkles size={15} aria-hidden="true" /> : <WifiOff size={15} aria-hidden="true" />}
+          <span>{webMcpStatus === 'ready' ? 'Guide available' : 'Standard portal'}</span>
         </div>
         <button className={styles.resetButton} onClick={reset}>
           <RotateCcw size={16} aria-hidden="true" />

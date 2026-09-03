@@ -25,6 +25,7 @@ describe('Guide portal UI', () => {
   });
 
   it('supports a complete manual reschedule flow', () => {
+    usePortalStore.getState().setAccessibility({ density: 'simplified' }, 'guide');
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Appointments' }));
     fireEvent.click(screen.getByRole('button', { name: 'Reschedule appointment' }));
@@ -38,6 +39,7 @@ describe('Guide portal UI', () => {
   });
 
   it('lets the person override accessibility settings and reset them', () => {
+    usePortalStore.getState().openSection('settings', 'you');
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: '175%' }));
     fireEvent.click(screen.getByRole('button', { name: 'High contrast' }));
@@ -45,6 +47,21 @@ describe('Guide portal UI', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset demo' }));
     expect(usePortalStore.getState().accessibility).toMatchObject({ textScale: 100, contrast: 'standard' });
-    expect(screen.getByText('Actions from you and Guide will appear here.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'PATIENT SUMMARY' })).toBeInTheDocument();
+  });
+
+  it('starts as Northstar legacy software and structurally transforms when adapted', async () => {
+    render(<App />);
+    expect(screen.getByText('Northstar Health')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'PATIENT SUMMARY' })).toBeInTheDocument();
+    expect(document.querySelector('[data-interface="legacy"]')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Simplify page' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+
+    expect(await screen.findByRole('heading', { name: 'Good afternoon, Robert.' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'PATIENT SUMMARY' })).not.toBeInTheDocument();
+    expect(document.querySelector('[data-interface="adapted"]')).toBeInTheDocument();
   });
 });

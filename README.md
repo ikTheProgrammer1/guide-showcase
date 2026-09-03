@@ -1,170 +1,145 @@
 # Guide
 
-**The web interface that adapts and guides you.**
+**What if websites did not have one fixed interface for everyone?**
 
-Guide is an OpenAI WebMCP Challenge project exploring a middle ground between chat instructions and invisible automation. A person and an AI agent share the same fictional patient portal. The agent can adapt the page, point to meaningful controls, prepare a workflow, or complete a delegated step—and every action remains visible and reversible by the person.
+Guide is a WebMCP interaction layer embedded in a fictional website. The demo begins with **Northstar Health**, a believable dense institutional patient portal. A person describes what is difficult to see or use to an AI client such as ChatGPT. The client discovers Northstar’s semantic WebMCP capabilities and asks the website to reorganize itself around those functional needs. Guide then stays visibly present to point, explain, collaborate, and complete delegated work.
 
-> Agents shouldn’t just use the web for us. They should be able to use it with us.
+> Agents should not just use the web for us. They should be able to use it with us.
 
-![Guide patient portal home](./docs/screenshots/guide-home.png)
-
-![Guide visibly adapting the shared interface](./docs/screenshots/guide-adapted.png)
+| Before: one inherited interface | After: adapted around the person |
+|---|---|
+| ![Dense Northstar Health legacy portal](./docs/screenshots/guide-home.png) | ![Northstar Health after a WebMCP accessibility adaptation](./docs/screenshots/guide-adapted.png) |
 
 ## Live Demo
 
 - Production: [https://guide-webmcp.vercel.app](https://guide-webmcp.vercel.app)
 - Source: [github.com/ikTheProgrammer1/guide-showcase](https://github.com/ikTheProgrammer1/guide-showcase)
 
-The portal contains only fictional administrative data. It does not connect to healthcare providers, upload files, or provide medical or financial advice.
+Everything in the portal is fictional. There is no healthcare connection, authentication, upload, payment processing, medical advice, or financial advice.
 
-## Why WebMCP
+## The Product Thesis
 
-Typical browser agents must infer meaning from screenshots, selectors, or coordinates. Guide instead exposes semantic application capabilities through the current imperative WebMCP API:
+Northstar Health is the website. Guide ✦ is the agent presence inside it.
+
+The initial Northstar interface looks like real institutional software that accumulated features over many years: compact navigation, small type, data tables, abbreviations, weak hierarchy, competing panels, and status indicators led by red and green. It remains usable and semantic—it is not a broken parody.
+
+A single composed tool call can transform the same application:
 
 ```ts
-await document.modelContext.registerTool({
-  name: 'guide_to',
-  description: 'Point to a semantic interface target without activating it.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      target: { type: 'string', enum: ['appointments_navigation', 'reschedule_button'] },
-    },
-    required: ['target'],
-    additionalProperties: false,
-  },
-  execute: async ({ target }, { signal }) => {
-    return runGuideAction({ target, signal });
-  },
+configure_accessibility({
+  textScale: 175,
+  contrast: 'high',
+  density: 'simplified',
+  controlSize: 'large',
+  spacing: 'increased',
+  colorIndependentStatus: true,
+  emphasizeInteractive: true,
 });
 ```
 
-The page translates a semantic target into a live DOM reference, scroll position, target outline, distinct Guide pointer, explanation, application action, and attributed activity event. There are no screen-coordinate automation tools.
+The result changes hierarchy, content density, navigation, layout, typography, spacing, control size, and status representation. It is structural adaptation, not CSS zoom. Statuses become explicit combinations such as **✓ Active** and **! Payment Due**, so meaning does not rely on color alone.
 
-## Interaction Model
+![Guide pointing to the adapted appointment card](./docs/screenshots/guide-presence.png)
 
-| Person asks | Guide does |
-|---|---|
-| “I can’t read this.” | Adapts text size, contrast, density, spacing, and controls. |
-| “Where do I change my appointment?” | Points to the relevant semantic control without activating it. |
-| “What does that button do?” | Highlights and explains it in the shared page. |
-| “Show me the options, but let me choose.” | Opens the non-committing chooser; the person selects a time. |
-| “You can finish.” | Re-reads shared state, previews the consequence, and confirms visibly. |
+There are no diagnosis presets. Guide responds to functional needs because people with the same diagnosis can experience the web differently. Manual preferences remain available under **Settings → Accessibility Preferences**; AI is never required for access.
 
-Human interaction is authoritative. If Guide selects September 12 and the person changes it to September 14, a stale agent confirmation fails with `selection_changed` instead of overwriting the person.
+## Collaboration Continuum
+
+| Stage | Person asks | Semantic behavior |
+|---|---|---|
+| Adapt | “The text is hard to read, red and green look alike, and this is overwhelming.” | Northstar composes several accessibility changes and visibly reflows. |
+| Show | “Where do I change my appointment?” | Guide points to a stable semantic target without activating it. |
+| Explain | “What does that do?” | Guide highlights the target and explains it in the page. |
+| Guide | “Help me reschedule, but let me choose.” | Guide opens a non-committing chooser. |
+| Collaborate | The person selects September 14 manually. | The human and agent share one Zustand state. |
+| Act | “That works. Finish it.” | Guide re-reads the choice, previews the consequence, and confirms visibly. |
+
+Human input is authoritative. If Guide proposed September 12 and the person selected September 14, a stale confirmation returns `selection_changed` instead of overwriting the person.
 
 ## WebMCP Tools
 
-| Tool | Lifecycle | Effect |
-|---|---|---|
-| `get_portal_state` | Always | Reads the visible page, accessibility settings, pending action, and recent human overrides. |
-| `configure_accessibility` | Always | Visibly applies one or more functional accessibility settings. |
-| `guide_to` | Always | Points, highlights, and explains without activation. |
-| `open_section` | Always | Opens one of the seven semantic portal sections. |
-| `get_upcoming_appointments` | Always | Reads the fictional upcoming appointment. |
-| `get_reschedule_options` | Always | Opens and returns the non-committing appointment chooser. |
-| `get_bill_details` | Always | Returns the fictional provider, insurance, and patient portions. |
-| `get_insurance_status` | Always | Returns the fictional active insurance card. |
-| `open_insurance_update` | Always | Opens a simulated update flow with no real upload. |
-| `select_reschedule_slot` | Chooser open | Prepares a selected slot without committing. |
-| `confirm_reschedule` | Slot selected | Validates and visibly commits the selected slot. |
+Guide uses the secure-context imperative API, `document.modelContext.registerTool()`. The AI client supplies language understanding and voice input; the website owns adaptation, semantics, shared state, and visible presence.
 
-The dynamic tools register and unregister with `AbortController`. Tool execution cancellation is passed into the visible presence sequence.
+| Tool | Lifecycle | Behavior |
+|---|---|---|
+| `get_portal_state` | Always | Reads interface mode, visible section, appointment, workflow, accessibility, pending action, and human overrides. |
+| `configure_accessibility` | Always | Composes functional settings and visibly transforms Northstar. |
+| `guide_to` | Always | Points, highlights, and explains without activation. |
+| `open_section` | Always | Opens one of seven semantic portal sections. |
+| `get_upcoming_appointments` | Always | Reads the fictional appointment. |
+| `get_reschedule_options` | Always | Read-only lookup of the three available slots. |
+| `open_reschedule` | Always | Visibly opens the non-committing chooser. |
+| `get_bill_details` | Always | Returns the fictional $160 / $120 / $40 breakdown. |
+| `get_insurance_status` | Always | Returns the fictional active policy. |
+| `open_insurance_update` | Always | Opens a simulated update flow without an upload. |
+| `select_reschedule_slot` | Chooser open | Selects a slot without committing it. |
+| `confirm_reschedule` | Valid slot selected | Validates the shared selection and commits visibly. |
+
+Targets such as `appointments_navigation`, `reschedule_button`, `billing_balance`, and `insurance_status` remain stable even when their DOM elements move between the legacy and adapted layouts. Guide visualizes semantic calls; it does not expose arbitrary selectors, coordinates, mouse movement, or clicks.
 
 ## Architecture
 
 ```text
-ChatGPT / browser agent
-        │ semantic WebMCP tool
-        ▼
-WebMCP registration layer
-        │ validated application intent
-        ▼
-Guide presence controller ──► target registry ──► visible pointer + highlight
-        │
-        ▼
-Shared Zustand portal store ◄── human controls
-        │
-        ├── portal UI
-        ├── pending/review state
-        └── Guide / You activity history
+Person speaks/types to ChatGPT
+            │
+            ▼
+AI client discovers semantic WebMCP tools
+            │
+            ▼
+Northstar WebMCP layer ──► Guide presence ──► live semantic target
+            │
+            ▼
+Shared Zustand state ◄──────────── human controls
+            │
+            ├── legacy/adapted portal UI
+            ├── review and pending action state
+            └── Guide / You attribution and overrides
 ```
 
-Important implementation areas:
+- `src/webmcp/` — schemas, handlers, truthful annotations, and dynamic registration
+- `src/presence/` — serialized cursor motion, semantic targeting, cancellation, and speech
+- `src/state/` — the shared human/agent state machine and deterministic reset
+- `src/components/` — Northstar portal, structural adaptation, preferences, and workflows
 
-- `src/webmcp/` — typed tool schemas, handlers, and dynamic lifecycle
-- `src/presence/` — semantic target registry, serialized motion, cancellation, and speech
-- `src/state/` — the single shared human/agent state machine
-- `src/components/` — portal, accessibility, Guide presence, and activity UI
+Consequential actions capture the shared interaction version, animate visibly, then validate state again before committing. A human interaction invalidates an obsolete agent sequence. Dynamic tools stay registered through the active workflow and unregister after dismissal or reset.
 
 ## Local Development
 
-Requirements: Node.js 22+ and npm 11+.
+Requires Node.js 22+ and npm 11+.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173`. Ordinary browsers show an honest preview notice and retain the full manual portal. They do not claim that WebMCP registration succeeded.
+Open `http://127.0.0.1:5173`. Browsers without WebMCP retain the complete manual portal and show an honest preview notice.
 
-## Test and Build
+## Verification
 
 ```bash
-npm test
-npm run lint
-npm run build
+npm run check
 npm run test:e2e
+npm run screenshots
 ```
 
-The suite covers:
+Vitest and React Testing Library cover store transitions, attribution, reset, overrides, stale confirmation, schemas, and unsupported-browser behavior. Playwright executes every workflow against the real UI with an injected `document.modelContext` implementation. It verifies dynamic registration, presence, shared state, cancellation, SpeechSynthesis fallback, desktop and 375 px layouts, and no horizontal overflow at 200% text.
 
-- shared store transitions and deterministic Reset Demo
-- human override attribution
-- stale confirmation rejection
-- WebMCP schemas and annotations
-- dynamic tool registration
-- desktop and 375 px browser workflows
-- 200% text without horizontal document overflow
-- axe scans with no serious or critical violations
+Axe checks run across the default legacy interface plus simplified, high-contrast, large-control, and 200% text states. The current automated suite reports no serious or critical violations. This is validation evidence, not a claim of WCAG certification.
 
-Playwright needs its test browser once per machine:
+## Suggested Live Scenario
 
-```bash
-npx playwright install chromium
-```
+1. Use **Reset Demo** to restore the dense legacy portal.
+2. Ask: “I have trouble distinguishing red and green, the text is difficult to read, and this page feels overwhelming. Can you make it easier for me?”
+3. Ask: “I need to change my appointment, but I don’t know how. Show me—don’t change anything yet.”
+4. Ask: “What does that do?”
+5. Ask: “Help me reschedule, but let me choose the time.”
+6. Select **September 14 at 3:00 PM** manually.
+7. Ask: “That works. Finish it.”
 
-## Testing with WebMCP
+See [DEMO_SCRIPT.md](./DEMO_SCRIPT.md) for the sub-three-minute narration and shot list.
 
-Use ChatGPT’s in-app browser, or a WebMCP-enabled Chrome version described by the challenge rules.
+## Privacy & License
 
-1. Open the production URL in the supported client.
-2. Confirm the client discovers the nine always-on tools.
-3. Ask: “The text is too small and this page feels crowded. Make it easier for me to use.”
-4. Ask: “I need to change my appointment, but I don’t know where. Show me.”
-5. Ask: “Show me the available times but let me choose.”
-6. Select September 14 at 3:00 PM manually.
-7. Ask: “How is the page configured now?” to verify the shared state.
-8. Ask: “You can finish the appointment change.”
-9. Use **Reset demo** before recording another take.
-
-Do not use examples based on the obsolete `navigator.modelContext.provideContext()` proposal. Guide uses `document.modelContext.registerTool()` exclusively.
-
-## Accessibility and Trust
-
-- Text scales from 100% to 200% with responsive reflow.
-- High contrast, simplified content, large controls, increased spacing, and interaction emphasis are independently adjustable.
-- Optional SpeechSynthesis reads Guide messages; it is off by default and cancelled on reset.
-- Motion respects `prefers-reduced-motion`.
-- The Guide indicator never imitates the system pointer and combines shape, label, target outline, and text.
-- Rescheduling always shows current and proposed times before an explicit human or agent confirmation.
-
-This project demonstrates accessibility transformations informed by WCAG principles, but it does not claim WCAG certification.
-
-## Privacy Boundary
-
-Guide is a frontend-only demonstration. State lasts for the browser session and resets on reload. It has no backend, analytics, authentication, medical integrations, payment processing, or persistent storage.
-
-## License
+State is frontend-only and session-only. Reload and Reset Demo restore the same fictional legacy state. There is no backend, analytics, persistence, or real patient data.
 
 [MIT](./LICENSE) © 2026 Nicolas Matta

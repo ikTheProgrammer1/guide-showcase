@@ -2,65 +2,70 @@
 
 ## Tagline
 
-The web interface that adapts and guides you.
+What if websites did not have one interface for everyone?
 
 ## Inspiration
 
-Most websites assume people can read dense layouts, distinguish small controls, understand unfamiliar navigation, and recognize which actions have consequences. AI currently offers two imperfect answers: instructions that the person must translate back onto the page, or autonomous execution that hides what happened.
+Essential websites often force the same inherited interface on every person: tiny text, dense tables, weak hierarchy, unfamiliar abbreviations, and status colors that assume everyone sees them the same way. Accessibility is commonly treated as a fixed overlay or a set of diagnosis presets. AI offers instructions in a separate chat or completes work invisibly.
 
-Guide explores a third interaction model: the person and agent share the webpage. The agent can adapt it, point to something, explain it, prepare a workflow, or complete a delegated action—while the page visibly communicates every step.
+Guide explores another model. A website can expose semantic ways to adapt itself around a person’s functional needs, then let an agent remain visibly present to show, explain, guide, collaborate, and act.
 
 ## What It Does
 
-Guide is a completely fictional patient portal for Robert. It demonstrates administrative navigation only.
+The demonstration begins inside **Northstar Health**, a fictional institutional patient portal that feels familiar for the wrong reasons. It is dense and dated, but plausible and usable.
 
-- Adapts text size, contrast, content density, control size, spacing, and emphasis.
-- Uses a distinct animated Guide presence to point at semantic interface targets.
-- Opens and explains appointments, billing, and insurance information.
-- Lets the agent prepare a reschedule while Robert chooses the time manually.
-- Lets Robert delegate final confirmation after seeing the current and proposed appointment.
-- Keeps human input authoritative and reports overrides back to the agent.
-- Records a transparent “Guide” versus “You” activity history.
+A person tells ChatGPT that red and green are difficult to distinguish, the text is hard to read, and the page feels overwhelming. ChatGPT calls Northstar’s `configure_accessibility` WebMCP capability. The same website visibly transforms: content is reprioritized, secondary information is removed, navigation changes, typography grows, spacing opens, controls enlarge, contrast strengthens, and statuses gain icons and explicit language.
+
+Guide ✦ then appears as the agent’s presence inside Northstar. It can point without clicking, explain without taking over, open a rescheduling workflow, observe a time the person selected manually, and complete the final confirmation only after the person delegates it.
+
+The complete continuum is:
+
+**Adapt → Show → Explain → Guide → Collaborate → Act**
+
+Manual accessibility preferences remain available under Settings. There are no diagnosis modes, because people with the same condition can have different functional needs.
 
 ## How We Used WebMCP
 
-The portal registers semantic JavaScript tools with `document.modelContext.registerTool()`. Tools expose application meaning—such as `configure_accessibility`, `guide_to`, `get_reschedule_options`, and `confirm_reschedule`—instead of generic clicks, selectors, or screen coordinates.
+Northstar registers typed semantic tools with the secure-context `document.modelContext.registerTool()` API. ChatGPT supplies language understanding and voice input; the website owns its adaptation system, Guide cursor, semantic targets, and shared application state.
 
-Every consequential tool routes through an Agent Presence Layer:
+The tools expose meaning—`configure_accessibility`, `guide_to`, `open_reschedule`, and `confirm_reschedule`—instead of arbitrary selectors, screen coordinates, or mouse commands. Targets such as `appointments_navigation` and `reschedule_button` remain stable while their visual DOM positions change dramatically.
 
-1. Resolve a semantic target to a live DOM element.
-2. Scroll it into view.
-3. Move and display the Guide pointer.
-4. Highlight and explain the target.
-5. Preview or execute the application action.
-6. Update the same Zustand store used by the human UI.
-7. Attribute the result in shared activity history.
+Consequential handlers route through the Guide presence controller:
 
-The rescheduling tools are dynamic. Selection becomes available only while the chooser is open, and confirmation becomes available only after a valid selection. Abort signals manage tool lifecycle and execution cancellation.
+1. Resolve a stable semantic target to its current DOM element.
+2. Recalculate its position after layout or viewport changes.
+3. Move the distinct Guide pointer and explain the step.
+4. Preview consequences before committing.
+5. Re-read shared state so human input remains authoritative.
+6. Attribute mutations to “Guide” or “You.”
+
+The chooser dynamically registers `select_reschedule_slot`; a valid selection dynamically registers `confirm_reschedule`. Human interaction invalidates an obsolete in-progress agent sequence. A stale confirmation returns `selection_changed` rather than overwriting the person.
 
 ## How We Built It
 
 - React 19, TypeScript, and Vite
 - Zustand shared state machine
-- Motion for visible Guide sequences
+- Motion for coordinated transformation and Guide presence
 - Direct imperative WebMCP API with `webmcp-types`
-- CSS Modules with responsive 200% text reflow
+- CSS Modules and bundled OFL fonts
 - Vitest, React Testing Library, Playwright, and axe
-- Vercel deployment
+- Vercel production deployment
 
 ## Challenges
 
-The hardest problem was making agent action and human control coexist without races. Every manual mutation increments an interaction version. Agent actions capture that version, animate visibly, then validate it again before committing. A stale confirmation returns `selection_changed` rather than overwriting the person.
+The first challenge was making the before state look honestly institutional without making it inaccessible on purpose. Northstar uses semantic HTML, keyboard-operable controls, responsive overflow, and honest status text even while recreating the visual density and hierarchy of inherited enterprise software.
 
-The second challenge was making a moving semantic pointer reliable across responsive layouts, enlarged text, scrolling, and modal state. Guide stores semantic IDs—not coordinates—and recalculates the active DOM target as layout changes.
+The second challenge was making adaptation structural. The modern state is not a theme painted over the same dashboard: information hierarchy, navigation, status representation, content density, card structure, typography, and control sizing all change while semantic target IDs remain stable.
+
+The third challenge was protecting human agency during visible asynchronous actions. Every manual mutation increments an interaction version. Guide validates that version before committing and rejects stale instructions.
 
 ## What We Learned
 
-WebMCP is most interesting when it is not treated as an invisible API wrapper. Semantic capabilities can become a visual interaction language: attention, explanation, preparation, delegation, and override all happen in the same surface.
+WebMCP can be more than an API surface for autonomous agents. It can become a negotiation layer between a person, an agent, and an interface. The page knows what it can safely change; the agent understands the person’s request; and the person stays inside the shared result.
 
 ## What’s Next
 
-This pattern could extend to government services, insurance, banking, education, travel, e-commerce, and enterprise software—anywhere a complex interface would benefit from an agent that can work with a person instead of only for them.
+The pattern can extend beyond healthcare to government services, insurance, education, banking, and enterprise software. The long-term question is not which single accessible interface should replace every existing interface. It is how websites can safely expose semantic adaptation so interfaces can respond to people.
 
 ## Links
 

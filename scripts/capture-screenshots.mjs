@@ -27,7 +27,7 @@ await page.addInitScript(() => {
 });
 
 await page.goto(baseUrl);
-await page.getByRole('status', { name: 'WebMCP status: Guide connected' }).waitFor();
+await page.getByRole('status', { name: 'WebMCP status: Guide available' }).waitFor();
 await page.waitForTimeout(500);
 await page.screenshot({ path: new URL('guide-home.png', outputDirectory).pathname });
 
@@ -41,11 +41,27 @@ await page.evaluate(async () => {
       density: 'simplified',
       controlSize: 'large',
       spacing: 'increased',
+      colorIndependentStatus: true,
       emphasizeInteractive: true,
     },
     { signal: new AbortController().signal },
   );
 });
+await page.waitForTimeout(3900);
 await page.screenshot({ path: new URL('guide-adapted.png', outputDirectory).pathname });
+
+await page.evaluate(async () => {
+  const tools = window.__guideScreenshotTools;
+  const tool = tools.get('guide_to');
+  await tool.execute(
+    {
+      target: 'upcoming_appointment',
+      message: 'Your next appointment is here. I can help you review it without changing anything.',
+    },
+    { signal: new AbortController().signal },
+  );
+});
+await page.waitForTimeout(700);
+await page.screenshot({ path: new URL('guide-presence.png', outputDirectory).pathname });
 
 await browser.close();

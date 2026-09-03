@@ -41,14 +41,19 @@ describe('portalStore', () => {
   it('resets every demo subsystem without adding a reset activity item', () => {
     const state = usePortalStore.getState();
     state.openSection('billing', 'you');
-    state.setAccessibility({ contrast: 'high', readAloud: true }, 'you');
+    state.setAccessibility({ contrast: 'high', colorIndependentStatus: true, readAloud: true }, 'you');
     state.openInsuranceUpdate('guide');
     state.resetDemo();
 
     const reset = usePortalStore.getState();
     expect(reset.currentSection).toBe('home');
     expect(reset.appointment).toEqual(originalAppointment);
-    expect(reset.accessibility).toMatchObject({ textScale: 100, contrast: 'standard', readAloud: false });
+    expect(reset.accessibility).toMatchObject({
+      textScale: 100,
+      contrast: 'standard',
+      colorIndependentStatus: false,
+      readAloud: false,
+    });
     expect(reset.reschedule).toMatchObject({ phase: 'idle', dialogOpen: false, selectedSlotId: null });
     expect(reset.insuranceUpdateOpen).toBe(false);
     expect(reset.activityLog).toEqual([]);

@@ -1,4 +1,4 @@
-import { Accessibility, Eye, MousePointer2, Sparkles, Volume2 } from 'lucide-react';
+import { Accessibility, BadgeCheck, Eye, MousePointer2, SlidersHorizontal, Sparkles, Volume2 } from 'lucide-react';
 import { useSemanticTarget } from '../../presence/targetRegistry';
 import { usePortalStore } from '../../state/portalStore';
 import type { AccessibilitySettings, TextScale } from '../../types';
@@ -18,10 +18,10 @@ export function AccessibilityControls() {
   return (
     <section ref={targetRef} className={`${styles.railCard} ${styles.accessibilityCard}`}>
       <div className={styles.railHeading}>
-        <div className={styles.guideMiniMark}><Sparkles size={14} aria-hidden="true" /></div>
+        <div className={styles.guideMiniMark}><SlidersHorizontal size={14} aria-hidden="true" /></div>
         <div>
-          <span>Adapt this portal</span>
-          <h2>Guide controls</h2>
+          <span>Personalize this portal</span>
+          <h2>Accessibility preferences</h2>
         </div>
       </div>
 
@@ -62,6 +62,12 @@ export function AccessibilityControls() {
           label="More spacing"
           pressed={settings.spacing === 'increased'}
           onClick={() => set('spacing', settings.spacing === 'increased' ? 'standard' : 'increased')}
+        />
+        <Toggle
+          icon={BadgeCheck}
+          label="Use icons with status colors"
+          pressed={settings.colorIndependentStatus}
+          onClick={() => set('colorIndependentStatus', !settings.colorIndependentStatus)}
         />
         <Toggle
           icon={Volume2}

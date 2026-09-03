@@ -23,6 +23,7 @@ export interface AccessibilitySettings {
   controlSize: ControlSize;
   spacing: Spacing;
   emphasizeInteractive: boolean;
+  colorIndependentStatus: boolean;
   readAloud: boolean;
 }
 
@@ -60,12 +61,16 @@ export type SemanticTarget =
   | 'insurance_navigation'
   | 'documents_navigation'
   | 'settings_navigation'
+  | 'guide_status'
+  | 'portal_surface'
   | 'upcoming_appointment'
   | 'reschedule_button'
   | 'appointment_slot_sep_11'
   | 'appointment_slot_sep_12'
   | 'appointment_slot_sep_14'
   | 'confirm_reschedule_button'
+  | 'billing_balance'
+  | 'insurance_status'
   | 'patient_responsibility'
   | 'update_insurance_button'
   | 'accessibility_controls';

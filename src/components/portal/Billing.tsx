@@ -6,17 +6,18 @@ import styles from '../../app/App.module.css';
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
 export function Billing() {
+  const balanceRef = useSemanticTarget<HTMLElement>('billing_balance');
   const responsibilityRef = useSemanticTarget<HTMLDivElement>('patient_responsibility');
 
   return (
     <div className={styles.page}>
       <div className={styles.pageIntro}>
         <span className={styles.eyebrow}>Billing</span>
-        <h2>See where every dollar goes.</h2>
-        <p>A plain-language view of the fictional charges, coverage, and amount left to pay.</p>
+        <h2>Billing and statements</h2>
+        <p>Review the charges, insurance payment, and remaining balance for this fictional visit.</p>
       </div>
 
-      <section className={styles.billCard}>
+      <section ref={balanceRef} className={styles.billCard}>
         <header className={styles.billHeader}>
           <div className={styles.billIcon}><CircleDollarSign size={22} aria-hidden="true" /></div>
           <div><span className={styles.eyebrow}>Statement · August 20</span><h3>{demoBill.label}</h3></div>

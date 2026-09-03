@@ -35,7 +35,7 @@ export function AgentPresence() {
     const observer = targetElement && 'ResizeObserver' in window ? new ResizeObserver(update) : null;
     if (targetElement && observer) observer.observe(targetElement);
     window.addEventListener('resize', update);
-    window.addEventListener('scroll', update, true);
+    window.addEventListener('scroll', update, { capture: true, passive: true });
     return () => {
       window.removeEventListener('resize', update);
       window.removeEventListener('scroll', update, true);

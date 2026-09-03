@@ -1,7 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react';
+import { SlidersHorizontal, Sparkles } from 'lucide-react';
 import { useEffect } from 'react';
-import { AccessibilityControls } from '../components/guide/AccessibilityControls';
-import { ActivityLog } from '../components/guide/ActivityLog';
 import { AgentPresence } from '../components/guide/AgentPresence';
 import { Header } from '../components/layout/Header';
 import { Sidebar } from '../components/layout/Sidebar';
@@ -11,7 +10,10 @@ import { Home } from '../components/portal/Home';
 import { Insurance } from '../components/portal/Insurance';
 import { PlaceholderSection } from '../components/portal/PlaceholderSection';
 import { RescheduleDialog } from '../components/portal/RescheduleDialog';
+import { SettingsPage } from '../components/portal/SettingsPage';
+import { isPortalAdapted } from '../data/demoData';
 import { cancelGuidePresence } from '../presence/presenceController';
+import { useSemanticTarget } from '../presence/targetRegistry';
 import { usePortalStore } from '../state/portalStore';
 import { useWebMCPTools } from '../webmcp/useWebMCPTools';
 import styles from './App.module.css';
@@ -19,18 +21,13 @@ import styles from './App.module.css';
 const sectionDescriptions = {
   messages: {
     eyebrow: 'Messages',
-    title: 'A quieter inbox',
-    description: 'Administrative messages from your care team would appear here.',
+    title: 'Message center',
+    description: 'Review administrative messages from your fictional care team.',
   },
   documents: {
     eyebrow: 'Documents',
-    title: 'Your records, organized',
-    description: 'Visit summaries and administrative forms would appear here.',
-  },
-  settings: {
-    eyebrow: 'Settings',
-    title: 'Portal preferences',
-    description: 'Manage communication and account preferences in one place.',
+    title: 'Documents and results',
+    description: 'Review fictional visit summaries and administrative forms.',
   },
 } as const;
 
@@ -41,6 +38,7 @@ function CurrentSection() {
   if (section === 'appointments') return <Appointments />;
   if (section === 'billing') return <Billing />;
   if (section === 'insurance') return <Insurance />;
+  if (section === 'settings') return <SettingsPage />;
 
   return <PlaceholderSection {...sectionDescriptions[section]} section={section} />;
 }
@@ -48,7 +46,10 @@ function CurrentSection() {
 export function App() {
   const accessibility = usePortalStore((state) => state.accessibility);
   const currentSection = usePortalStore((state) => state.currentSection);
+  const openSection = usePortalStore((state) => state.openSection);
   const status = useWebMCPTools();
+  const portalSurfaceRef = useSemanticTarget<HTMLElement>('portal_surface');
+  const interfaceMode = isPortalAdapted(accessibility) ? 'adapted' : 'legacy';
 
   useEffect(() => () => cancelGuidePresence(), []);
 
@@ -61,6 +62,8 @@ export function App() {
       data-spacing={accessibility.spacing}
       data-emphasize={accessibility.emphasizeInteractive ? 'true' : 'false'}
       data-text-scale={accessibility.textScale}
+      data-status-mode={accessibility.colorIndependentStatus ? 'independent' : 'color-led'}
+      data-interface={interfaceMode}
       style={{ '--text-scale': accessibility.textScale / 100 } as React.CSSProperties}
     >
       <a className={styles.skipLink} href="#portal-content">
@@ -86,25 +89,36 @@ export function App() {
             </div>
           ) : null}
 
+          {interfaceMode === 'adapted' ? (
+            <motion.div
+              className={styles.adaptationBanner}
+              role="status"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.2 }}
+            >
+              <span className={styles.adaptationMark}><Sparkles size={16} aria-hidden="true" /></span>
+              <span><strong>Interface adapted</strong> around your current readability preferences.</span>
+              <button onClick={() => openSection('settings', 'you')}>
+                <SlidersHorizontal size={15} aria-hidden="true" /> Review settings
+              </button>
+            </motion.div>
+          ) : null}
+
           <div className={styles.portalGrid}>
-            <main id="portal-content" className={styles.mainContent} tabIndex={-1}>
+            <main ref={portalSurfaceRef} id="portal-content" className={styles.mainContent} tabIndex={-1}>
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={currentSection}
-                  initial={{ opacity: 0, y: 12 }}
+                  key={`${currentSection}-${interfaceMode}`}
+                  initial={{ opacity: 0, y: 12, scale: 0.995 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: interfaceMode === 'adapted' ? 0.52 : 0.24, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <CurrentSection />
                 </motion.div>
               </AnimatePresence>
             </main>
-
-            <aside className={styles.guideRail} aria-label="Guide controls and activity">
-              <AccessibilityControls />
-              <ActivityLog />
-            </aside>
           </div>
         </div>
       </div>

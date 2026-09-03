@@ -18,6 +18,7 @@ describe('WebMCP tool contracts', () => {
       'open_section',
       'get_upcoming_appointments',
       'get_reschedule_options',
+      'open_reschedule',
       'get_bill_details',
       'get_insurance_status',
       'open_insurance_update',
@@ -38,6 +39,12 @@ describe('WebMCP tool contracts', () => {
     expect(schema.properties.target.enum).toEqual(semanticTargets);
     expect(schema.properties.message.maxLength).toBe(180);
     expect(schema.additionalProperties).toBe(false);
+  });
+
+  it('accepts color-independent status as a composable accessibility setting', () => {
+    const tool = createStaticTools().find((candidate) => candidate.name === 'configure_accessibility');
+    const schema = tool?.inputSchema as { properties: Record<string, { type: string }> };
+    expect(schema.properties.colorIndependentStatus).toEqual({ type: 'boolean' });
   });
 
   it('returns selection_changed when the requested confirmation is stale', async () => {

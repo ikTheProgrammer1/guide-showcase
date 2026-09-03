@@ -1,20 +1,55 @@
 import { CalendarDays, Check, Clock3, MapPin, RefreshCw } from 'lucide-react';
+import { isPortalAdapted } from '../../data/demoData';
 import { useSemanticTarget } from '../../presence/targetRegistry';
 import { usePortalStore } from '../../state/portalStore';
 import styles from '../../app/App.module.css';
 
 export function Appointments() {
   const appointment = usePortalStore((state) => state.appointment);
+  const adapted = usePortalStore((state) => isPortalAdapted(state.accessibility));
   const openReschedule = usePortalStore((state) => state.openReschedule);
   const appointmentRef = useSemanticTarget<HTMLDivElement>('upcoming_appointment');
   const rescheduleRef = useSemanticTarget<HTMLButtonElement>('reschedule_button');
+
+  if (!adapted) {
+    return (
+      <div className={`${styles.page} ${styles.legacyAppointments}`}>
+        <div className={styles.legacyBreadcrumb}>HOME &gt; APPTS &gt; APPOINTMENT LIST <span>PRINT PAGE</span></div>
+        <section className={styles.legacyPanel}>
+          <header><h2>APPOINTMENTS / VISITS</h2><span>SHOWING: UPCOMING + PAST 12 MONTHS</span></header>
+          <div ref={appointmentRef} className={styles.legacyPanelBody}>
+            <table className={styles.legacyDataTable}>
+              <caption className={styles.visuallyHidden}>Appointments and visits</caption>
+              <thead><tr><th>STATUS</th><th>DATE</th><th>TIME</th><th>PROVIDER / DEPT</th><th>LOCATION</th><th>ACTIONS</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span className={styles.legacyStatus} data-tone="good"><span className={styles.legacyStatusDot} aria-hidden="true" />CONFIRMED</span></td>
+                  <td>09/10/26</td><td>14:30</td><td>MAYA CHEN MD<br /><small>PCP / PRIMARY CARE</small></td><td>BLDG B · RM 304</td>
+                  <td><button ref={rescheduleRef} className={styles.legacyActionButton} onClick={() => openReschedule('you')}>MODIFY</button> <button className={styles.legacyActionButton}>VIEW</button></td>
+                </tr>
+                <tr><td>COMPLETED</td><td>04/18/26</td><td>09:00</td><td>MAYA CHEN MD<br /><small>ANNUAL WELLNESS</small></td><td>BLDG B · RM 208</td><td><button className={styles.legacyActionButton}>SUMMARY</button></td></tr>
+                <tr><td>COMPLETED</td><td>01/07/26</td><td>11:15</td><td>NORTHSTAR LAB<br /><small>LAB SERVICES</small></td><td>BLDG A · L1</td><td><button className={styles.legacyActionButton}>RESULT</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section className={styles.legacyPanel}>
+          <header><h2>APPOINTMENT OPTIONS</h2></header>
+          <div className={`${styles.legacyPanelBody} ${styles.legacyInlineForm}`}>
+            <label>Filter visits: <select defaultValue="all"><option value="all">All visits</option><option>Upcoming</option><option>Past</option></select></label>
+            <button>REQUEST NEW APPOINTMENT</button><button>PRINT SCHEDULE</button>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>
       <div className={styles.pageIntro}>
         <span className={styles.eyebrow}>Appointments</span>
-        <h2>Your time, clearly organized.</h2>
-        <p>Review what’s coming up or choose a different time without losing your place.</p>
+        <h2>Upcoming appointments</h2>
+        <p>Review your next visit or choose a different available time.</p>
       </div>
 
       <section className={styles.sectionBlock}>
@@ -38,7 +73,7 @@ export function Appointments() {
           <div className={styles.detailGrid}>
             <div><CalendarDays aria-hidden="true" /><span>Date<strong>{appointment.dateLabel}</strong></span></div>
             <div><Clock3 aria-hidden="true" /><span>Time<strong>{appointment.time}</strong></span></div>
-            <div className={styles.secondaryMetadata}><MapPin aria-hidden="true" /><span>Location<strong>Guide Health Center</strong></span></div>
+            <div className={styles.secondaryMetadata}><MapPin aria-hidden="true" /><span>Location<strong>Northstar Medical Center · Building B</strong></span></div>
           </div>
 
           <div className={styles.cardActions}>

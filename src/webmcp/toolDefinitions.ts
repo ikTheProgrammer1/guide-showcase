@@ -1,4 +1,4 @@
-import { demoBill, demoInsurance, rescheduleSlots } from '../data/demoData';
+import { demoBill, demoInsurance, isPortalAdapted, rescheduleSlots } from '../data/demoData';
 import { runGuideAction } from '../presence/presenceController';
 import { semanticTargetForSlot, usePortalStore } from '../state/portalStore';
 import {
@@ -16,12 +16,16 @@ export const semanticTargets: SemanticTarget[] = [
   'insurance_navigation',
   'documents_navigation',
   'settings_navigation',
+  'guide_status',
+  'portal_surface',
   'upcoming_appointment',
   'reschedule_button',
   'appointment_slot_sep_11',
   'appointment_slot_sep_12',
   'appointment_slot_sep_14',
   'confirm_reschedule_button',
+  'billing_balance',
+  'insurance_status',
   'patient_responsibility',
   'update_insurance_button',
   'accessibility_controls',
@@ -46,6 +50,7 @@ const sectionTarget: Record<PortalSection, SemanticTarget> = {
 function portalSnapshot() {
   const state = usePortalStore.getState();
   return {
+    interfaceMode: isPortalAdapted(state.accessibility) ? 'adapted' : 'legacy',
     currentSection: state.currentSection,
     appointment: state.appointment,
     reschedule: state.reschedule,
@@ -76,13 +81,30 @@ function titleCase(value: string) {
   return value.replace(/([A-Z])/g, ' $1').replace(/^./, (letter) => letter.toUpperCase());
 }
 
+function describeAccessibilityPatch(patch: Partial<AccessibilitySettings>) {
+  const phrases: Partial<Record<keyof AccessibilitySettings, (value: never) => string>> = {
+    textScale: (value) => `set text to ${String(value)}%`,
+    contrast: (value) => value === 'high' ? 'strengthened contrast' : 'restored standard contrast',
+    density: (value) => value === 'simplified' ? 'simplified the page' : 'restored standard detail',
+    controlSize: (value) => value === 'large' ? 'enlarged controls' : 'restored standard controls',
+    spacing: (value) => value === 'increased' ? 'increased spacing' : 'restored standard spacing',
+    emphasizeInteractive: (value) => value ? 'emphasized buttons and links' : 'restored standard link emphasis',
+    colorIndependentStatus: (value) => value ? 'added icons and labels to statuses' : 'restored color-led statuses',
+    readAloud: (value) => value ? 'enabled read-aloud for Guide' : 'disabled read-aloud',
+  };
+
+  return Object.entries(patch)
+    .map(([key, value]) => phrases[key as keyof AccessibilitySettings]?.(value as never) ?? `${titleCase(key)} ${String(value)}`)
+    .join(', ');
+}
+
 export function createStaticTools(): WebMCP.ModelContextTool[] {
   return [
     {
       name: 'get_portal_state',
       title: 'Get portal state',
       description:
-        'Read what Robert currently sees in the fictional Guide Patient Portal, including human overrides and pending actions. Call this before continuing a shared workflow.',
+        'Read what Robert currently sees in the fictional Northstar Health portal, including its legacy or adapted presentation, human overrides, and pending actions. Call this before continuing a shared workflow.',
       inputSchema: noInputSchema,
       annotations: { readOnlyHint: true, untrustedContentHint: false },
       execute: async () => ({ ok: true, state: portalSnapshot() }),
@@ -91,7 +113,7 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
       name: 'configure_accessibility',
       title: 'Adapt the portal',
       description:
-        'Visibly adapt the shared portal to a functional need. Provide only settings the person requested. The person can change every setting afterward.',
+        'Visibly transform the shared Northstar interface around functional visual needs. Compose any requested settings in one call; the person can change every setting afterward.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -101,6 +123,7 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
           controlSize: { type: 'string', enum: ['standard', 'large'] },
           spacing: { type: 'string', enum: ['standard', 'increased'] },
           emphasizeInteractive: { type: 'boolean' },
+          colorIndependentStatus: { type: 'boolean' },
           readAloud: { type: 'boolean' },
         },
         minProperties: 1,
@@ -109,14 +132,13 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
       annotations: { readOnlyHint: false, untrustedContentHint: false },
       execute: async (input, { signal }) => {
         const patch = input as Partial<AccessibilitySettings>;
-        const settings = Object.entries(patch)
-          .map(([key, value]) => `${titleCase(key)} ${String(value)}`)
-          .join(', ');
+        const settings = describeAccessibilityPatch(patch);
         const result = await runGuideAction({
-          target: 'accessibility_controls',
-          message: `I’ll adapt the portal: ${settings}. You can change any of these controls yourself.`,
+          target: 'guide_status',
+          message: `I ${settings}. You can review or change every setting yourself.`,
           signal,
           beforeActionStatus: 'previewing',
+          actionTiming: 'before-presence',
           action: () => usePortalStore.getState().setAccessibility(patch, 'guide'),
         });
         if (!result.ok) return cancelledResult(result.code);
@@ -182,9 +204,9 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
     },
     {
       name: 'get_reschedule_options',
-      title: 'Show reschedule options',
+      title: 'Get reschedule options',
       description:
-        'Read and visibly show available times for Robert’s fictional appointment. This opens a chooser but does not select or commit a time.',
+        'Read the available times for Robert’s fictional appointment without opening a workflow, selecting a time, or changing the appointment.',
       inputSchema: {
         type: 'object',
         properties: { appointmentId: { type: 'string', enum: ['appointment_robert_2026_09_10'] } },
@@ -192,6 +214,27 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
         additionalProperties: false,
       },
       annotations: { readOnlyHint: true, untrustedContentHint: false },
+      execute: async (input) => {
+        const state = usePortalStore.getState();
+        if (input.appointmentId !== state.appointment.id) {
+          return failed('appointment_not_found', 'That appointment is not available in this fictional portal.');
+        }
+
+        return { ok: true, appointmentId: input.appointmentId, options: rescheduleSlots, committed: false };
+      },
+    },
+    {
+      name: 'open_reschedule',
+      title: 'Open appointment rescheduling',
+      description:
+        'Visibly guide Robert to the reschedule control and open the non-committing time chooser. Nothing changes until a selected time is explicitly confirmed.',
+      inputSchema: {
+        type: 'object',
+        properties: { appointmentId: { type: 'string', enum: ['appointment_robert_2026_09_10'] } },
+        required: ['appointmentId'],
+        additionalProperties: false,
+      },
+      annotations: { readOnlyHint: false, untrustedContentHint: false },
       execute: async (input, { signal }) => {
         const state = usePortalStore.getState();
         if (input.appointmentId !== state.appointment.id) {
@@ -201,7 +244,7 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
         if (state.currentSection !== 'appointments') {
           const opened = await runGuideAction({
             target: 'appointments_navigation',
-            message: 'Your appointment tools are here.',
+            message: 'Appointments are here. I’ll open that section first.',
             signal,
             action: () => usePortalStore.getState().openSection('appointments', 'guide'),
           });
@@ -211,14 +254,14 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
         if (!usePortalStore.getState().reschedule.dialogOpen) {
           const shown = await runGuideAction({
             target: 'reschedule_button',
-            message: 'I’ll open the available times. Nothing will be changed until you confirm.',
+            message: 'This opens available times. You can choose one yourself, and nothing changes until confirmation.',
             signal,
             action: () => usePortalStore.getState().openReschedule('guide'),
           });
           if (!shown.ok) return cancelledResult(shown.code);
         }
 
-        return { ok: true, appointmentId: input.appointmentId, options: rescheduleSlots, committed: false };
+        return { ok: true, appointmentId: input.appointmentId, options: rescheduleSlots, chooserOpen: true, committed: false };
       },
     },
     {

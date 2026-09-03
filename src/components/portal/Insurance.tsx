@@ -11,17 +11,18 @@ export function Insurance() {
   const closeUpdate = usePortalStore((state) => state.closeInsuranceUpdate);
   const saveUpdate = usePortalStore((state) => state.saveInsuranceUpdate);
   const updateRef = useSemanticTarget<HTMLButtonElement>('update_insurance_button');
+  const statusRef = useSemanticTarget<HTMLElement>('insurance_status');
 
   return (
     <div className={styles.page}>
       <div className={styles.pageIntro}>
         <span className={styles.eyebrow}>Insurance</span>
-        <h2>Your coverage, at a glance.</h2>
-        <p>Review the card currently attached to this fictional portal.</p>
+        <h2>Insurance coverage</h2>
+        <p>Review the plan currently listed on this fictional account.</p>
       </div>
 
       <div className={styles.insuranceGrid}>
-        <section className={styles.insuranceCard}>
+        <section ref={statusRef} className={styles.insuranceCard}>
           <div className={styles.insuranceGlow} aria-hidden="true" />
           <header><ShieldCheck size={25} aria-hidden="true" /><span>{demoInsurance.carrier}</span></header>
           <div className={styles.insurancePlan}>

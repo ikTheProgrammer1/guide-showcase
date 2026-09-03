@@ -63,5 +63,19 @@ export const defaultAccessibility: AccessibilitySettings = {
   controlSize: 'standard',
   spacing: 'standard',
   emphasizeInteractive: false,
+  colorIndependentStatus: false,
   readAloud: false,
 };
+
+export function isPortalAdapted(settings: AccessibilitySettings) {
+  return (
+    settings.textScale !== defaultAccessibility.textScale ||
+    settings.contrast !== defaultAccessibility.contrast ||
+    settings.density !== defaultAccessibility.density ||
+    settings.controlSize !== defaultAccessibility.controlSize ||
+    settings.spacing !== defaultAccessibility.spacing ||
+    settings.emphasizeInteractive !== defaultAccessibility.emphasizeInteractive ||
+    settings.colorIndependentStatus !== defaultAccessibility.colorIndependentStatus ||
+    settings.readAloud !== defaultAccessibility.readAloud
+  );
+}

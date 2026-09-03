@@ -16,7 +16,7 @@ export function ActivityLog() {
         {visibleEvents.length === 0 ? (
           <div className={styles.emptyActivity}>
             <span className={styles.emptySpark}><Sparkles size={15} aria-hidden="true" /></span>
-            <p>Actions from you and Guide will appear here.</p>
+            <p>Actions from you and Guide will appear here after assistance begins.</p>
           </div>
         ) : (
           visibleEvents.map((event) => (

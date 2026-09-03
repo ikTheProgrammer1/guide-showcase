@@ -18,6 +18,7 @@ interface GuideActionOptions {
   message: string;
   signal?: AbortSignal;
   beforeActionStatus?: AgentStatus;
+  actionTiming?: 'after-presence' | 'before-presence';
   action?: () => boolean | void | Promise<boolean | void>;
 }
 
@@ -100,6 +101,41 @@ async function performGuideAction(options: GuideActionOptions): Promise<GuideAct
   const store = usePortalStore.getState();
   const startVersion = store.interactionVersion;
   const operationId = store.agentPresence.operationId + 1;
+
+  if (options.actionTiming === 'before-presence' && options.action) {
+    const targetElement = await findVisibleTarget(options.target);
+    if (!targetElement) return { ok: false, code: 'target_not_visible' };
+
+    const ready = await wait(120, options.signal);
+    if (!ready) return { ok: false, code: 'cancelled' };
+    if (usePortalStore.getState().interactionVersion !== startVersion) {
+      return { ok: false, code: 'interrupted_by_user' };
+    }
+
+    const accepted = await options.action();
+    if (accepted === false) return { ok: false, code: 'action_rejected' };
+
+    await wait(reducedMotion() ? 0 : 620);
+    if (usePortalStore.getState().interactionVersion !== startVersion) {
+      return { ok: false, code: 'interrupted_by_user' };
+    }
+    const updatedTarget = await findVisibleTarget(options.target);
+    if (!updatedTarget) return { ok: false, code: 'target_not_visible' };
+    updatedTarget.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+    store.setAgentPresence({
+      visible: true,
+      target: options.target,
+      message: options.message,
+      status: 'highlighting',
+      operationId,
+      position: pointerPosition(options.target),
+    });
+    speak(options.message);
+    store.setAgentPresence({ status: 'complete' });
+    hidePresenceLater(operationId);
+    return { ok: true };
+  }
+
   store.setAgentPresence({
     visible: true,
     target: options.target,
