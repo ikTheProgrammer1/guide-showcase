@@ -47,7 +47,7 @@ await page.evaluate(async () => {
     { signal: new AbortController().signal },
   );
 });
-await page.waitForTimeout(3900);
+await page.locator('[class*="agentPointer"]').waitFor({ state: 'detached', timeout: 7000 });
 await page.screenshot({ path: new URL('guide-adapted.png', outputDirectory).pathname });
 
 await page.evaluate(async () => {

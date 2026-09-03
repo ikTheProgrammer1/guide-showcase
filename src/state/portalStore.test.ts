@@ -8,6 +8,7 @@ describe('portalStore', () => {
   });
 
   it('attributes human accessibility changes and exposes them as overrides', () => {
+    const before = usePortalStore.getState();
     usePortalStore.getState().setAccessibility({ textScale: 175, density: 'simplified' }, 'guide');
     usePortalStore.getState().setAccessibility({ textScale: 150 }, 'you');
 
@@ -15,6 +16,32 @@ describe('portalStore', () => {
     expect(state.accessibility.textScale).toBe(150);
     expect(state.recentHumanOverrides.at(-1)).toMatchObject({ field: 'textScale', value: 150 });
     expect(state.activityLog.at(-1)).toMatchObject({ actor: 'you', type: 'accessibility' });
+    expect(state.uiRevision).toBe(before.uiRevision + 2);
+    expect(state.navigationRevision).toBe(before.navigationRevision);
+    expect(state.rescheduleRevision).toBe(before.rescheduleRevision);
+  });
+
+  it('preserves omitted accessibility settings and revisions for a no-op patch', () => {
+    const state = usePortalStore.getState();
+    state.setAccessibility({ contrast: 'high', spacing: 'increased' }, 'guide');
+    const beforeNoOp = usePortalStore.getState();
+
+    beforeNoOp.setAccessibility({ contrast: 'high' }, 'guide');
+    const afterNoOp = usePortalStore.getState();
+
+    expect(afterNoOp.accessibility).toMatchObject({ contrast: 'high', spacing: 'increased' });
+    expect(afterNoOp.uiRevision).toBe(beforeNoOp.uiRevision);
+    expect(afterNoOp.activityLog).toHaveLength(beforeNoOp.activityLog.length);
+  });
+
+  it('tracks navigation independently from appointment workflow revisions', () => {
+    const before = usePortalStore.getState();
+    before.openSection('appointments', 'guide');
+    const navigated = usePortalStore.getState();
+
+    expect(navigated.uiRevision).toBe(before.uiRevision + 1);
+    expect(navigated.navigationRevision).toBe(before.navigationRevision + 1);
+    expect(navigated.rescheduleRevision).toBe(before.rescheduleRevision);
   });
 
   it('prepares a slot without committing it', () => {
@@ -38,8 +65,28 @@ describe('portalStore', () => {
     expect(usePortalStore.getState().appointment.date).toBe('2026-09-10');
   });
 
+  it('keeps a selected appointment valid through an accessibility reflow', () => {
+    const state = usePortalStore.getState();
+    state.openReschedule('guide');
+    state.selectRescheduleSlot('slot_2026_09_14_1500', 'you');
+    const selected = usePortalStore.getState();
+
+    selected.setAccessibility({ textScale: 175, density: 'simplified' }, 'you');
+    const adapted = usePortalStore.getState();
+
+    expect(adapted.uiRevision).toBe(selected.uiRevision + 1);
+    expect(adapted.rescheduleRevision).toBe(selected.rescheduleRevision);
+    expect(adapted.reschedule.selectedSlotId).toBe('slot_2026_09_14_1500');
+    expect(adapted.confirmReschedule('slot_2026_09_14_1500', 'guide')).toBe(true);
+  });
+
   it('resets every demo subsystem without adding a reset activity item', () => {
     const state = usePortalStore.getState();
+    const revisions = {
+      ui: state.uiRevision,
+      navigation: state.navigationRevision,
+      reschedule: state.rescheduleRevision,
+    };
     state.openSection('billing', 'you');
     state.setAccessibility({ contrast: 'high', colorIndependentStatus: true, readAloud: true }, 'you');
     state.openInsuranceUpdate('guide');
@@ -58,5 +105,8 @@ describe('portalStore', () => {
     expect(reset.insuranceUpdateOpen).toBe(false);
     expect(reset.activityLog).toEqual([]);
     expect(reset.recentHumanOverrides).toEqual([]);
+    expect(reset.uiRevision).toBeGreaterThan(revisions.ui);
+    expect(reset.navigationRevision).toBeGreaterThan(revisions.navigation);
+    expect(reset.rescheduleRevision).toBeGreaterThan(revisions.reschedule);
   });
 });

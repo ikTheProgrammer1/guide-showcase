@@ -82,7 +82,7 @@ export function App() {
             <div className={styles.webMcpNotice} role="status">
               <strong>{status === 'error' ? 'WebMCP registration needs attention.' : 'Portal preview mode.'}</strong>{' '}
               {status === 'unavailable'
-                ? 'The portal works normally here; agent tools require ChatGPT’s in-app browser or WebMCP-enabled Chrome.'
+                ? 'The portal works normally here; Guide tools require a supported ChatGPT desktop account and model using the built-in browser, or a WebMCP-enabled Chrome environment.'
                 : status === 'registering'
                   ? 'Guide is registering semantic tools with this browser.'
                   : 'The manual portal remains available while tool registration is unavailable.'}

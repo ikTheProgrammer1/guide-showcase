@@ -8,27 +8,43 @@ import {
   type SemanticTarget,
 } from '../types';
 
-export const semanticTargets: SemanticTarget[] = [
-  'home_navigation',
-  'appointments_navigation',
-  'messages_navigation',
-  'billing_navigation',
-  'insurance_navigation',
-  'documents_navigation',
-  'settings_navigation',
-  'guide_status',
-  'portal_surface',
-  'upcoming_appointment',
-  'reschedule_button',
-  'appointment_slot_sep_11',
-  'appointment_slot_sep_12',
-  'appointment_slot_sep_14',
-  'confirm_reschedule_button',
-  'billing_balance',
-  'insurance_status',
-  'patient_responsibility',
-  'update_insurance_button',
-  'accessibility_controls',
+export const semanticTargetMetadata: Record<
+  SemanticTarget,
+  { title: string; description: string }
+> = {
+  home_navigation: { title: 'Home navigation', description: 'The control that opens the portal home section.' },
+  appointments_navigation: { title: 'Appointments navigation', description: 'The control that opens appointments.' },
+  messages_navigation: { title: 'Messages navigation', description: 'The control that opens administrative messages.' },
+  billing_navigation: { title: 'Billing navigation', description: 'The control that opens billing.' },
+  insurance_navigation: { title: 'Insurance navigation', description: 'The control that opens insurance.' },
+  documents_navigation: { title: 'Documents navigation', description: 'The control that opens documents.' },
+  settings_navigation: { title: 'Settings navigation', description: 'The control that opens portal settings.' },
+  guide_status: { title: 'Guide status', description: 'The portal indicator showing whether Guide tools are available.' },
+  portal_surface: { title: 'Portal content', description: 'The main visible portal content area.' },
+  upcoming_appointment: { title: 'Upcoming appointment', description: 'The visible card or summary for the upcoming appointment.' },
+  reschedule_button: { title: 'Reschedule appointment', description: 'The control that opens appointment rescheduling.' },
+  appointment_slot_sep_11: { title: 'September 11 at 9:00 AM', description: 'The September 11 reschedule option.' },
+  appointment_slot_sep_12: { title: 'September 12 at 11:30 AM', description: 'The September 12 reschedule option.' },
+  appointment_slot_sep_14: { title: 'September 14 at 3:00 PM', description: 'The September 14 reschedule option.' },
+  confirm_reschedule_button: { title: 'Confirm new time', description: 'The consequential control that commits the reviewed appointment time.' },
+  billing_balance: { title: 'Billing balance', description: 'The visible account balance summary.' },
+  insurance_status: { title: 'Insurance status', description: 'The visible insurance coverage status.' },
+  patient_responsibility: { title: 'Patient responsibility', description: 'The patient portion of the fictional bill.' },
+  update_insurance_button: { title: 'Update insurance', description: 'The control that opens the simulated insurance update.' },
+  accessibility_controls: { title: 'Accessibility preferences', description: 'The manual controls for portal presentation preferences.' },
+};
+
+export const semanticTargets = Object.keys(semanticTargetMetadata) as SemanticTarget[];
+
+export const accessibilityKeys: Array<keyof AccessibilitySettings> = [
+  'textScale',
+  'contrast',
+  'density',
+  'controlSize',
+  'spacing',
+  'emphasizeInteractive',
+  'colorIndependentStatus',
+  'readAloud',
 ];
 
 const noInputSchema = {
@@ -59,6 +75,9 @@ function portalSnapshot() {
     accessibility: state.accessibility,
     pendingAction: state.pendingAction,
     recentHumanOverrides: state.recentHumanOverrides,
+    uiRevision: state.uiRevision,
+    navigationRevision: state.navigationRevision,
+    rescheduleRevision: state.rescheduleRevision,
     insuranceUpdateOpen: state.insuranceUpdateOpen,
   };
 }
@@ -117,14 +136,43 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
       inputSchema: {
         type: 'object',
         properties: {
-          textScale: { type: 'number', enum: [100, 125, 150, 175, 200] },
-          contrast: { type: 'string', enum: ['standard', 'high'] },
-          density: { type: 'string', enum: ['standard', 'simplified'] },
-          controlSize: { type: 'string', enum: ['standard', 'large'] },
-          spacing: { type: 'string', enum: ['standard', 'increased'] },
-          emphasizeInteractive: { type: 'boolean' },
-          colorIndependentStatus: { type: 'boolean' },
-          readAloud: { type: 'boolean' },
+          textScale: {
+            type: 'number',
+            enum: [100, 125, 150, 175, 200],
+            description: 'Changes the visible text scale percentage.',
+          },
+          contrast: {
+            type: 'string',
+            enum: ['standard', 'high'],
+            description: 'Switches between standard and stronger visual contrast.',
+          },
+          density: {
+            type: 'string',
+            enum: ['standard', 'simplified'],
+            description: 'Simplified prioritizes primary tasks and reduces secondary information.',
+          },
+          controlSize: {
+            type: 'string',
+            enum: ['standard', 'large'],
+            description: 'Changes the visible size of interactive controls.',
+          },
+          spacing: {
+            type: 'string',
+            enum: ['standard', 'increased'],
+            description: 'Changes separation between controls and content groups.',
+          },
+          emphasizeInteractive: {
+            type: 'boolean',
+            description: 'Makes buttons and links more visually distinct when true.',
+          },
+          colorIndependentStatus: {
+            type: 'boolean',
+            description: 'Adds icons, shapes, and text so status is not conveyed by color alone.',
+          },
+          readAloud: {
+            type: 'boolean',
+            description: 'Enables optional webpage speech for visible Guide messages when true.',
+          },
         },
         minProperties: 1,
         additionalProperties: false,
@@ -132,17 +180,38 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
       annotations: { readOnlyHint: false, untrustedContentHint: false },
       execute: async (input, { signal }) => {
         const patch = input as Partial<AccessibilitySettings>;
-        const settings = describeAccessibilityPatch(patch);
+        const previousAccessibility = { ...usePortalStore.getState().accessibility };
+        const changed = accessibilityKeys.filter(
+          (key) => Object.hasOwn(patch, key) && patch[key] !== previousAccessibility[key],
+        );
+        const changedPatch = Object.fromEntries(
+          changed.map((key) => [key, patch[key]]),
+        ) as Partial<AccessibilitySettings>;
+        const settings = changed.length > 0
+          ? describeAccessibilityPatch(changedPatch)
+          : 'found that those settings were already active';
         const result = await runGuideAction({
           target: 'guide_status',
           message: `I ${settings}. You can review or change every setting yourself.`,
           signal,
           beforeActionStatus: 'previewing',
-          actionTiming: 'before-presence',
-          action: () => usePortalStore.getState().setAccessibility(patch, 'guide'),
+          actionTiming: changed.length > 0 ? 'before-presence' : 'after-presence',
+          action: changed.length > 0
+            ? () => usePortalStore.getState().setAccessibility(changedPatch, 'guide')
+            : undefined,
         });
         if (!result.ok) return cancelledResult(result.code);
-        return { ok: true, accessibility: usePortalStore.getState().accessibility };
+        const state = usePortalStore.getState();
+        return {
+          ok: true,
+          changed,
+          previousAccessibility,
+          accessibility: state.accessibility,
+          interfaceMode: isPortalAdapted(state.accessibility) ? 'adapted' : 'legacy',
+          uiRevision: state.uiRevision,
+          presentedVisually: result.presentedVisually,
+          spokenByPage: result.spokenByPage,
+        };
       },
     },
     {
@@ -153,8 +222,22 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
       inputSchema: {
         type: 'object',
         properties: {
-          target: { type: 'string', enum: semanticTargets },
-          message: { type: 'string', maxLength: 180 },
+          target: {
+            type: 'string',
+            enum: semanticTargets,
+            oneOf: semanticTargets.map((target) => ({
+              type: 'string',
+              const: target,
+              title: semanticTargetMetadata[target].title,
+              description: semanticTargetMetadata[target].description,
+            })),
+            description: 'A stable semantic target in the visible Northstar interface.',
+          },
+          message: {
+            type: 'string',
+            maxLength: 180,
+            description: 'Short plain-text guidance to display beside the target.',
+          },
         },
         required: ['target'],
         additionalProperties: false,
@@ -168,7 +251,13 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
             : 'This is the part of the portal you asked about.';
         const result = await runGuideAction({ target, message, signal });
         if (!result.ok) return cancelledResult(result.code);
-        return { ok: true, target, activated: false };
+        return {
+          ok: true,
+          target,
+          activated: false,
+          presentedVisually: result.presentedVisually,
+          spokenByPage: result.spokenByPage,
+        };
       },
     },
     {
@@ -191,7 +280,12 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
           action: () => usePortalStore.getState().openSection(section, 'guide'),
         });
         if (!result.ok) return cancelledResult(result.code);
-        return { ok: true, currentSection: section };
+        return {
+          ok: true,
+          currentSection: section,
+          presentedVisually: result.presentedVisually,
+          spokenByPage: result.spokenByPage,
+        };
       },
     },
     {
@@ -241,6 +335,8 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
           return failed('appointment_not_found', 'That appointment is not available in this fictional portal.');
         }
 
+        let presentedVisually = false;
+        let spokenByPage = false;
         if (state.currentSection !== 'appointments') {
           const opened = await runGuideAction({
             target: 'appointments_navigation',
@@ -249,6 +345,8 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
             action: () => usePortalStore.getState().openSection('appointments', 'guide'),
           });
           if (!opened.ok) return cancelledResult(opened.code);
+          presentedVisually ||= opened.presentedVisually;
+          spokenByPage ||= opened.spokenByPage;
         }
 
         if (!usePortalStore.getState().reschedule.dialogOpen) {
@@ -259,11 +357,22 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
             action: () => usePortalStore.getState().openReschedule('guide'),
           });
           if (!shown.ok) return cancelledResult(shown.code);
+          presentedVisually ||= shown.presentedVisually;
+          spokenByPage ||= shown.spokenByPage;
         }
 
-        return { ok: true, appointmentId: input.appointmentId, options: rescheduleSlots, chooserOpen: true, committed: false };
+        return {
+          ok: true,
+          appointmentId: input.appointmentId,
+          options: rescheduleSlots,
+          chooserOpen: true,
+          committed: false,
+          presentedVisually,
+          spokenByPage,
+        };
       },
     },
+    createSelectSlotTool(),
     {
       name: 'get_bill_details',
       title: 'Get bill details',
@@ -279,33 +388,6 @@ export function createStaticTools(): WebMCP.ModelContextTool[] {
       inputSchema: noInputSchema,
       annotations: { readOnlyHint: true, untrustedContentHint: false },
       execute: async () => ({ ok: true, insurance: demoInsurance }),
-    },
-    {
-      name: 'open_insurance_update',
-      title: 'Open insurance update',
-      description: 'Visibly open the simulated insurance-update screen. No real file is uploaded and no real policy is changed.',
-      inputSchema: noInputSchema,
-      annotations: { readOnlyHint: false, untrustedContentHint: false },
-      execute: async (_input, { signal }) => {
-        if (usePortalStore.getState().currentSection !== 'insurance') {
-          const opened = await runGuideAction({
-            target: 'insurance_navigation',
-            message: 'Your insurance information is in this section.',
-            signal,
-            action: () => usePortalStore.getState().openSection('insurance', 'guide'),
-          });
-          if (!opened.ok) return cancelledResult(opened.code);
-        }
-
-        const result = await runGuideAction({
-          target: 'update_insurance_button',
-          message: 'I’ll open the demonstration update screen. It does not send or store real information.',
-          signal,
-          action: () => usePortalStore.getState().openInsuranceUpdate('guide'),
-        });
-        if (!result.ok) return cancelledResult(result.code);
-        return { ok: true, currentSection: 'insurance', updateOpen: true, simulated: true };
-      },
     },
   ];
 }
@@ -332,7 +414,7 @@ export function createSelectSlotTool(): WebMCP.ModelContextTool {
         return failed('appointment_not_found', 'The requested appointment does not match the shared portal state.');
       }
       if (!state.reschedule.dialogOpen) {
-        return failed('chooser_closed', 'Open the reschedule options before selecting a time.');
+        return failed('chooser_closed', 'Open the reschedule workflow before selecting a time.');
       }
 
       const slotId = input.slotId as string;
@@ -347,7 +429,14 @@ export function createSelectSlotTool(): WebMCP.ModelContextTool {
         action: () => usePortalStore.getState().selectRescheduleSlot(slotId, 'guide'),
       });
       if (!result.ok) return cancelledResult(result.code);
-      return { ok: true, selectedSlot: slot, committed: false, next: 'Review the change with the person before confirming.' };
+      return {
+        ok: true,
+        selectedSlot: slot,
+        committed: false,
+        next: 'Review the change with the person before confirming.',
+        presentedVisually: result.presentedVisually,
+        spokenByPage: result.spokenByPage,
+      };
     },
   };
 }
@@ -379,7 +468,7 @@ export function createConfirmTool(): WebMCP.ModelContextTool {
         return failed('selection_changed', 'The person’s current selection differs from the requested slot. Re-read portal state and do not overwrite it.');
       }
 
-      const expectedVersion = before.interactionVersion;
+      const expectedRescheduleRevision = before.rescheduleRevision;
       const result = await runGuideAction({
         target: 'confirm_reschedule_button',
         message: `Current: ${before.appointment.dateLabel} at ${before.appointment.time}. New: ${slot.dateLabel} at ${slot.time}. I’ll confirm this visible change now.`,
@@ -387,7 +476,12 @@ export function createConfirmTool(): WebMCP.ModelContextTool {
         beforeActionStatus: 'previewing',
         action: () => {
           const latest = usePortalStore.getState();
-          if (latest.interactionVersion !== expectedVersion || latest.reschedule.selectedSlotId !== slotId) return false;
+          if (
+            latest.rescheduleRevision !== expectedRescheduleRevision ||
+            latest.appointment.id !== input.appointmentId ||
+            !latest.reschedule.dialogOpen ||
+            latest.reschedule.selectedSlotId !== slotId
+          ) return false;
           return latest.confirmReschedule(slotId, 'guide');
         },
       });
@@ -397,7 +491,13 @@ export function createConfirmTool(): WebMCP.ModelContextTool {
         }
         return cancelledResult(result.code);
       }
-      return { ok: true, appointment: usePortalStore.getState().appointment, committed: true };
+      return {
+        ok: true,
+        appointment: usePortalStore.getState().appointment,
+        committed: true,
+        presentedVisually: result.presentedVisually,
+        spokenByPage: result.spokenByPage,
+      };
     },
   };
 }

@@ -14,11 +14,11 @@ Record the production URL in ChatGPT’s in-app browser at 1440 × 900 and 100% 
 
 **Prompt:**
 
-> I have trouble distinguishing red and green, the text is difficult to read, and this page feels overwhelming. Can you make it easier for me?
+> These red and green indicators look the same to me, the text is too small, and this page is overwhelming. Simplify it and read your guidance aloud.
 
-**Expected tools:** `get_portal_state`, then one `configure_accessibility` call with 175% text, high contrast, simplified density, large controls, increased spacing, color-independent status, and emphasized interactions.
+**Expected tools:** `get_portal_state`, then one `configure_accessibility` call with 175% text, high contrast, simplified density, large controls, increased spacing, color-independent status, emphasized interactions, and read-aloud enabled.
 
-**Screen:** The same Northstar application reorganizes into the calm modern interface. Guide ✦ appears after the transformation.
+**Screen:** The same Northstar application reorganizes into the calm modern interface. Guide ✦ appears after the transformation and its optional webpage voice finishes before the tool resolves.
 
 **Narration:**
 
@@ -58,7 +58,7 @@ Record the production URL in ChatGPT’s in-app browser at 1440 × 900 and 100% 
 
 **Expected tools:** `get_reschedule_options`, then `open_reschedule`.
 
-**Screen:** The chooser shows the current appointment and three alternatives. `select_reschedule_slot` becomes available. Manually choose **Monday, September 14 · 3:00 PM**.
+**Screen:** The chooser shows the current appointment and three alternatives. `select_reschedule_slot` was already discoverable but becomes valid only now. Manually choose **Monday, September 14 · 3:00 PM**; `confirm_reschedule` appears after the selection.
 
 **Narration:**
 

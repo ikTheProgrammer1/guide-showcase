@@ -16,6 +16,7 @@ interface HighlightRect {
 export function AgentPresence() {
   const presence = usePortalStore((state) => state.agentPresence);
   const largeControls = usePortalStore((state) => state.accessibility.controlSize === 'large');
+  const uiRevision = usePortalStore((state) => state.uiRevision);
   const [highlight, setHighlight] = useState<HighlightRect | null>(null);
 
   useEffect(() => {
@@ -41,7 +42,7 @@ export function AgentPresence() {
       window.removeEventListener('scroll', update, true);
       observer?.disconnect();
     };
-  }, [presence.target, presence.operationId, presence.visible]);
+  }, [presence.target, presence.operationId, presence.visible, uiRevision]);
 
   return (
     <div className={styles.agentLayer} aria-live="polite" aria-atomic="true">

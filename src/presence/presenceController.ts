@@ -11,6 +11,8 @@ export type GuideActionCode =
 export interface GuideActionResult {
   ok: boolean;
   code?: GuideActionCode;
+  presentedVisually: boolean;
+  spokenByPage: boolean;
 }
 
 interface GuideActionOptions {
@@ -25,25 +27,25 @@ interface GuideActionOptions {
 let sequence: Promise<unknown> = Promise.resolve();
 let hideTimer: number | null = null;
 let cancellationGeneration = 0;
+let settleActiveSpeech: ((spoken: boolean) => void) | null = null;
+
+export const GUIDE_SPEECH_TIMEOUT_MS = 25_000;
 
 function reducedMotion() {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 }
 
 function wait(ms: number, signal?: AbortSignal) {
+  if (signal?.aborted) return Promise.resolve(false);
   if (reducedMotion()) return Promise.resolve(true);
   return new Promise<boolean>((resolve) => {
-    if (signal?.aborted) {
-      resolve(false);
-      return;
-    }
-
     const timer = window.setTimeout(() => {
       signal?.removeEventListener('abort', cancel);
       resolve(true);
     }, ms);
     const cancel = () => {
       window.clearTimeout(timer);
+      signal?.removeEventListener('abort', cancel);
       resolve(false);
     };
     signal?.addEventListener('abort', cancel, { once: true });
@@ -59,6 +61,11 @@ async function findVisibleTarget(target: SemanticTarget) {
   return null;
 }
 
+async function afterPaint() {
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+}
+
 function pointerPosition(target: SemanticTarget) {
   const rect = getTargetRect(target);
   if (!rect) return null;
@@ -67,14 +74,56 @@ function pointerPosition(target: SemanticTarget) {
   return { x, y };
 }
 
-function speak(message: string) {
+function cancelGuideSpeech() {
+  window.speechSynthesis?.cancel();
+  settleActiveSpeech?.(false);
+  settleActiveSpeech = null;
+}
+
+export function speakGuideMessage(message: string, signal?: AbortSignal): Promise<boolean> {
   const { readAloud } = usePortalStore.getState().accessibility;
-  if (!readAloud || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(message);
-  utterance.rate = 0.92;
-  utterance.pitch = 1.03;
-  window.speechSynthesis.speak(utterance);
+  if (
+    !readAloud ||
+    typeof window.speechSynthesis?.speak !== 'function' ||
+    typeof window.SpeechSynthesisUtterance !== 'function'
+  ) {
+    return Promise.resolve(false);
+  }
+
+  cancelGuideSpeech();
+  if (signal?.aborted) return Promise.resolve(false);
+
+  return new Promise<boolean>((resolve) => {
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.rate = 0.92;
+    utterance.pitch = 1.03;
+    let settled = false;
+
+    const finish = (spoken: boolean) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      signal?.removeEventListener('abort', abort);
+      utterance.onend = null;
+      utterance.onerror = null;
+      if (settleActiveSpeech === finish) settleActiveSpeech = null;
+      resolve(spoken);
+    };
+    const abort = () => {
+      window.speechSynthesis.cancel();
+      finish(false);
+    };
+    const timeout = window.setTimeout(() => {
+      window.speechSynthesis.cancel();
+      finish(false);
+    }, GUIDE_SPEECH_TIMEOUT_MS);
+
+    settleActiveSpeech = finish;
+    utterance.onend = () => finish(true);
+    utterance.onerror = () => finish(false);
+    signal?.addEventListener('abort', abort, { once: true });
+    window.speechSynthesis.speak(utterance);
+  });
 }
 
 function hidePresenceLater(operationId: number) {
@@ -92,35 +141,51 @@ function hidePresenceLater(operationId: number) {
   }, reducedMotion() ? 1600 : 3600);
 }
 
-async function performGuideAction(options: GuideActionOptions): Promise<GuideActionResult> {
+function failedGuideAction(code: GuideActionCode): GuideActionResult {
+  return { ok: false, code, presentedVisually: false, spokenByPage: false };
+}
+
+function sequenceCancelled(generation: number, signal?: AbortSignal) {
+  return generation !== cancellationGeneration || signal?.aborted === true;
+}
+
+async function performGuideAction(
+  options: GuideActionOptions,
+  generation: number,
+): Promise<GuideActionResult> {
   if (hideTimer !== null) {
     window.clearTimeout(hideTimer);
     hideTimer = null;
   }
 
   const store = usePortalStore.getState();
-  const startVersion = store.interactionVersion;
+  const startNavigationRevision = store.navigationRevision;
   const operationId = store.agentPresence.operationId + 1;
 
   if (options.actionTiming === 'before-presence' && options.action) {
     const targetElement = await findVisibleTarget(options.target);
-    if (!targetElement) return { ok: false, code: 'target_not_visible' };
+    if (!targetElement) return failedGuideAction('target_not_visible');
 
     const ready = await wait(120, options.signal);
-    if (!ready) return { ok: false, code: 'cancelled' };
-    if (usePortalStore.getState().interactionVersion !== startVersion) {
-      return { ok: false, code: 'interrupted_by_user' };
+    if (!ready || sequenceCancelled(generation, options.signal)) {
+      return failedGuideAction('cancelled');
+    }
+    if (usePortalStore.getState().navigationRevision !== startNavigationRevision) {
+      return failedGuideAction('interrupted_by_user');
     }
 
     const accepted = await options.action();
-    if (accepted === false) return { ok: false, code: 'action_rejected' };
+    if (accepted === false) return failedGuideAction('action_rejected');
 
-    await wait(reducedMotion() ? 0 : 620);
-    if (usePortalStore.getState().interactionVersion !== startVersion) {
-      return { ok: false, code: 'interrupted_by_user' };
+    const settled = await wait(reducedMotion() ? 0 : 620, options.signal);
+    if (!settled || sequenceCancelled(generation, options.signal)) {
+      return { ok: true, presentedVisually: false, spokenByPage: false };
+    }
+    if (usePortalStore.getState().navigationRevision !== startNavigationRevision) {
+      return { ok: true, presentedVisually: false, spokenByPage: false };
     }
     const updatedTarget = await findVisibleTarget(options.target);
-    if (!updatedTarget) return { ok: false, code: 'target_not_visible' };
+    if (!updatedTarget) return { ok: true, presentedVisually: false, spokenByPage: false };
     updatedTarget.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
     store.setAgentPresence({
       visible: true,
@@ -130,10 +195,11 @@ async function performGuideAction(options: GuideActionOptions): Promise<GuideAct
       operationId,
       position: pointerPosition(options.target),
     });
-    speak(options.message);
+    await afterPaint();
+    const spokenByPage = await speakGuideMessage(options.message, options.signal);
     store.setAgentPresence({ status: 'complete' });
     hidePresenceLater(operationId);
-    return { ok: true };
+    return { ok: true, presentedVisually: true, spokenByPage };
   }
 
   store.setAgentPresence({
@@ -147,7 +213,7 @@ async function performGuideAction(options: GuideActionOptions): Promise<GuideAct
   const targetElement = await findVisibleTarget(options.target);
   if (!targetElement) {
     store.setAgentPresence({ visible: false, status: 'hidden', target: null, message: null });
-    return { ok: false, code: 'target_not_visible' };
+    return failedGuideAction('target_not_visible');
   }
 
   targetElement.scrollIntoView({
@@ -156,38 +222,65 @@ async function performGuideAction(options: GuideActionOptions): Promise<GuideAct
     inline: 'nearest',
   });
   const positioned = await wait(90, options.signal);
-  if (!positioned) return { ok: false, code: 'cancelled' };
+  if (!positioned || sequenceCancelled(generation, options.signal)) {
+    store.setAgentPresence({ visible: false, status: 'hidden' });
+    return failedGuideAction('cancelled');
+  }
+  if (usePortalStore.getState().navigationRevision !== startNavigationRevision) {
+    store.setAgentPresence({ visible: false, status: 'hidden' });
+    return failedGuideAction('interrupted_by_user');
+  }
 
   const position = pointerPosition(options.target);
   store.setAgentPresence({ status: 'moving', position });
   const moved = await wait(520, options.signal);
-  if (!moved) {
+  if (!moved || sequenceCancelled(generation, options.signal)) {
     store.setAgentPresence({ visible: false, status: 'hidden' });
-    return { ok: false, code: 'cancelled' };
+    return failedGuideAction('cancelled');
   }
 
-  if (usePortalStore.getState().interactionVersion !== startVersion) {
+  if (usePortalStore.getState().navigationRevision !== startNavigationRevision) {
     store.setAgentPresence({ visible: false, status: 'hidden' });
-    return { ok: false, code: 'interrupted_by_user' };
+    return failedGuideAction('interrupted_by_user');
   }
 
+  const currentTarget = await findVisibleTarget(options.target);
+  if (!currentTarget) {
+    store.setAgentPresence({ visible: false, status: 'hidden' });
+    return failedGuideAction('target_not_visible');
+  }
+  currentTarget.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+  store.setAgentPresence({ position: pointerPosition(options.target) });
   store.setAgentPresence({ status: options.beforeActionStatus ?? 'highlighting' });
-  speak(options.message);
+  await afterPaint();
+  if (sequenceCancelled(generation, options.signal)) {
+    store.setAgentPresence({ visible: false, status: 'hidden' });
+    return failedGuideAction('cancelled');
+  }
+  const speech = speakGuideMessage(options.message, options.signal);
   const highlighted = await wait(300, options.signal);
-  if (!highlighted) return { ok: false, code: 'cancelled' };
+  if (!highlighted || sequenceCancelled(generation, options.signal)) {
+    cancelGuideSpeech();
+    store.setAgentPresence({ visible: false, status: 'hidden' });
+    return failedGuideAction('cancelled');
+  }
 
+  let actionCommitted = false;
   if (options.action) {
-    if (usePortalStore.getState().interactionVersion !== startVersion) {
+    if (usePortalStore.getState().navigationRevision !== startNavigationRevision) {
+      cancelGuideSpeech();
       store.setAgentPresence({ visible: false, status: 'hidden' });
-      return { ok: false, code: 'interrupted_by_user' };
+      return failedGuideAction('interrupted_by_user');
     }
     store.setAgentPresence({ status: 'acting' });
     const accepted = await options.action();
     if (accepted === false) {
+      cancelGuideSpeech();
       store.setAgentPresence({ status: 'highlighting' });
       hidePresenceLater(operationId);
-      return { ok: false, code: 'action_rejected' };
+      return failedGuideAction('action_rejected');
     }
+    actionCommitted = true;
 
     await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
     const updatedTarget = getTargetElement(options.target);
@@ -201,17 +294,29 @@ async function performGuideAction(options: GuideActionOptions): Promise<GuideAct
     }
   }
 
+  const spokenByPage = await speech;
+  if (sequenceCancelled(generation, options.signal) && !actionCommitted) {
+    store.setAgentPresence({ visible: false, status: 'hidden' });
+    return failedGuideAction('cancelled');
+  }
+  if (
+    !actionCommitted &&
+    usePortalStore.getState().navigationRevision !== startNavigationRevision
+  ) {
+    store.setAgentPresence({ visible: false, status: 'hidden' });
+    return failedGuideAction('interrupted_by_user');
+  }
   store.setAgentPresence({ status: 'complete' });
   hidePresenceLater(operationId);
-  return { ok: true };
+  return { ok: true, presentedVisually: true, spokenByPage };
 }
 
 export function runGuideAction(options: GuideActionOptions): Promise<GuideActionResult> {
   const generation = cancellationGeneration;
   const run = sequence.then(() =>
     generation === cancellationGeneration
-      ? performGuideAction(options)
-      : ({ ok: false, code: 'cancelled' } satisfies GuideActionResult),
+      ? performGuideAction(options, generation)
+      : failedGuideAction('cancelled'),
   );
   sequence = run.catch(() => undefined);
   return run;
@@ -221,7 +326,7 @@ export function cancelGuidePresence() {
   cancellationGeneration += 1;
   if (hideTimer !== null) window.clearTimeout(hideTimer);
   hideTimer = null;
-  window.speechSynthesis?.cancel();
+  cancelGuideSpeech();
   const store = usePortalStore.getState();
   store.setAgentPresence({
     visible: false,

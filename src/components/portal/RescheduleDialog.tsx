@@ -8,7 +8,15 @@ import { usePortalStore } from '../../state/portalStore';
 import type { RescheduleSlot } from '../../types';
 import styles from '../../app/App.module.css';
 
-function SlotButton({ slot, selected }: { slot: RescheduleSlot; selected: boolean }) {
+function SlotButton({
+  slot,
+  selected,
+  tabStop,
+}: {
+  slot: RescheduleSlot;
+  selected: boolean;
+  tabStop: boolean;
+}) {
   const select = usePortalStore((state) => state.selectRescheduleSlot);
   const targetMap = {
     slot_2026_09_11_0900: 'appointment_slot_sep_11',
@@ -17,6 +25,26 @@ function SlotButton({ slot, selected }: { slot: RescheduleSlot; selected: boolea
   } as const;
   const ref = useSemanticTarget<HTMLButtonElement>(targetMap[slot.id as keyof typeof targetMap]);
 
+  const handleRadioKeys = (event: KeyboardEvent<HTMLButtonElement>) => {
+    const keys = ['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft', 'Home', 'End'];
+    if (!keys.includes(event.key)) return;
+    const group = event.currentTarget.closest('[role="radiogroup"]');
+    const radios = group ? [...group.querySelectorAll<HTMLButtonElement>('[role="radio"]')] : [];
+    const currentIndex = radios.indexOf(event.currentTarget);
+    if (currentIndex < 0 || radios.length === 0) return;
+
+    event.preventDefault();
+    const nextIndex = event.key === 'Home'
+      ? 0
+      : event.key === 'End'
+        ? radios.length - 1
+        : event.key === 'ArrowDown' || event.key === 'ArrowRight'
+          ? (currentIndex + 1) % radios.length
+          : (currentIndex - 1 + radios.length) % radios.length;
+    radios[nextIndex].focus();
+    radios[nextIndex].click();
+  };
+
   return (
     <button
       ref={ref}
@@ -24,7 +52,9 @@ function SlotButton({ slot, selected }: { slot: RescheduleSlot; selected: boolea
       data-selected={selected ? 'true' : 'false'}
       role="radio"
       aria-checked={selected}
+      tabIndex={tabStop ? 0 : -1}
       onClick={() => select(slot.id, 'you')}
+      onKeyDown={handleRadioKeys}
     >
       <span className={styles.slotDate}>{slot.dayLabel}</span>
       <span className={styles.slotTime}><Clock3 size={16} aria-hidden="true" /> {slot.time}</span>
@@ -58,6 +88,12 @@ export function RescheduleDialog() {
       previousFocus.current?.focus();
     };
   }, [reschedule.dialogOpen]);
+
+  useEffect(() => {
+    if (!reschedule.dialogOpen || reschedule.phase !== 'complete') return;
+    const frame = requestAnimationFrame(() => titleRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [reschedule.dialogOpen, reschedule.phase]);
 
   const handleDialogKeys = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key === 'Escape') {
@@ -102,7 +138,7 @@ export function RescheduleDialog() {
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
           >
             {reschedule.phase === 'complete' ? (
-              <div className={styles.successPanel}>
+              <div className={styles.successPanel} role="status" aria-live="polite">
                 <div className={styles.successIcon}><CheckCircle2 size={34} aria-hidden="true" /></div>
                 <span className={styles.eyebrow}>Appointment updated</span>
                 <h2 ref={titleRef} id="reschedule-title" tabIndex={-1}>Your new time is confirmed.</h2>
@@ -137,7 +173,15 @@ export function RescheduleDialog() {
                     <h3>Available times</h3>
                     <div role="radiogroup" aria-label="Available reschedule times" className={styles.slotList}>
                       {rescheduleSlots.map((slot) => (
-                        <SlotButton key={slot.id} slot={slot} selected={slot.id === reschedule.selectedSlotId} />
+                        <SlotButton
+                          key={slot.id}
+                          slot={slot}
+                          selected={slot.id === reschedule.selectedSlotId}
+                          tabStop={
+                            slot.id === reschedule.selectedSlotId ||
+                            (!reschedule.selectedSlotId && slot.id === rescheduleSlots[0].id)
+                          }
+                        />
                       ))}
                     </div>
                   </div>

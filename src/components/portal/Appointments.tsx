@@ -25,7 +25,7 @@ export function Appointments() {
                 <tr>
                   <td><span className={styles.legacyStatus} data-tone="good"><span className={styles.legacyStatusDot} aria-hidden="true" />CONFIRMED</span></td>
                   <td>09/10/26</td><td>14:30</td><td>MAYA CHEN MD<br /><small>PCP / PRIMARY CARE</small></td><td>BLDG B · RM 304</td>
-                  <td><button ref={rescheduleRef} className={styles.legacyActionButton} onClick={() => openReschedule('you')}>MODIFY</button> <button className={styles.legacyActionButton}>VIEW</button></td>
+                  <td><button ref={rescheduleRef} className={styles.legacyActionButton} aria-label="Reschedule appointment" onClick={() => openReschedule('you')}>MODIFY</button> <button className={styles.legacyActionButton}>VIEW</button></td>
                 </tr>
                 <tr><td>COMPLETED</td><td>04/18/26</td><td>09:00</td><td>MAYA CHEN MD<br /><small>ANNUAL WELLNESS</small></td><td>BLDG B · RM 208</td><td><button className={styles.legacyActionButton}>SUMMARY</button></td></tr>
                 <tr><td>COMPLETED</td><td>01/07/26</td><td>11:15</td><td>NORTHSTAR LAB<br /><small>LAB SERVICES</small></td><td>BLDG A · L1</td><td><button className={styles.legacyActionButton}>RESULT</button></td></tr>

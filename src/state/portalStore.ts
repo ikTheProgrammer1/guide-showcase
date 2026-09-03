@@ -26,7 +26,9 @@ interface PortalStore {
   activityLog: ActivityEvent[];
   recentHumanOverrides: HumanOverride[];
   pendingAction: PendingAction | null;
-  interactionVersion: number;
+  uiRevision: number;
+  navigationRevision: number;
+  rescheduleRevision: number;
   insuranceUpdateOpen: boolean;
   insuranceUpdateSaved: boolean;
   openSection: (section: PortalSection, actor: Actor) => void;
@@ -74,10 +76,6 @@ function appendEvent(events: ActivityEvent[], event: ActivityEvent) {
   return [...events, event].slice(-16);
 }
 
-function withHumanVersion(actor: Actor, version: number) {
-  return actor === 'you' ? version + 1 : version;
-}
-
 function navigationLabel(section: PortalSection) {
   return section[0].toUpperCase() + section.slice(1);
 }
@@ -91,14 +89,18 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
   activityLog: [],
   recentHumanOverrides: [],
   pendingAction: null,
-  interactionVersion: 0,
+  uiRevision: 0,
+  navigationRevision: 0,
+  rescheduleRevision: 0,
   insuranceUpdateOpen: false,
   insuranceUpdateSaved: false,
 
   openSection: (section, actor) => {
+    if (get().currentSection === section) return;
     set((state) => ({
       currentSection: section,
-      interactionVersion: withHumanVersion(actor, state.interactionVersion),
+      uiRevision: state.uiRevision + 1,
+      navigationRevision: state.navigationRevision + 1,
       activityLog: appendEvent(
         state.activityLog,
         makeEvent(actor, 'navigation', `${actor === 'guide' ? 'Guide opened' : 'You opened'} ${navigationLabel(section)}`),
@@ -122,7 +124,7 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
 
       return {
         accessibility: nextAccessibility,
-        interactionVersion: withHumanVersion(actor, state.interactionVersion),
+        uiRevision: state.uiRevision + 1,
         recentHumanOverrides: [...state.recentHumanOverrides, ...overrides].slice(-8),
         activityLog: appendEvent(
           state.activityLog,
@@ -141,7 +143,10 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
       currentSection: 'appointments',
       reschedule: { phase: 'choosing', dialogOpen: true, selectedSlotId: null },
       pendingAction: null,
-      interactionVersion: withHumanVersion(actor, state.interactionVersion),
+      uiRevision: state.uiRevision + 1,
+      navigationRevision:
+        state.currentSection === 'appointments' ? state.navigationRevision : state.navigationRevision + 1,
+      rescheduleRevision: state.rescheduleRevision + 1,
       activityLog: appendEvent(
         state.activityLog,
         makeEvent(actor, 'reschedule_opened', `${actor === 'guide' ? 'Guide opened' : 'You opened'} available appointment times`),
@@ -149,22 +154,26 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
     }));
   },
 
-  closeReschedule: (actor) => {
+  closeReschedule: () => {
+    if (!get().reschedule.dialogOpen) return;
     set((state) => ({
       reschedule: { ...initialReschedule },
       pendingAction: null,
-      interactionVersion: withHumanVersion(actor, state.interactionVersion),
+      uiRevision: state.uiRevision + 1,
+      rescheduleRevision: state.rescheduleRevision + 1,
     }));
   },
 
   selectRescheduleSlot: (slotId, actor) => {
     const slot = rescheduleSlots.find((candidate) => candidate.id === slotId);
     if (!slot || !get().reschedule.dialogOpen) return false;
+    if (get().reschedule.selectedSlotId === slotId) return true;
 
     set((state) => ({
       reschedule: { phase: 'reviewing', dialogOpen: true, selectedSlotId: slotId },
       pendingAction: { type: 'reschedule', appointmentId: state.appointment.id, slotId },
-      interactionVersion: withHumanVersion(actor, state.interactionVersion),
+      uiRevision: state.uiRevision + 1,
+      rescheduleRevision: state.rescheduleRevision + 1,
       recentHumanOverrides:
         actor === 'you'
           ? [...state.recentHumanOverrides, { field: 'selectedRescheduleSlot', value: slotId, timestamp: Date.now() }].slice(-8)
@@ -195,7 +204,8 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
       },
       reschedule: { phase: 'complete', dialogOpen: true, selectedSlotId: slotId },
       pendingAction: null,
-      interactionVersion: withHumanVersion(actor, current.interactionVersion),
+      uiRevision: current.uiRevision + 1,
+      rescheduleRevision: current.rescheduleRevision + 1,
       activityLog: appendEvent(
         current.activityLog,
         makeEvent(
@@ -209,11 +219,14 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
   },
 
   openInsuranceUpdate: (actor) => {
+    if (get().insuranceUpdateOpen) return;
     set((state) => ({
       currentSection: 'insurance',
       insuranceUpdateOpen: true,
       insuranceUpdateSaved: false,
-      interactionVersion: withHumanVersion(actor, state.interactionVersion),
+      uiRevision: state.uiRevision + 1,
+      navigationRevision:
+        state.currentSection === 'insurance' ? state.navigationRevision : state.navigationRevision + 1,
       activityLog: appendEvent(
         state.activityLog,
         makeEvent(actor, 'insurance_update_opened', `${actor === 'guide' ? 'Guide opened' : 'You opened'} insurance update`),
@@ -221,17 +234,19 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
     }));
   },
 
-  closeInsuranceUpdate: (actor) => {
+  closeInsuranceUpdate: () => {
+    if (!get().insuranceUpdateOpen) return;
     set((state) => ({
       insuranceUpdateOpen: false,
-      interactionVersion: withHumanVersion(actor, state.interactionVersion),
+      uiRevision: state.uiRevision + 1,
     }));
   },
 
   saveInsuranceUpdate: (actor) => {
+    if (get().insuranceUpdateSaved) return;
     set((state) => ({
       insuranceUpdateSaved: true,
-      interactionVersion: withHumanVersion(actor, state.interactionVersion),
+      uiRevision: state.uiRevision + 1,
       activityLog: appendEvent(
         state.activityLog,
         makeEvent(actor, 'insurance_update_saved', `${actor === 'guide' ? 'Guide saved' : 'You saved'} the fictional insurance update`),
@@ -254,7 +269,9 @@ export const usePortalStore = create<PortalStore>((set, get) => ({
       activityLog: [],
       recentHumanOverrides: [],
       pendingAction: null,
-      interactionVersion: state.interactionVersion + 1,
+      uiRevision: state.uiRevision + 1,
+      navigationRevision: state.navigationRevision + 1,
+      rescheduleRevision: state.rescheduleRevision + 1,
       insuranceUpdateOpen: false,
       insuranceUpdateSaved: false,
     }));
