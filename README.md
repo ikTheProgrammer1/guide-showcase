@@ -120,6 +120,8 @@ npm run dev
 
 Open `http://127.0.0.1:5173`. Browsers without WebMCP retain the complete manual portal and show an honest preview notice.
 
+The Vercel deployment uses a static SPA fallback, so direct and bookmarked subpaths load the same session-only portal shell instead of returning a hosting 404.
+
 Guide tools require a supported ChatGPT desktop account and model using the built-in browser, or a WebMCP-enabled Chrome environment. For local Chrome testing, enable:
 
 ```text
