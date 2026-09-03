@@ -1,6 +1,7 @@
 import { CalendarDays, Check, Clock3, MapPin, RefreshCw } from 'lucide-react';
 import { isPortalAdapted } from '../../data/demoData';
 import { useSemanticTarget } from '../../presence/targetRegistry';
+import { JargonTerm } from '../../simulation/JargonTerm';
 import { usePortalStore } from '../../state/portalStore';
 import styles from '../../app/App.module.css';
 
@@ -24,7 +25,7 @@ export function Appointments() {
               <tbody>
                 <tr>
                   <td><span className={styles.legacyStatus} data-tone="good"><span className={styles.legacyStatusDot} aria-hidden="true" />CONFIRMED</span></td>
-                  <td>09/10/26</td><td>14:30</td><td>MAYA CHEN MD<br /><small>PCP / PRIMARY CARE</small></td><td>BLDG B · RM 304</td>
+                  <td>09/10/26</td><td>14:30</td><td>MAYA CHEN MD<br /><small><JargonTerm>PCP</JargonTerm> / PRIMARY CARE</small></td><td>BLDG B · RM 304</td>
                   <td><button ref={rescheduleRef} className={styles.legacyActionButton} aria-label="Reschedule appointment" onClick={() => openReschedule('you')}>MODIFY</button> <button className={styles.legacyActionButton}>VIEW</button></td>
                 </tr>
                 <tr><td>COMPLETED</td><td>04/18/26</td><td>09:00</td><td>MAYA CHEN MD<br /><small>ANNUAL WELLNESS</small></td><td>BLDG B · RM 208</td><td><button className={styles.legacyActionButton}>SUMMARY</button></td></tr>

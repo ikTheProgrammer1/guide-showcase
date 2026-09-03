@@ -1,8 +1,8 @@
-# Guide Demo Script — 2:40 Target
+# Guide Demo Script — 2:50 Target
 
 Record the production URL in ChatGPT’s in-app browser at 1440 × 900 and 100% browser zoom. Start with **Reset Demo**. Keep the source editor ready for one brief code shot.
 
-## 0:00–0:12 — One Interface for Everyone
+## 0:00–0:15 — One Interface for Everyone
 
 **Screen:** Hold on the dense Northstar Health portal. Let the crowded tables, compact navigation, abbreviations, small controls, and red/green status dots register.
 
@@ -10,61 +10,45 @@ Record the production URL in ChatGPT’s in-app browser at 1440 × 900 and 100% 
 
 “Most websites still present one fixed interface to everyone. And many essential services look like this.”
 
-## 0:12–0:38 — Adapt
+## 0:15–0:40 — Demonstrate the Barrier
+
+**Screen:** Open **Simulate a barrier → Mobility → Parkinson’s**. Aim at the center of the compact **MODIFY APPT** control during the seeded demonstration phase. The displaced simulated cursor lands outside the button, the action does not fire, and **Missed target** appears.
+
+**Narration:**
+
+“This built-in simulator demonstrates one pointer-precision barrier. It does not reproduce anyone’s disability. The miss is real DOM hit testing—not a scripted failure for this button.”
+
+## 0:40–1:12 — Adapt and Point
 
 **Prompt:**
 
-> These red and green indicators look the same to me, the text is too small, and this page is overwhelming. Simplify it and read your guidance aloud.
+> My hands shake, precise clicking is difficult, and this page is overwhelming. Reorganize it with large separated controls and show me where to reschedule, but do not open it yet.
 
-**Expected tools:** `get_portal_state`, then one `configure_accessibility` call with 175% text, high contrast, simplified density, large controls, increased spacing, color-independent status, emphasized interactions, and read-aloud enabled.
+**Expected tools:** `get_portal_state` if needed, one composed `configure_accessibility` call with simplified density, large controls, increased spacing, and interactive emphasis, then `guide_to(reschedule_button)`. No appointment action yet.
 
-**Screen:** The same Northstar application reorganizes into the calm modern interface. Guide ✦ appears after the transformation and its optional webpage voice finishes before the tool resolves.
+**Screen:** Keep the simulation active. The same Northstar application reorganizes into the calm modern interface. Guide ✦ points to the new large appointment control without activating it.
 
 **Narration:**
 
 “Northstar exposes not only actions through WebMCP, but semantic ways its own interface can adapt. This is a structural reflow—not a zoomed screenshot.”
 
-## 0:38–1:00 — Show
+## 1:12–1:28 — Successful Acquisition
 
-**Prompt:**
-
-> I need to change my appointment, but I don’t know how. Show me—don’t change anything yet.
-
-**Expected tool:** `guide_to` targeting `appointments_navigation` or `reschedule_button`.
-
-**Screen:** Guide flies to the control, highlights it, and says, “Your appointment can be changed here.” Nothing activates.
+**Screen:** Aim at the center of the larger adapted **Change appointment** control with the same simulation phase. Both physical and displaced coordinates resolve to that control, so it opens Appointments successfully. Choose **Reschedule appointment**.
 
 **Narration:**
 
-“Guide can direct attention without taking control. Its target is semantic, so it survives the layout transformation.”
+“Nothing in the simulator changed. The same generic algorithm succeeds because Northstar created a materially larger target with more separation.”
 
-## 1:00–1:18 — Explain
+## 1:28–1:58 — Guide & Collaborate
 
-**Prompt:**
-
-> What does that do?
-
-**Expected tool:** `guide_to` with a short explanation.
+**Screen:** Open the chooser if it is not already open. It shows the current appointment and three alternatives. Manually choose **Monday, September 14 · 3:00 PM**; `confirm_reschedule` appears only after the valid selection.
 
 **Narration:**
 
-“The agent explains in the shared page instead of making me translate chat instructions back onto the interface.”
+“Guide prepared the path, but I make the decision. My click updates the exact same state the agent sees.”
 
-## 1:18–1:52 — Guide & Collaborate
-
-**Prompt:**
-
-> Help me reschedule it, but let me choose the time.
-
-**Expected tools:** `get_reschedule_options`, then `open_reschedule`.
-
-**Screen:** The chooser shows the current appointment and three alternatives. `select_reschedule_slot` was already discoverable but becomes valid only now. Manually choose **Monday, September 14 · 3:00 PM**; `confirm_reschedule` appears after the selection.
-
-**Narration:**
-
-“Guide prepares the workflow, but I make the decision. My click updates the exact same state the agent sees.”
-
-## 1:52–2:14 — Act
+## 1:58–2:22 — Delegated Act
 
 **Prompt:**
 
@@ -72,23 +56,23 @@ Record the production URL in ChatGPT’s in-app browser at 1440 × 900 and 100% 
 
 **Expected tools:** `get_portal_state`, then `confirm_reschedule` with the human-selected slot.
 
-**Screen:** Guide moves to Confirm, shows the before-and-after time, pauses, and commits. Hold on the success state.
+**Screen:** Guide moves to Confirm, shows the before-and-after time, pauses, and commits. `confirm_reschedule` unregisters immediately. Hold on success, then stop the simulation.
 
 **Narration:**
 
 “When I delegate the last step, Guide re-reads my choice and refuses stale instructions. The action stays visible and attributable.”
 
-## 2:14–2:29 — WebMCP-Native
+## 2:22–2:38 — WebMCP-Native
 
-**Screen:** Briefly show `document.modelContext.registerTool()`, the `configure_accessibility` schema, and the semantic target registry.
+**Screen:** Briefly show `document.modelContext.registerTool()`, the `configure_accessibility` schema, the semantic target registry, and the separate simulation store.
 
 **Narration:**
 
-“This is not screen-coordinate automation. ChatGPT is the client and language layer. Northstar owns semantic capabilities, adaptation, and visible presence.”
+“This is not screen-coordinate automation. ChatGPT is the language layer, and Northstar owns semantic capabilities and visible presence. The simulator is human-only and never appears in WebMCP state.”
 
-## 2:29–2:40 — Close
+## 2:38–2:50 — Close
 
-**Screen:** Adapted Northstar and the Guide success state.
+**Screen:** Adapted Northstar and the Guide success state, with the simulator off.
 
 **Narration:**
 
@@ -100,6 +84,8 @@ Record the production URL in ChatGPT’s in-app browser at 1440 × 900 and 100% 
 - Show the production URL and tools actually discovered by the client.
 - Keep the full legacy-to-adapted transition in one uninterrupted shot.
 - Use functional-needs language, not diagnosis presets or medical claims.
+- Explicitly call the simulator illustrative, keep Dyslexia and Concentration difficulty out of the hero, and do not imply disability reproduction or compliance proof.
+- Show that the first miss and second success come from actual coordinate hit testing, with no target-specific failure or nearest-control retargeting.
 - Show one human slot selection and one delegated confirmation.
 - Do not imply a real healthcare integration or appointment change.
 - Upload the final video publicly and add its link to Devpost manually.

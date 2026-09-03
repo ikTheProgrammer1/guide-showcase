@@ -1,6 +1,7 @@
 import { Check, FileCheck2, ShieldCheck, Upload, X } from 'lucide-react';
 import { demoInsurance } from '../../data/demoData';
 import { useSemanticTarget } from '../../presence/targetRegistry';
+import { JargonTerm } from '../../simulation/JargonTerm';
 import { usePortalStore } from '../../state/portalStore';
 import styles from '../../app/App.module.css';
 
@@ -29,7 +30,7 @@ export function Insurance() {
             <span>Plan</span>
             <strong>{demoInsurance.plan}</strong>
           </div>
-          <footer><span>{demoInsurance.memberId}</span><span className={styles.activeBadge}><Check size={13} aria-hidden="true" /> {demoInsurance.status}</span></footer>
+          <footer><span><JargonTerm>Member ID</JargonTerm> {demoInsurance.memberId}</span><span className={styles.activeBadge}><Check size={13} aria-hidden="true" /> {demoInsurance.status}</span></footer>
         </section>
 
         <section className={styles.insuranceActions}>

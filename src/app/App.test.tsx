@@ -1,12 +1,14 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearTargetRegistry } from '../presence/targetRegistry';
+import { useSimulationStore } from '../simulation/simulationStore';
 import { usePortalStore } from '../state/portalStore';
 import { App } from './App';
 
 describe('Guide portal UI', () => {
   beforeEach(() => {
     usePortalStore.getState().resetDemo();
+    useSimulationStore.getState().resetSimulation();
     Object.defineProperty(document, 'modelContext', {
       configurable: true,
       value: {
@@ -58,9 +60,10 @@ describe('Guide portal UI', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Simplify page' }));
+    await waitFor(() => expect(document.querySelector('[data-interface="adapted"]')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Home' }));
 
-    expect(await screen.findByRole('heading', { name: 'Good afternoon, Robert.' })).toBeInTheDocument();
+    expect(await screen.findByText('Good afternoon, Robert.', { selector: 'h2' }, { timeout: 3_000 })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'PATIENT SUMMARY' })).not.toBeInTheDocument();
     expect(document.querySelector('[data-interface="adapted"]')).toBeInTheDocument();
   });

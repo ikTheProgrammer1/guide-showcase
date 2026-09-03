@@ -12,9 +12,9 @@ Guide explores another model. A website can expose semantic ways to adapt itself
 
 ## What It Does
 
-The demonstration begins inside **Northstar Health**, a fictional institutional patient portal that feels familiar for the wrong reasons. It is dense and dated, but plausible and usable.
+The demonstration begins inside **Northstar Health**, a fictional institutional patient portal that feels familiar for the wrong reasons. It is dense and dated, but plausible and usable. A human-controlled illustrative simulator can make one isolated interaction barrier visible while Guide adapts the same page.
 
-A person tells ChatGPT that red and green are difficult to distinguish, the text is hard to read, and the page feels overwhelming. ChatGPT calls Northstar’s `configure_accessibility` WebMCP capability. The same website visibly transforms: content is reprioritized, secondary information is removed, navigation changes, typography grows, spacing opens, controls enlarge, contrast strengthens, and statuses gain icons and explicit language.
+In the primary story, the Parkinson’s pointer-precision demonstration produces an honest miss on a compact legacy control. The person explains that precise clicking is difficult and the page is overwhelming. ChatGPT calls Northstar’s `configure_accessibility` WebMCP capability. The same website visibly transforms: content is reprioritized, secondary information is reduced, spacing opens, and controls enlarge. With the simulator still active, the larger control succeeds under the same hit-testing algorithm.
 
 Guide ✦ then appears as the agent’s presence inside Northstar. It can point without clicking, explain without taking over, open a rescheduling workflow, observe a time the person selected manually, and complete the final confirmation only after the person delegates it.
 
@@ -23,6 +23,8 @@ The complete continuum is:
 **Adapt → Show → Explain → Guide → Collaborate → Act**
 
 Manual accessibility preferences remain available under Settings. There are no diagnosis modes, because people with the same condition can have different functional needs.
+
+The simulator is not the accessibility solution and is never exposed through WebMCP. It does not accurately reproduce a disability, replace disabled-user research, diagnose a condition, or prove accessibility compliance. Guide and the site-supported WebMCP adaptation are the product.
 
 ## How We Used WebMCP
 
@@ -39,7 +41,7 @@ Consequential handlers route through the Guide presence controller:
 5. Re-read shared state so human input remains authoritative.
 6. Attribute mutations to “Guide” or “You.”
 
-The chooser dynamically registers `select_reschedule_slot`; a valid selection dynamically registers `confirm_reschedule`. Human interaction invalidates an obsolete in-progress agent sequence. A stale confirmation returns `selection_changed` rather than overwriting the person.
+`select_reschedule_slot` is statically discoverable but returns `chooser_closed` before the workflow opens. A valid selection dynamically registers `confirm_reschedule`, which unregisters immediately after a commit. Human interaction invalidates an obsolete in-progress agent sequence. A stale confirmation returns `selection_changed` rather than overwriting the person.
 
 ## How We Built It
 
@@ -47,6 +49,7 @@ The chooser dynamically registers `select_reschedule_slot`; a valid selection dy
 - Zustand shared state machine
 - Motion for coordinated transformation and Guide presence
 - Direct imperative WebMCP API with `webmcp-types`
+- Separate session-only simulator store with deterministic CSS/SVG effects and real DOM coordinate hit testing
 - CSS Modules and bundled OFL fonts
 - Vitest, React Testing Library, Playwright, and axe
 - Vercel production deployment
@@ -58,6 +61,8 @@ The first challenge was making the before state look honestly institutional with
 The second challenge was making adaptation structural. The modern state is not a theme painted over the same dashboard: information hierarchy, navigation, status representation, content density, card structure, typography, and control sizing all change while semantic target IDs remain stable.
 
 The third challenge was protecting human agency during visible asynchronous actions. Guide separates UI, navigation, and reschedule revisions, then re-reads the appointment, selected slot, and reschedule revision immediately before committing. Accessibility reflow can reposition the pointer without invalidating a valid choice, while stale selection instructions are rejected.
+
+The fourth challenge was making a pointer-precision demonstration honest. The motor simulation compares `document.elementFromPoint()` results at the physical and displaced coordinates, permits activation only when both resolve to the same actionable element, and never searches for or redirects to a nearby control. The code contains no appointment-specific failure branch.
 
 ## What We Learned
 

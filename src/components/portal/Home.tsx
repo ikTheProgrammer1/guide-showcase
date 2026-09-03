@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { isPortalAdapted } from '../../data/demoData';
 import { useSemanticTarget } from '../../presence/targetRegistry';
+import { JargonTerm } from '../../simulation/JargonTerm';
 import { usePortalStore } from '../../state/portalStore';
 import styles from '../../app/App.module.css';
 
@@ -34,7 +35,7 @@ function LegacyHome() {
 
   return (
     <div className={`${styles.page} ${styles.legacyDashboard}`}>
-      <div className={styles.legacyBreadcrumb}>HOME &gt; PATIENT DASHBOARD <span>MRN: NS-0091847</span></div>
+      <div className={styles.legacyBreadcrumb}>HOME &gt; PATIENT DASHBOARD <span><JargonTerm>MRN</JargonTerm>: NS-0091847</span></div>
       <div className={styles.legacyAlertStrip} role="status">
         <strong>ACCOUNT NOTICES:</strong> 2 NEW MESSAGE(S) &nbsp;|&nbsp; BALANCE DUE: $40.00 &nbsp;|&nbsp; 1 UPCOMING APPOINTMENT
       </div>
@@ -46,7 +47,7 @@ function LegacyHome() {
             <caption className={styles.visuallyHidden}>Upcoming appointment summary</caption>
             <tbody>
               <tr><th>APPT STATUS:</th><td><LegacyStatus tone="good">CONFIRMED</LegacyStatus></td><th>PROVIDER:</th><td>MAYA CHEN MD</td></tr>
-              <tr><th>TYPE:</th><td>PCP / OFFICE VISIT</td><th>DATE/TIME:</th><td>{appointment.date.slice(5).replace('-', '/')} / 26 &nbsp; 14:30</td></tr>
+              <tr><th>TYPE:</th><td><JargonTerm>PCP</JargonTerm> / OFFICE VISIT</td><th>DATE/TIME:</th><td>{appointment.date.slice(5).replace('-', '/')} / 26 &nbsp; 14:30</td></tr>
               <tr><th>LOCATION:</th><td colSpan={3}>NSMC BLDG B · RM 304 · 1550 NORTH AVE</td></tr>
               <tr><th>FACILITY PHONE:</th><td>(555) 014-0281</td><th>VISIT ID:</th><td>VST-260910-304</td></tr>
             </tbody>
@@ -87,7 +88,7 @@ function LegacyHome() {
             <tbody>
               <tr><td>08/20/26</td><td>Office visit summary</td><td>PRIMARY CARE</td><td><LegacyStatus tone="good">AVAILABLE</LegacyStatus></td></tr>
               <tr><td>04/18/26</td><td>Annual wellness summary</td><td>PRIMARY CARE</td><td><LegacyStatus tone="good">AVAILABLE</LegacyStatus></td></tr>
-              <tr><td>02/07/26</td><td>Insurance eligibility</td><td>REGISTRATION</td><td><LegacyStatus tone="neutral">VERIFIED</LegacyStatus></td></tr>
+              <tr><td>02/07/26</td><td>Insurance <JargonTerm>eligibility</JargonTerm></td><td><JargonTerm>REGISTRATION</JargonTerm></td><td><LegacyStatus tone="neutral">VERIFIED</LegacyStatus></td></tr>
             </tbody>
           </table>
         </section>

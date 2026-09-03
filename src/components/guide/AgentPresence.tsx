@@ -37,9 +37,11 @@ export function AgentPresence() {
     if (targetElement && observer) observer.observe(targetElement);
     window.addEventListener('resize', update);
     window.addEventListener('scroll', update, { capture: true, passive: true });
+    window.addEventListener('guide:layoutchange', update);
     return () => {
       window.removeEventListener('resize', update);
       window.removeEventListener('scroll', update, true);
+      window.removeEventListener('guide:layoutchange', update);
       observer?.disconnect();
     };
   }, [presence.target, presence.operationId, presence.visible, uiRevision]);

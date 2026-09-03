@@ -1,6 +1,7 @@
 import { ArrowDown, CheckCircle2, CircleDollarSign, FileDown, HelpCircle } from 'lucide-react';
 import { demoBill } from '../../data/demoData';
 import { useSemanticTarget } from '../../presence/targetRegistry';
+import { JargonTerm } from '../../simulation/JargonTerm';
 import styles from '../../app/App.module.css';
 
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -30,7 +31,7 @@ export function Billing() {
           <div><span>Insurance paid</span><strong>−{currency.format(demoBill.insurancePaid)}</strong><small><CheckCircle2 size={14} aria-hidden="true" /> Applied to this bill</small></div>
           <ArrowDown aria-hidden="true" />
           <div ref={responsibilityRef} className={styles.responsibility}>
-            <span>Your responsibility</span><strong>{currency.format(demoBill.patientResponsibility)}</strong><small>The remaining administrative balance</small>
+            <span>Your <JargonTerm>responsibility</JargonTerm></span><strong>{currency.format(demoBill.patientResponsibility)}</strong><small>The remaining <JargonTerm>administrative balance</JargonTerm></small>
           </div>
         </div>
 

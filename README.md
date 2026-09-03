@@ -42,7 +42,19 @@ The result changes hierarchy, content density, navigation, layout, typography, s
 
 ![Guide pointing to the adapted appointment card](./docs/screenshots/guide-presence.png)
 
-There are no diagnosis presets. Guide responds to functional needs because people with the same diagnosis can experience the web differently. Manual preferences remain available under **Settings → Accessibility Preferences**; AI is never required for access.
+Guide has no diagnosis presets. It responds to functional needs because people with the same diagnosis can experience the web differently. Manual preferences remain available under **Settings → Accessibility Preferences**; AI is never required for access.
+
+## Integrated Barrier Demonstration
+
+The demonstration ribbon includes a human-controlled **Simulate a barrier** panel. It is a supporting storytelling aid for showing why an adaptation matters; Guide and the site’s WebMCP capabilities remain the product.
+
+The primary demonstration uses the **Parkinson’s** pointer-precision option. A bounded simulated cursor makes an honest miss on the compact legacy appointment control, using the element actually under both the physical and displaced coordinates. Guide then creates large, separated controls through the existing `configure_accessibility` tool, and the same generic hit-testing algorithm succeeds on the larger target.
+
+![Legacy Northstar with the illustrative Parkinson’s pointer-precision simulation and a genuine missed target](./docs/screenshots/guide-parkinsons.png)
+
+The simulator also contains deterministic sight, reading, vocabulary, and concentration treatments. Color-difference effects use fixed matrices from the published [Machado color-vision model](https://profs.ic.uff.br/~laffernandes/content/publications/journal/2009_tvcg_15%286%29/machado_oliveira_fernandes-tvcg-15%286%29-2009-corrected.pdf). Dyslexia and Concentration difficulty are visibly labeled **Illustrative**. Effects never scramble letters, generate intrusive thoughts, redirect clicks, or search for a geometrically nearby control. Keyboard, touch, Guide, and WebMCP actions remain unaffected.
+
+The simulator approximates isolated interaction barriers only. It does not accurately reproduce any person’s disability, diagnose a condition, replace testing with disabled people, or establish accessibility compliance.
 
 ## Collaboration Continuum
 
@@ -94,11 +106,15 @@ Shared Zustand state ◄──────────── human controls
             ├── legacy/adapted portal UI
             ├── review and pending action state
             └── Guide / You attribution and overrides
+
+Separate simulation store ──────── human-only demonstration effects
+            └── never enters WebMCP state or accessibility preferences
 ```
 
 - `src/webmcp/` — schemas, handlers, truthful annotations, and dynamic registration
 - `src/presence/` — serialized cursor motion, semantic targeting, cancellation, and speech
 - `src/state/` — the shared human/agent state machine and deterministic reset
+- `src/simulation/` — isolated session-only simulator state, reversible effects, and target-agnostic hit testing
 - `src/components/` — Northstar portal, structural adaptation, preferences, and workflows
 
 Consequential actions capture the relevant revision, animate visibly, then validate state again before committing. Navigation and workflow changes invalidate only the sequences they make stale. The dynamic confirmation tool unregisters immediately after a successful commit, as well as on close, reset, or unmount.
@@ -138,21 +154,21 @@ npm run test:e2e
 npm run screenshots
 ```
 
-Vitest and React Testing Library cover store transitions, attribution, reset, overrides, stale confirmation, schemas, and unsupported-browser behavior. Playwright executes every workflow against the real UI with an injected `document.modelContext` implementation. It verifies dynamic registration, presence, shared state, cancellation, SpeechSynthesis fallback, desktop and 375 px layouts, and no horizontal overflow at 200% text.
+Vitest and React Testing Library cover store transitions, attribution, reset, overrides, stale confirmation, schemas, unsupported-browser behavior, the exact simulator hierarchy, isolated state, deterministic offsets, and coordinate-based hit testing. Playwright executes every workflow against the real UI with an injected `document.modelContext` implementation. It verifies dynamic registration, presence, shared state, cancellation, SpeechSynthesis fallback, every simulation and cleanup path, touch and keyboard operation, desktop and 375 px layouts, and no horizontal overflow at 200% text.
 
 The release checklist also includes manual keyboard and VoiceOver verification plus a 20-prompt natural-language Site Tools matrix. The September 3 production gate passed all 20 cases with no consequential call without explicit delegation and no Billing/Insurance hero-flow misroute. See [Accessibility QA](./docs/accessibility-qa.md) and [Tool-selection evaluations](./docs/tool-selection-evals.md).
 
-Axe checks run across the default legacy interface plus simplified, high-contrast, large-control, and 200% text states. The final automated gate passed 22 unit tests and 30 desktop/mobile Playwright cases with no serious or critical axe violations. This is validation evidence, not a claim of WCAG certification.
+Axe checks run across the default legacy interface plus simplified, high-contrast, large-control, 200% text, and simulator-control states. Automated and manual results are release evidence only—not a claim of WCAG certification.
 
 ## Suggested Live Scenario
 
 1. Use **Reset Demo** to restore the dense legacy portal.
-2. Ask: “These red and green indicators look the same to me, the text is too small, and this page is overwhelming. Simplify it and read your guidance aloud.”
-3. Ask: “I need to change my appointment, but I don’t know how. Show me—don’t change anything yet.”
-4. Ask: “What does that do?”
-5. Ask: “Help me reschedule, but let me choose the time.”
-6. Select **September 14 at 3:00 PM** manually.
-7. Ask: “That works. Finish it.”
+2. Open **Simulate a barrier → Mobility → Parkinson’s**.
+3. Aim at the compact **MODIFY APPT** control during the seeded demonstration phase and show the honest missed attempt.
+4. Ask: “My hands shake, precise clicking is difficult, and this page is overwhelming. Reorganize it with large separated controls and show me where to reschedule, but do not open it yet.”
+5. Use the larger adapted control successfully, open the chooser, and select **September 14 at 3:00 PM** manually.
+6. Ask: “That works. Finish it.”
+7. Stop the simulation.
 
 See [DEMO_SCRIPT.md](./DEMO_SCRIPT.md) for the sub-three-minute narration and shot list.
 

@@ -31,6 +31,19 @@ await page.getByRole('status', { name: 'WebMCP status: Guide available' }).waitF
 await page.waitForTimeout(500);
 await page.screenshot({ path: new URL('guide-home.png', outputDirectory).pathname });
 
+await page.getByRole('button', { name: 'Simulate a barrier' }).click();
+await page.getByRole('button', { name: 'Mobility', exact: true }).click();
+await page.getByRole('button', { name: 'Parkinson’s' }).click();
+await page.evaluate(() => { window.__guideSimulationTestElapsedMs = 495; });
+const legacyButton = page.getByRole('button', { name: 'Reschedule appointment' });
+const legacyBox = await legacyButton.boundingBox();
+if (!legacyBox) throw new Error('Could not measure the legacy appointment control.');
+await page.mouse.move(legacyBox.x + legacyBox.width / 2, legacyBox.y + legacyBox.height / 2);
+await page.mouse.click(legacyBox.x + legacyBox.width / 2, legacyBox.y + legacyBox.height / 2);
+await page.getByText('Missed target').waitFor();
+await page.screenshot({ path: new URL('guide-parkinsons.png', outputDirectory).pathname });
+await page.getByRole('button', { name: 'Stop simulation' }).click();
+
 await page.evaluate(async () => {
   const tools = window.__guideScreenshotTools;
   const tool = tools.get('configure_accessibility');

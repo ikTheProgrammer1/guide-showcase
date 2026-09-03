@@ -1,18 +1,11 @@
 import { RotateCcw, Sparkles, WifiOff } from 'lucide-react';
-import { cancelGuidePresence } from '../../presence/presenceController';
 import { useSemanticTarget } from '../../presence/targetRegistry';
-import { usePortalStore } from '../../state/portalStore';
+import { resetDemoExperience } from '../../state/resetDemo';
 import type { WebMCPStatus } from '../../webmcp/useWebMCPTools';
 import styles from '../../app/App.module.css';
 
 export function Header({ webMcpStatus }: { webMcpStatus: WebMCPStatus }) {
-  const resetDemo = usePortalStore((state) => state.resetDemo);
   const guideStatusRef = useSemanticTarget<HTMLDivElement>('guide_status');
-
-  const reset = () => {
-    cancelGuidePresence();
-    resetDemo();
-  };
 
   return (
     <header className={styles.header}>
@@ -31,7 +24,7 @@ export function Header({ webMcpStatus }: { webMcpStatus: WebMCPStatus }) {
           {webMcpStatus === 'ready' ? <Sparkles size={15} aria-hidden="true" /> : <WifiOff size={15} aria-hidden="true" />}
           <span>{webMcpStatus === 'ready' ? 'Guide available' : 'Standard portal'}</span>
         </div>
-        <button className={styles.resetButton} onClick={reset}>
+        <button className={styles.resetButton} onClick={resetDemoExperience}>
           <RotateCcw size={16} aria-hidden="true" />
           Reset demo
         </button>

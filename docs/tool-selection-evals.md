@@ -2,6 +2,8 @@
 
 Run this matrix against the production URL in a supported ChatGPT desktop built-in browser. Start each case from **Reset demo** unless the setup says otherwise. Record the actual discovered/called tool from Site Tools activity, not from expected behavior.
 
+The illustrative simulator is human-controlled and out of band: activating it must not add a tool, change a schema, or appear in `get_portal_state`. For the production regression, keep Parkinson’s active during cases 3, 7, 14, and 15 and confirm tool selection remains identical.
+
 ## Release Gate
 
 - Hero, consequential, and “show but don’t act” cases: 100% correct.

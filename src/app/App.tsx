@@ -15,6 +15,9 @@ import { isPortalAdapted } from '../data/demoData';
 import { cancelGuidePresence } from '../presence/presenceController';
 import { useSemanticTarget } from '../presence/targetRegistry';
 import { usePortalStore } from '../state/portalStore';
+import { BarrierSimulator } from '../simulation/BarrierSimulator';
+import { SimulationEffects } from '../simulation/SimulationEffects';
+import { useSimulationStore } from '../simulation/simulationStore';
 import { useWebMCPTools } from '../webmcp/useWebMCPTools';
 import styles from './App.module.css';
 
@@ -48,6 +51,7 @@ export function App() {
   const currentSection = usePortalStore((state) => state.currentSection);
   const openSection = usePortalStore((state) => state.openSection);
   const status = useWebMCPTools();
+  const activeSimulation = useSimulationStore((state) => state.activeSimulation);
   const portalSurfaceRef = useSemanticTarget<HTMLElement>('portal_surface');
   const interfaceMode = isPortalAdapted(accessibility) ? 'adapted' : 'legacy';
 
@@ -64,17 +68,15 @@ export function App() {
       data-text-scale={accessibility.textScale}
       data-status-mode={accessibility.colorIndependentStatus ? 'independent' : 'color-led'}
       data-interface={interfaceMode}
+      data-simulation={activeSimulation ?? 'none'}
       style={{ '--text-scale': accessibility.textScale / 100 } as React.CSSProperties}
     >
       <a className={styles.skipLink} href="#portal-content">
         Skip to portal content
       </a>
-      <div className={styles.demoRibbon}>
-        <span aria-hidden="true" className={styles.ribbonDot} />
-        Fictional demonstration environment
-      </div>
+      <BarrierSimulator />
 
-      <div className={styles.shell}>
+      <div className={styles.shell} data-simulation-surface="true">
         <Sidebar />
         <div className={styles.workspace}>
           <Header webMcpStatus={status} />
@@ -124,6 +126,7 @@ export function App() {
       </div>
 
       <RescheduleDialog />
+      <SimulationEffects />
       <AgentPresence />
     </div>
   );

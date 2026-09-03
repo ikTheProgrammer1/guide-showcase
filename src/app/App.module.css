@@ -88,7 +88,7 @@
   min-height: 1.8rem;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 0.45rem;
   padding: 0.25rem 1rem;
   color: #effbf7;
@@ -99,6 +99,235 @@
   text-transform: uppercase;
 }
 
+.simulatorChrome {
+  position: relative;
+  z-index: 100;
+}
+
+.demoLabel {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.simulatorControl {
+  position: relative;
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--ink);
+  font-size: calc(0.78rem * var(--text-scale, 1));
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.simulatorTrigger,
+.simulatorCategoryButton,
+.simulatorOptions button,
+.simulationStatus button {
+  touch-action: manipulation;
+}
+
+.simulatorTrigger {
+  min-height: 2.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  padding: 0.4rem 0.65rem;
+  color: #173331;
+  background: #fff8e7;
+  border: 1px solid #d6b56b;
+  border-radius: 0.55rem;
+  box-shadow: 0 2px 8px rgba(6, 40, 37, 0.16);
+  cursor: pointer;
+  font-weight: 760;
+}
+
+.simulatorTrigger:hover,
+.simulatorTrigger[aria-expanded='true'] {
+  color: #092f2c;
+  background: #fffdf5;
+  border-color: #e48b2f;
+}
+
+.simulatorTrigger svg:last-child,
+.simulatorCategoryButton svg {
+  flex: 0 0 auto;
+  transition: transform 0.18s ease;
+  transform-origin: center;
+}
+
+.simulatorTrigger svg[data-open='true'],
+.simulatorCategoryButton svg[data-open='true'] {
+  transform: rotate(180deg);
+}
+
+.simulatorPanel {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  right: 0;
+  width: min(27rem, calc(100vw - 1rem));
+  max-height: min(72vh, 36rem);
+  padding: 0.7rem;
+  color: #173331;
+  background: #fffdf8;
+  border: 1px solid #b8c7c1;
+  border-radius: 0.85rem;
+  box-shadow: 0 22px 55px rgba(7, 37, 34, 0.28);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.simulatorPanelTitle {
+  margin: 0 0 0.55rem;
+  color: #4d615e;
+  font-size: 0.82em;
+  font-weight: 780;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.simulatorAccordion {
+  display: grid;
+  gap: 0.38rem;
+}
+
+.simulatorCategory {
+  border: 1px solid #d3ddd8;
+  border-radius: 0.62rem;
+  overflow: hidden;
+}
+
+.simulatorCategoryButton {
+  width: 100%;
+  min-height: 2.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0.7rem;
+  color: #173331;
+  background: #f2f6f3;
+  border: 0;
+  cursor: pointer;
+  font-weight: 780;
+  text-align: left;
+}
+
+.simulatorCategoryButton:hover,
+.simulatorCategoryButton[aria-expanded='true'] {
+  background: #e3f0eb;
+}
+
+.simulatorOptions {
+  display: grid;
+  padding: 0.28rem;
+  background: white;
+}
+
+.simulatorOptions[hidden] {
+  display: none;
+}
+
+.simulatorOptions button {
+  min-height: 2.55rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.52rem 0.62rem;
+  color: #2a413e;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #edf1ee;
+  cursor: pointer;
+  text-align: left;
+}
+
+.simulatorOptions button:last-child {
+  border-bottom: 0;
+}
+
+.simulatorOptions button:hover,
+.simulatorOptions button[aria-pressed='true'] {
+  color: #0a4f4b;
+  background: #eef8f4;
+}
+
+.simulatorOptions button[aria-pressed='true'] {
+  box-shadow: inset 3px 0 0 #e48b2f;
+  font-weight: 760;
+}
+
+.simulatorOptions small {
+  flex: 0 0 auto;
+  padding: 0.16rem 0.32rem;
+  color: #70420d;
+  background: #fff0d8;
+  border-radius: 999px;
+  font-size: 0.68em;
+  font-weight: 780;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.simulationStatus {
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.58rem max(0.75rem, calc((100vw - 74rem) / 2));
+  color: #26322e;
+  background: #fff4db;
+  border-bottom: 1px solid #d4ae5a;
+  font-size: calc(0.84rem * var(--text-scale, 1));
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.simulationStatusHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.simulationStatusHeading > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.simulationStatus button {
+  min-height: 2.35rem;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.38rem 0.65rem;
+  color: #fff;
+  background: #784d17;
+  border: 1px solid #54330c;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 760;
+}
+
+.simulationStatus button:hover {
+  background: #5c380d;
+}
+
+.simulationStatus p {
+  margin: 0;
+  max-width: 88rem;
+  line-height: 1.38;
+}
+
+.simulationDisclaimer {
+  color: #5b4d38;
+  font-size: 0.84em;
+}
+
 .ribbonDot {
   width: 0.45rem;
   height: 0.45rem;
@@ -106,6 +335,213 @@
   border-radius: 999px;
   box-shadow: inset 0 0 0 1.5px var(--teal-dark);
   background: #87d2b3;
+}
+
+.simulationSvgFilters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.app[data-simulation='total-color-blindness'] .shell,
+.app[data-simulation='total-color-blindness'] .dialogBackdrop {
+  filter: url('#guide-total-color-blindness');
+}
+
+.app[data-simulation='yellow-blue-color-blindness'] .shell,
+.app[data-simulation='yellow-blue-color-blindness'] .dialogBackdrop {
+  filter: url('#guide-yellow-blue-color-blindness');
+}
+
+.app[data-simulation='red-green-color-blindness'] .shell,
+.app[data-simulation='red-green-color-blindness'] .dialogBackdrop {
+  filter: url('#guide-red-green-color-blindness');
+}
+
+.app[data-simulation='far-sightedness'] .shell,
+.app[data-simulation='far-sightedness'] .dialogBackdrop {
+  filter: blur(2.4px);
+}
+
+.app[data-simulation='sunshine'] .shell,
+.app[data-simulation='sunshine'] .dialogBackdrop {
+  filter: brightness(1.25) contrast(0.58) saturate(0.76);
+}
+
+.tunnelOverlay,
+.sunshineOverlay,
+.simulatedCursor,
+.missedTarget {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.tunnelOverlay {
+  z-index: 70;
+  background: radial-gradient(
+    circle at var(--tunnel-x) var(--tunnel-y),
+    transparent 0,
+    transparent 120px,
+    rgba(7, 18, 17, 0.28) 165px,
+    rgba(7, 18, 17, 0.92) 220px
+  );
+}
+
+.sunshineOverlay {
+  z-index: 70;
+  background:
+    radial-gradient(circle at 72% 10%, rgba(255, 251, 205, 0.75), transparent 38rem),
+    rgba(255, 247, 193, 0.22);
+  mix-blend-mode: screen;
+}
+
+.app[data-simulation='dyslexia'] .mainContent :is(p, td, small, li),
+.app[data-simulation='dyslexia'] .dialog :is(p, small) {
+  line-height: 1.18;
+  word-spacing: -0.08em;
+  text-shadow: 0.028em 0 rgba(23, 51, 49, 0.22);
+}
+
+.app[data-simulation='dyslexia'] .mainContent {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 1.08em,
+    rgba(23, 51, 49, 0.035) 1.08em,
+    rgba(23, 51, 49, 0.035) 1.18em
+  );
+}
+
+.app[data-simulation='concentration-difficulty'] .quickCard:nth-child(2n),
+.app[data-simulation='concentration-difficulty'] .legacyStatusBox:nth-child(2n),
+.app[data-simulation='concentration-difficulty'] .secondarySection {
+  animation: concentration-pull 5.8s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+.app[data-simulation='concentration-difficulty'] .quickCard:nth-child(2n + 1),
+.app[data-simulation='concentration-difficulty'] .legacyStatusBox:nth-child(2n + 1),
+.app[data-simulation='concentration-difficulty'] .legacyColumns .legacyPanel {
+  animation: concentration-pull 7.2s 0.9s ease-in-out infinite alternate-reverse;
+  transform-origin: center;
+}
+
+@keyframes concentration-pull {
+  0%, 46% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  64%, 100% {
+    opacity: 0.94;
+    transform: translate3d(1px, -1px, 0) scale(1.008);
+  }
+}
+
+.jargonTerm {
+  display: inline;
+}
+
+.jargonMask {
+  display: none;
+}
+
+.app[data-simulation='small-vocabulary'] .jargonTerm {
+  position: relative;
+  display: inline-flex;
+  vertical-align: baseline;
+}
+
+.app[data-simulation='small-vocabulary'] .jargonOriginal {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.app[data-simulation='small-vocabulary'] .jargonMask {
+  display: inline-flex;
+  padding: 0 0.2em;
+  color: #5b421d;
+  background: #efe4ce;
+  border: 1px dashed #a78b5e;
+  border-radius: 0.18em;
+  font-size: 0.9em;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.app[data-simulation='parkinsons'] [data-simulation-surface='true'],
+.app[data-simulation='parkinsons'] [data-simulation-surface='true'] * {
+  cursor: none !important;
+}
+
+.simulatedCursor {
+  right: auto;
+  bottom: auto;
+  z-index: 75;
+  width: 0;
+  height: 0;
+  color: #102f4c;
+  filter: drop-shadow(0 2px 1px rgba(255, 255, 255, 0.95)) drop-shadow(0 4px 5px rgba(0, 0, 0, 0.42));
+  will-change: transform;
+}
+
+.simulatedCursor svg {
+  position: absolute;
+  top: -2px;
+  left: -3px;
+  fill: #fffaf0;
+}
+
+.missedTarget {
+  right: auto;
+  bottom: auto;
+  z-index: 76;
+  width: 0;
+  height: 0;
+}
+
+.missedTarget > span {
+  position: absolute;
+  top: -1.1rem;
+  left: -1.1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 2px solid #d06b1b;
+  border-radius: 999px;
+  animation: missed-target-ring 0.7s ease-out both;
+}
+
+.missedTarget strong {
+  position: absolute;
+  top: 1rem;
+  left: 0.75rem;
+  width: max-content;
+  padding: 0.3rem 0.46rem;
+  color: #432308;
+  background: #fff4db;
+  border: 1px solid #d7a24a;
+  border-radius: 0.38rem;
+  box-shadow: 0 6px 20px rgba(44, 25, 5, 0.18);
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+@keyframes missed-target-ring {
+  from {
+    opacity: 1;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.45);
+  }
 }
 
 .shell {
@@ -2242,7 +2678,7 @@
   display: flex;
   justify-content: space-between;
   padding: 0.15rem 0.2rem;
-  color: #4b5359;
+  color: #3f494f;
   font-size: 0.68em;
   text-decoration: underline;
 }
@@ -2665,6 +3101,36 @@
   .legacyDataTable {
     min-width: 38rem;
   }
+
+  .demoRibbon {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .demoLabel {
+    width: 100%;
+  }
+
+  .simulatorControl,
+  .simulatorTrigger {
+    width: 100%;
+  }
+
+  .simulatorPanel {
+    right: auto;
+    left: 0;
+    width: calc(100vw - 1.1rem);
+  }
+
+  .simulationStatusHeading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .simulationStatus button {
+    width: 100%;
+  }
 }
 
 @media (min-width: 861px) {
@@ -2717,6 +3183,17 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.app[data-text-scale='175'] .demoRibbon,
+.app[data-text-scale='200'] .demoRibbon {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.app[data-text-scale='175'] .simulatorPanel,
+.app[data-text-scale='200'] .simulatorPanel {
+  max-height: 62vh;
+}
+
 @media (max-width: 650px) {
   .app[data-text-scale='175'] .navList,
   .app[data-text-scale='200'] .navList {
@@ -2726,5 +3203,23 @@
   .app[data-text-scale='175'] .sectionHeading,
   .app[data-text-scale='200'] .sectionHeading {
     min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app[data-simulation='concentration-difficulty'] .quickCard,
+  .app[data-simulation='concentration-difficulty'] .legacyStatusBox,
+  .app[data-simulation='concentration-difficulty'] .secondarySection,
+  .app[data-simulation='concentration-difficulty'] .legacyColumns .legacyPanel {
+    animation: none !important;
+    outline: 2px solid rgba(228, 139, 47, 0.32);
+    outline-offset: 2px;
+  }
+
+  .simulatorTrigger svg:last-child,
+  .simulatorCategoryButton svg,
+  .missedTarget > span {
+    animation: none;
+    transition: none;
   }
 }
