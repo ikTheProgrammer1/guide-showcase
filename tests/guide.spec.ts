@@ -90,6 +90,41 @@ async function callTool(page: Page, name: string, input: Record<string, unknown>
   );
 }
 
+const rememberedPreferencesKey = 'northstar.functional-preferences.v1';
+
+async function expectLegacyBaseline(page: Page) {
+  const app = page.locator('[data-personalized="false"]');
+  await expect(app).toBeVisible();
+  await expect(page.getByText('Interface personalized')).toHaveCount(0);
+  await expect(page.getByRole('navigation', { name: 'Additional patient services' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Primary care visit' })).toBeVisible();
+  await expect(page.locator('[data-adaptation-region="appointment_actions"]')).toHaveAttribute('data-label-style', 'concise');
+  await expect(page.locator('[data-adaptation-region="status_indicators"]')).toHaveAttribute('data-status-presentation', 'color-and-text');
+
+  const presentation = await page.getByRole('button', { name: 'Reschedule appointment' }).evaluate((element) => ({
+    fontFamily: getComputedStyle(element.closest('[data-personalized]')!).fontFamily,
+    height: element.getBoundingClientRect().height,
+    label: element.textContent?.trim(),
+  }));
+  expect(presentation.fontFamily).toContain('Tahoma');
+  expect(presentation.height).toBeLessThanOrEqual(36);
+  expect(presentation.label).toBe('MODIFY APPT');
+}
+
+async function approvePointerCalibration(page: Page, remember: boolean) {
+  await page.getByRole('button', { name: 'Personalize interface' }).click();
+  await page.getByRole('button', { name: /Calibrate pointer precision/ }).click();
+  const practice = page.getByRole('button', { name: 'Practice appointment' });
+  for (let attempt = 0; attempt < 6; attempt += 1) await practice.click();
+  await expect(page.getByRole('heading', { name: 'Does this feel comfortable?' })).toBeVisible();
+  await page.getByRole('button', { name: 'Larger' }).click();
+  await page.getByRole('button', { name: 'Farther apart' }).click();
+  if (remember) await page.getByRole('checkbox', { name: /Remember these preferences/ }).check();
+  await page.getByRole('button', { name: /This feels comfortable/ }).click();
+  await expect(page.getByRole('heading', { name: 'Reschedule your appointment' })).toBeVisible();
+  await expect(page.locator('[data-personalized="true"]')).toBeVisible();
+}
+
 async function enableReadAloudManually(page: Page) {
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Read Guide aloud' }).click();
@@ -108,6 +143,81 @@ async function stopBarrier(page: Page) {
   await page.getByRole('button', { name: 'Stop simulation' }).click();
   await expect(page.locator('[data-simulation="none"]')).toBeVisible();
 }
+
+test('fresh browser context renders the approved dense legacy baseline', async ({ page }) => {
+  await installWebMCP(page);
+  await page.goto('/');
+
+  expect(await page.evaluate((key) => window.localStorage.getItem(key), rememberedPreferencesKey)).toBeNull();
+  await expectLegacyBaseline(page);
+});
+
+test('approved non-persisted adaptation returns to legacy after reload', async ({ page }) => {
+  await installWebMCP(page);
+  await page.goto('/');
+  await approvePointerCalibration(page, false);
+
+  expect(await page.evaluate((key) => window.localStorage.getItem(key), rememberedPreferencesKey)).toBeNull();
+  await page.reload();
+  await expectLegacyBaseline(page);
+});
+
+test('explicitly remembered profile restores the personalized interface after reload', async ({ page }) => {
+  await installWebMCP(page);
+  await page.goto('/');
+  await approvePointerCalibration(page, true);
+
+  const remembered = await page.evaluate((key) => window.localStorage.getItem(key), rememberedPreferencesKey);
+  expect(remembered).not.toBeNull();
+  expect(JSON.parse(remembered!)).toMatchObject({
+    version: 1,
+    profile: {
+      version: 1,
+      input: { minimumTargetSize: 44, minimumControlGap: 16 },
+    },
+  });
+
+  await page.reload();
+  await expect(page.locator('[data-personalized="true"]')).toBeVisible();
+  await expect(page.getByText('Interface personalized')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Reschedule appointment' })).toContainText('Reschedule appointment');
+  await expect(page.locator('[data-adaptation-region="appointment_actions"]')).toHaveCSS('--region-target-size', '44px');
+  const restoredHeight = await page.getByRole('button', { name: 'Reschedule appointment' }).evaluate(
+    (element) => element.getBoundingClientRect().height,
+  );
+  expect(restoredHeight).toBeGreaterThan(40);
+});
+
+test('Reset Demo removes persisted personalization and immediately restores legacy', async ({ page }) => {
+  await installWebMCP(page);
+  await page.goto('/');
+  await approvePointerCalibration(page, true);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Reschedule your appointment' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Reset demo', exact: true }).click();
+
+  expect(await page.evaluate((key) => window.localStorage.getItem(key), rememberedPreferencesKey)).toBeNull();
+  await expectLegacyBaseline(page);
+  await expect(page.locator('[data-simulation="none"]')).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  const resetState = await callTool(page, 'get_portal_state', {}) as {
+    state: {
+      appointment: { date: string; time: string };
+      currentSection: string;
+      personalization: { functionalProfile: unknown; componentOverrides: Record<string, unknown>; rememberPreferences: boolean };
+      reschedule: { phase: string; selectedSlotId: string | null };
+    };
+  };
+  expect(resetState.state).toMatchObject({
+    appointment: { date: '2026-09-10', time: '2:30 PM' },
+    currentSection: 'home',
+    personalization: { functionalProfile: null, componentOverrides: {}, rememberPreferences: false },
+    reschedule: { phase: 'idle', selectedSlotId: null },
+  });
+
+  await page.reload();
+  await expectLegacyBaseline(page);
+});
 
 test('points to the reschedule entry point before and after composition without activating it', async ({ page }) => {
   await installWebMCP(page);
