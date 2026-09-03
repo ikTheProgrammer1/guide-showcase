@@ -57,7 +57,7 @@ The first challenge was making the before state look honestly institutional with
 
 The second challenge was making adaptation structural. The modern state is not a theme painted over the same dashboard: information hierarchy, navigation, status representation, content density, card structure, typography, and control sizing all change while semantic target IDs remain stable.
 
-The third challenge was protecting human agency during visible asynchronous actions. Every manual mutation increments an interaction version. Guide validates that version before committing and rejects stale instructions.
+The third challenge was protecting human agency during visible asynchronous actions. Guide separates UI, navigation, and reschedule revisions, then re-reads the appointment, selected slot, and reschedule revision immediately before committing. Accessibility reflow can reposition the pointer without invalidating a valid choice, while stale selection instructions are rejected.
 
 ## What We Learned
 

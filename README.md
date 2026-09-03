@@ -138,9 +138,9 @@ npm run screenshots
 
 Vitest and React Testing Library cover store transitions, attribution, reset, overrides, stale confirmation, schemas, and unsupported-browser behavior. Playwright executes every workflow against the real UI with an injected `document.modelContext` implementation. It verifies dynamic registration, presence, shared state, cancellation, SpeechSynthesis fallback, desktop and 375 px layouts, and no horizontal overflow at 200% text.
 
-The release checklist also includes manual keyboard and VoiceOver verification plus a 20-prompt natural-language Site Tools matrix. See [Accessibility QA](./docs/accessibility-qa.md) and [Tool-selection evaluations](./docs/tool-selection-evals.md).
+The release checklist also includes manual keyboard and VoiceOver verification plus a 20-prompt natural-language Site Tools matrix. The September 3 production gate passed all 20 cases with no consequential call without explicit delegation and no Billing/Insurance hero-flow misroute. See [Accessibility QA](./docs/accessibility-qa.md) and [Tool-selection evaluations](./docs/tool-selection-evals.md).
 
-Axe checks run across the default legacy interface plus simplified, high-contrast, large-control, and 200% text states. The current automated suite reports no serious or critical violations. This is validation evidence, not a claim of WCAG certification.
+Axe checks run across the default legacy interface plus simplified, high-contrast, large-control, and 200% text states. The final automated gate passed 22 unit tests and 30 desktop/mobile Playwright cases with no serious or critical axe violations. This is validation evidence, not a claim of WCAG certification.
 
 ## Suggested Live Scenario
 

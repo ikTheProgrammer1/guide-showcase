@@ -33,12 +33,15 @@ Verify both the dense legacy interface and the structurally adapted interface at
 
 ## Release Record
 
-- Date:
-- Production build/commit:
-- Browser/app version:
-- Legacy keyboard: Pending
-- Adapted keyboard: Pending
-- Legacy VoiceOver: Pending
-- Adapted VoiceOver: Pending
-- Issues found/fixed:
+- Date: September 3, 2026
+- Production build/commit: `f7ba299`
+- Browser/app version: ChatGPT/Codex desktop built-in browser `26.901.20858`; macOS `15.7.4`; production WebMCP capability
+- Legacy keyboard: **Pass** — all portal navigation names were exposed; Enter opened Appointments; the dialog used title → one radio tab stop → confirmation → success heading → Done; focus returned to **Reschedule appointment**.
+- Adapted keyboard: **Pass** — the same flow passed with 150% text, stronger contrast, simplified density, larger controls, increased spacing, interactive emphasis, and color-independent status.
+- Legacy VoiceOver: **Pass** — live VoiceOver and the browser accessibility tree exposed the portal landmarks, Guide status, appointment summary, dialog title, current time, three-option radiogroup, review, confirmation, and success status.
+- Adapted VoiceOver: **Pass** — the adapted appointment and all eight manual preference names/states were exposed; the complete dialog flow and success status remained available.
+- Guide focus: **Pass** — with VoiceOver running, `guide_to` exposed its polite page announcement while keyboard focus stayed on the same reschedule control. The overlay remained non-interactive and non-focusable.
+- Speech: **Pass** — production SpeechSynthesis reached `onend` for the read-aloud cases; automated coverage separately verifies unsupported, error, abort, previous-speech cancellation, and the 25-second timeout paths. `spokenByPage` was treated only as an informational signal.
+- Issues found/fixed: the production pass found and fixed the missing Home reschedule semantic target (`165bbd2`) and moved the close control later in dialog focus order so one Tab from the title reaches the radio group (`f7ba299`). No remaining blocking issue was observed. VoiceOver was stopped after the pass.
 
+The VoiceOver pass used live VoiceOver navigation plus observable accessibility-tree and focus state. It did not record or score the synthesized audio waveform.
