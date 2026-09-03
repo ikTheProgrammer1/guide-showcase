@@ -64,6 +64,6 @@ This pattern could extend to government services, insurance, banking, education,
 
 ## Links
 
-- Live demo: deployment pending
-- Public repository: publication pending
+- Live demo: [https://guide-webmcp.vercel.app](https://guide-webmcp.vercel.app)
+- Public repository: [https://github.com/ikTheProgrammer1/guide-webmcp](https://github.com/ikTheProgrammer1/guide-webmcp)
 - Demo video: upload pending
